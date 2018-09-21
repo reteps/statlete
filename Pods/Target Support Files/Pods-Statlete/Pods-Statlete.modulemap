@@ -1,0 +1,6 @@
+framework module Pods_Statlete {
+  umbrella header "Pods-Statlete-umbrella.h"
+
+  export *
+  module * { export * }
+}
