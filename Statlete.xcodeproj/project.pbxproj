@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		600EAE123AB3C4E8B593701B /* Pods_Statlete.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6544A8E92BDB626B3C75D41B /* Pods_Statlete.framework */; };
+		D003589B2157F48A008D4B64 /* TabController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D003589A2157F48A008D4B64 /* TabController.swift */; };
 		D074CD0521518949004AA7BB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D074CD0421518949004AA7BB /* AppDelegate.swift */; };
 		D074CD0721518949004AA7BB /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D074CD0621518949004AA7BB /* ViewController.swift */; };
 		D074CD0A21518949004AA7BB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D074CD0821518949004AA7BB /* Main.storyboard */; };
@@ -15,12 +16,16 @@
 		D074CD0F2151894B004AA7BB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D074CD0D2151894B004AA7BB /* LaunchScreen.storyboard */; };
 		D075D7442153D49D00787AB0 /* SettingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D7432153D49D00787AB0 /* SettingsController.swift */; };
 		D075D74621547D4800787AB0 /* jsonDecoders.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74521547D4800787AB0 /* jsonDecoders.swift */; };
+		D075D74821571FAA00787AB0 /* AthleteSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74721571FA900787AB0 /* AthleteSearchController.swift */; };
+		D075D74A21571FCC00787AB0 /* TeamSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74921571FCC00787AB0 /* TeamSearchController.swift */; };
+		D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		6544A8E92BDB626B3C75D41B /* Pods_Statlete.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Statlete.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		720A11A2CFC22BBC5F5AA572 /* Pods-Statlete.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Statlete.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Statlete/Pods-Statlete.debug.xcconfig"; sourceTree = "<group>"; };
 		96C2B824457F7AFAFA1D7C22 /* Pods-Statlete.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Statlete.release.xcconfig"; path = "Pods/Target Support Files/Pods-Statlete/Pods-Statlete.release.xcconfig"; sourceTree = "<group>"; };
+		D003589A2157F48A008D4B64 /* TabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabController.swift; sourceTree = "<group>"; };
 		D074CD0121518949004AA7BB /* Statlete.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Statlete.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D074CD0421518949004AA7BB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		D074CD0621518949004AA7BB /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -30,6 +35,9 @@
 		D074CD102151894B004AA7BB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		D075D7432153D49D00787AB0 /* SettingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsController.swift; sourceTree = "<group>"; };
 		D075D74521547D4800787AB0 /* jsonDecoders.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = jsonDecoders.swift; sourceTree = "<group>"; };
+		D075D74721571FA900787AB0 /* AthleteSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteSearchController.swift; sourceTree = "<group>"; };
+		D075D74921571FCC00787AB0 /* TeamSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamSearchController.swift; sourceTree = "<group>"; };
+		D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = athleticNetHandlers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -75,9 +83,13 @@
 			isa = PBXGroup;
 			children = (
 				D074CD0421518949004AA7BB /* AppDelegate.swift */,
+				D003589A2157F48A008D4B64 /* TabController.swift */,
 				D074CD0621518949004AA7BB /* ViewController.swift */,
 				D075D7432153D49D00787AB0 /* SettingsController.swift */,
+				D075D74921571FCC00787AB0 /* TeamSearchController.swift */,
 				D075D74521547D4800787AB0 /* jsonDecoders.swift */,
+				D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */,
+				D075D74721571FA900787AB0 /* AthleteSearchController.swift */,
 				D074CD0821518949004AA7BB /* Main.storyboard */,
 				D074CD0B2151894B004AA7BB /* Assets.xcassets */,
 				D074CD0D2151894B004AA7BB /* LaunchScreen.storyboard */,
@@ -218,7 +230,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */,
+				D003589B2157F48A008D4B64 /* TabController.swift in Sources */,
+				D075D74A21571FCC00787AB0 /* TeamSearchController.swift in Sources */,
 				D075D74621547D4800787AB0 /* jsonDecoders.swift in Sources */,
+				D075D74821571FAA00787AB0 /* AthleteSearchController.swift in Sources */,
 				D075D7442153D49D00787AB0 /* SettingsController.swift in Sources */,
 				D074CD0721518949004AA7BB /* ViewController.swift in Sources */,
 				D074CD0521518949004AA7BB /* AppDelegate.swift in Sources */,

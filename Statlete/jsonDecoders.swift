@@ -10,6 +10,7 @@ import Foundation
 /*
 Search Data
 */
+
 struct SearchResponse: Codable {
     let d: ResponseData
 }
@@ -23,23 +24,24 @@ struct ResponseData: Codable {
 /*
 Token Data
 */
-struct TokenData {
+struct TokenData: Codable {
     let sport: String
-    let schoolID, seasonID, membershipLevel: Int
-    let twitterUser: NSNull
-    let addEventURL: String
-    let userID: Int
-    let photoStyle: String
+    let SchoolID, SeasonID, MembershipLevel: Int
+    let TwitterUser: JSONNull?
+    let addEventUrl: String
+    let UserID: Int
+    let photoStyle: String?
     let isCoach, isAuthenticatedWithGoodStanding, editPermission, admin: Bool
     let isTeamAthlete: Bool
     let publicToken: String
-    let editToken, uploadToken: NSNull
+    let editToken, uploadToken: JSONNull?
     let guid, embedToken: String
-    let coverPhoto: NSNull
+    let coverPhoto: JSONNull?
     let isTLogAdmin: Bool
     let athleteCoachToken: String
-    let stripeKey: NSNull
+    let stripeKey: JSONNull?
     let live: Bool
+
 }
 
 /*
@@ -56,7 +58,7 @@ struct TeamData: Codable {
     let inviteRequests: JSONNull?
     let athletes: [Athlete]
     let coaches: [Coach]
-    let adHTML, tLog, userInfo: JSONNull?
+    let adHTML, tLog, userInfo: String?
     let vendors: [JSONAny]
     let cartAmounts, cartFees, subscriptions, tipOfTheDayHistory: JSONNull?
 }
@@ -99,12 +101,13 @@ struct CurrentCal: Codable {
     let id, dateDiff, endDateDiff: Int
     let name: String
     let type, calHasResults, meetID, meetHasResults: Int
-    let streetAddress, city, state, postalCode: String
+    let streetAddress, city, state, postalCode: String?
     let country, location, date, startDate: String
     let endDate: String
-    let athleteLock, meetDepart, meetReturn: JSONNull?
+    let athleteLock: String?
+    let meetDepart, meetReturn: String?
     let gender: String
-    let notes: JSONNull?
+    let notes: String?
     let owner, meetOwner, regStatus: Int
     let regEnabled: Bool
     let invoiceID, invoiceKey, invStatus, invPreAuth: JSONNull?
@@ -179,11 +182,12 @@ struct Season: Codable {
 }
 
 struct TeamDataTeam: Codable {
-    let name: String
+    let name: String?
     let level, teamRecords: Int
-    let address, city, state, zipCode: String
-    let phone, fax: JSONNull?
-    let url, urlTeam: String
+    let address, city, state, zipCode: String?
+    let phone: String?
+    let fax: String?
+    let url, urlTeam: String?
     let prefStore, prepSportID, accountLock, regionID: Int
     let hasPhotos: Bool
     
@@ -211,7 +215,7 @@ struct TeamNav: Codable {
     let team: TeamNavTeam
     let userAthleteIDOnTeam: Int
     let hasCoachAccess: Bool
-    let mascotToken: JSONNull?
+    let mascotToken: String?
     let grades: [Grade]
     let divisions: [Division]
     let customLists: CustomLists
@@ -235,9 +239,11 @@ struct Division: Codable {
 struct TeamNavTeam: Codable {
     let name: String
     let level: Int
-    let city, state, mascot, mascotGUID: String
+    let city, state: String
+    let mascot: String?
+    let mascotGUID: String?
     let teamRecords, siteSupport: Int
-    let colors: [String]
+    let colors: [String?]
     
     enum CodingKeys: String, CodingKey {
         case name = "Name"
