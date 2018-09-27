@@ -13,12 +13,17 @@ class TabController: UITabBarController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Do any additional setup after loading the view.
+        // Create View Controllers
         let settings = UINavigationController(rootViewController: SettingsController())
-        viewControllers = [settings]
+        let individual = IndividualAthleteController()
+        
+        // Set Icons
+        // https://stackoverflow.com/questions/34039475/programmatically-set-the-uitabbaritem-icon-for-every-linked-viewcontroller/43591493
+        // https://medium.com/@unicornmobile/uitabbarcontroller-programmatically-316b89b5b21b
+        viewControllers = [settings, individual]
         let finishedSetup = UserDefaults.standard.bool(forKey: "finishedSetup")
         if finishedSetup {
-            print("finished Setup")
+            self.selectedIndex = 1
         } else {
             self.selectedIndex = 0
         }

@@ -14,6 +14,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearch
     var shouldShowSearchResults = false
     var searchController: UISearchController!
     var searchControllerHeight = 0
+    var teamSelection:((String, String) -> ())?
     override func viewDidLoad() {
         super.viewDidLoad()
         print("view loading...")
@@ -34,7 +35,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearch
     }
     func configureTableView() {
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-        let displayWidth: CGFloat = self.view.frame.size.width
+        // let displayWidth: CGFloat = self.view.frame.size.width
         let displayHeight: CGFloat = self.view.frame.size.height
         
         //myTableView = UITableView(frame: CGRect(x: 0, y: barHeight, width: displayWidth, height: displayHeight - barHeight))
@@ -66,16 +67,13 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearch
     }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //get the cell based on the indexPath
-        let schoolID = searchResultsArray[indexPath[1]]["id"]!
+        //self.schoolID = searchResultsArray[indexPath[1]]["id"]!
         // self.isHidden = true
+        // https://www.codementor.io/kevinfarst/exploring-swift-closures-ar1ns9xn6
+        let cell = searchResultsArray[indexPath[1]]
+        self.teamSelection!(cell["id"]!, cell["school"]!)
         searchController.isActive = false
-        //self.navigationController?.popViewController(animated: true)
-        
-        let athleteSearch = AthleteSearchController()
-        athleteSearch.schoolID = schoolID
-        let settingsController = SettingsController()
-        athleteSearch.sportMode = settingsController.getSportMode()
-        self.navigationController?.pushViewController(athleteSearch, animated: true)
+        self.navigationController?.popViewController(animated: true)
     }
     func updateSearchResults(for searchController: UISearchController) {
         let searchString = searchController.searchBar.text

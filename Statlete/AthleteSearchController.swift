@@ -7,23 +7,29 @@
 //
 
 import UIKit
+import SwiftyJSON
 
 class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISearchResultsUpdating {
 
     func updateSearchResults(for searchController: UISearchController) {
         let searchString = searchController.searchBar.text!
-        self.filteredResultsArray = allResultsArray.filter({( athlete: Athlete) -> Bool in
-            return athlete.name.lowercased().contains(searchString.lowercased())
-        })
+        if searchString != "" {
+            self.filteredResultsArray = allResultsArray.filter({( athlete: JSON) -> Bool in
+                return athlete["Name"].stringValue.lowercased().contains(searchString.lowercased())
+            })
+        } else {
+            self.filteredResultsArray = self.allResultsArray
+        }
         self.tableView.reloadData()
     }
     
-    var filteredResultsArray = [Athlete]()
-    var allResultsArray = [Athlete]()
+    var filteredResultsArray = [JSON()]
+    var allResultsArray = [JSON()]
     var shouldShowSearchResults = false
     var searchController: UISearchController!
     var searchControllerHeight = 0
     var schoolID = ""
+    var schoolName = ""
     var sportMode = ""
     
     override func viewDidLoad() {
@@ -32,15 +38,17 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         //configureTableView()
         //configureSearchController()
         teamRequest(schoolID: self.schoolID, type: self.sportMode) { TokenData, TeamData in
-            self.allResultsArray = TeamData.athletes
-            self.filteredResultsArray = TeamData.athletes
+            self.allResultsArray = TeamData["athletes"].arrayValue
+            print(self.allResultsArray)
+            self.filteredResultsArray = TeamData["athletes"].arrayValue
             self.tableView.reloadData()
 
         }
-        self.configureTableView()
+        // self.configureTableView()
         self.configureSearchController()
         print(self.schoolID)
         print(self.sportMode)
+        //salf.navigationController?
     }
     func configureSearchController() {
         searchController = UISearchController(searchResultsController: nil)
@@ -51,10 +59,10 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         searchController.searchBar.sizeToFit()
         searchController.definesPresentationContext = true
         self.tableView.tableHeaderView = searchController.searchBar
-        
+        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         
     }
-    func configureTableView() {
+    /*func configureTableView() {
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
         let displayWidth: CGFloat = self.view.frame.size.width
         let displayHeight: CGFloat = self.view.frame.size.height
@@ -66,7 +74,7 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         // self.tableView.rowHeight = (displayHeight - barHeight) / 10
         //myTableView.isHidden = true
         //self.view.addSubview(myTableView)
-    }
+    }*/
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if self.shouldShowSearchResults {
             return self.filteredResultsArray.count
@@ -79,22 +87,30 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell")!
         if self.shouldShowSearchResults {
-            cell.textLabel?.text = filteredResultsArray[indexPath.row].name
+            cell.textLabel?.text = filteredResultsArray[indexPath.row]["Name"].stringValue
         } else {
-            cell.textLabel?.text = allResultsArray[indexPath.row].name
+            cell.textLabel?.text = allResultsArray[indexPath.row]["Name"].stringValue
         }
         
         return cell
     }
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //get the cell based on the indexPath
+        var cellJSON: JSON
         if self.shouldShowSearchResults {
-            let name = filteredResultsArray[indexPath[1]].name
-            print(name)
+            cellJSON = filteredResultsArray[indexPath[1]]
         } else {
-            let name = allResultsArray[indexPath[1]].name
-            print(name)
+            cellJSON = allResultsArray[indexPath[1]]
         }
+        print(cellJSON)
+        UserDefaults.standard.set(cellJSON["Name"], forKey:"athleteName")
+        UserDefaults.standard.set(cellJSON["Id"], forKey:"athleteID")
+        UserDefaults.standard.set(self.schoolID, forKey:"teamID")
+        UserDefaults.standard.set(self.schoolName, forKey:"teamName")
+        UserDefaults.standard.set(self.sportMode, forKey:"sportMode")
+        UserDefaults.standard.set(true, forKey:"finishedSetup")
+        self.tabBarController?.tabBar.isHidden = false
+
     }
 
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
