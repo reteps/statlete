@@ -31,6 +31,8 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
     var schoolID = ""
     var schoolName = ""
     var sportMode = ""
+    var athleteSelection:((String) -> ())?
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,8 +48,6 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         }
         // self.configureTableView()
         self.configureSearchController()
-        print(self.schoolID)
-        print(self.sportMode)
         //salf.navigationController?
     }
     func configureSearchController() {
@@ -102,15 +102,15 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         } else {
             cellJSON = allResultsArray[indexPath[1]]
         }
-        print(cellJSON)
-        UserDefaults.standard.set(cellJSON["Name"], forKey:"athleteName")
-        UserDefaults.standard.set(cellJSON["Id"], forKey:"athleteID")
+        self.athleteSelection!(cellJSON["Name"].stringValue)
+        UserDefaults.standard.set(cellJSON["Name"].stringValue, forKey:"athleteName")
+        UserDefaults.standard.set(cellJSON["ID"].intValue, forKey:"athleteID")
         UserDefaults.standard.set(self.schoolID, forKey:"teamID")
         UserDefaults.standard.set(self.schoolName, forKey:"teamName")
         UserDefaults.standard.set(self.sportMode, forKey:"sportMode")
         UserDefaults.standard.set(true, forKey:"finishedSetup")
         self.tabBarController?.tabBar.isHidden = false
-
+        self.navigationController?.popViewController(animated: true)
     }
 
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {

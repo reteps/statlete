@@ -1,18 +1,18 @@
 //
-//  IndividualAthleteController.swift
+//  TeamStatsController.swift
 //  Statlete
 //
-//  Created by Peter Stenger on 9/26/18.
+//  Created by Peter Stenger on 9/28/18.
 //  Copyright © 2018 Peter Stenger. All rights reserved.
 //
 
 import UIKit
 
-class IndividualAthleteController: UIViewController {
+class TeamStatsController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Stats"
+
         // Do any additional setup after loading the view.
     }
     

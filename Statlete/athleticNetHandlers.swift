@@ -58,7 +58,7 @@ func searchRequest(search: String, searchType: String, completionHandler: @escap
 }
 struct Athlete {
     var name: String
-    var athleteID: String
+    var athleteID: Int
     var times: [String: AthleteEvent]
     
 }
@@ -88,7 +88,7 @@ func formatEventTime(s: String) -> Date {
     }
     return dateFormatter.date(from: s)!
 }
-func individualAthlete(athleteID: String, athleteName: String, type: String) -> Athlete? {
+func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Athlete? {
     let url = URL(string: "https://www.athletic.net/\(type)/Athlete.aspx?AID=\(athleteID)#!/L0")
     if let doc = try? HTML(url: url!, encoding: .utf8) {
         var athlete = Athlete(name: athleteName, athleteID: athleteID, times: [:])

@@ -34,31 +34,28 @@ class SettingsController: UIViewController {
     var selectedSegmentIndex: Int = 0
     let teamButton = UIButton()
     let segmentedControl = UISegmentedControl(items: ["Cross Country", "Track"])
-    let setupComplete = UserDefaults.standard.bool(forKey: "finishedSetup")
     let athleteButton = UIButton()
     let spectateButton = UIButton()
     var schoolID = ""
     var schoolName = ""
+    var setupComplete = false
     let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Settings"
         self.view.backgroundColor = .white
+        CreateModeSwitcher()
+        CreateSearchTeamButton()
         if setupComplete {
-            let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(handleClick))
-            self.navigationItem.leftBarButtonItem = settingsButton
-            let athlete = individualAthlete(athleteID: "11555581", athleteName: "bob", type: "TrackAndField")
-            
-        } else {
-            self.tabBarController?.tabBar.isHidden = true
-            CreateModeSwitcher()
-            CreateSearchTeamButton()
+            self.schoolName = UserDefaults.standard.string(forKey: "teamName")!
+            self.schoolID = UserDefaults.standard.string(forKey: "teamID")!
+            let athleteName = UserDefaults.standard.string(forKey: "athleteName")!
+            self.teamButton.setTitle(self.schoolName + " >", for: .normal)
+            self.CreateSearchAthleteButton()
+            self.athleteButton.setTitle(athleteName + " >", for: .normal)
+            // self.CreateSpectateButton()
         }
 
-    }
-    @objc func handleClick(sender: UIBarButtonItem) {
-        print("settings clicked")
     }
     @objc func buttonAction(sender: UIButton!) {
         if (sender == teamButton) {
@@ -78,9 +75,12 @@ class SettingsController: UIViewController {
             athleteSearch.sportMode = modes[segmentedControl.selectedSegmentIndex]
             athleteSearch.schoolID = self.schoolID
             athleteSearch.schoolName = self.schoolName
+            athleteSearch.athleteSelection = { (athleteName) in
+                self.athleteButton.setTitle(athleteName, for: .normal)
+            }
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         } else if sender == spectateButton {
-            print("person is spectator")
+            print("ahhh")
         }
     }
 
@@ -142,7 +142,4 @@ class SettingsController: UIViewController {
     }
 
 
-
 }
-
-
