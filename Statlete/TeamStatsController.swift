@@ -9,6 +9,9 @@
 import UIKit
 
 class TeamStatsController: UIViewController {
+    var schoolName = UserDefaults.standard.string(forKey: "schoolName")
+    let sportMode = UserDefaults.standard.string(forKey: "sportMode")
+    var schoolID = UserDefaults.standard.string(forKey: "schoolID")
 
     override func viewDidLoad() {
         super.viewDidLoad()

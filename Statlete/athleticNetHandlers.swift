@@ -22,7 +22,6 @@ func teamRequest(schoolID: String, type: String = "CrossCountry", completionHand
         let jsonTeamData = rawTeamData.data(using: .utf8, allowLossyConversion: false)!
         let parsedTokenData = try! JSON(data: jsonTokenData)
         let parsedTeamData = try! JSON(data: jsonTeamData)
-        // print("\n\n", tokenData[0][1].count)
         completionHandler(parsedTokenData, parsedTeamData)
     }
 
@@ -41,7 +40,7 @@ func searchRequest(search: String, searchType: String, completionHandler: @escap
         let json = response.data
         do {
             var searchResults: [[String: String]] = []
-            let parsedJson = JSON(json)
+            let parsedJson = JSON(json!)
             if let doc = try? Kanna.HTML(html: parsedJson["d"]["results"].stringValue, encoding: .utf8) {
                 for row in doc.css("td:nth-child(2)") {
                     let link = row.at_css("a.result-title-tf")!
@@ -59,7 +58,7 @@ func searchRequest(search: String, searchType: String, completionHandler: @escap
 struct Athlete {
     var name: String
     var athleteID: Int
-    var times: [String: AthleteEvent]
+    var events: [String: AthleteEvent]
     
 }
 struct AthleteEvent {
@@ -91,7 +90,7 @@ func formatEventTime(s: String) -> Date {
 func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Athlete? {
     let url = URL(string: "https://www.athletic.net/\(type)/Athlete.aspx?AID=\(athleteID)#!/L0")
     if let doc = try? HTML(url: url!, encoding: .utf8) {
-        var athlete = Athlete(name: athleteName, athleteID: athleteID, times: [:])
+        var athlete = Athlete(name: athleteName, athleteID: athleteID, events: [:])
         for season in doc.css(".season") {
             // https://stackoverflow.com/questions/39677330/how-does-string-substring-work-in-swift
             let year = season.className!.split(separator: " ")[4].suffix(4)
@@ -111,20 +110,20 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                     let date = formatEventDate(s: race.at_css("td[style='width: 60px;']")!.text! + " " + year)
                     eventTimes.append(AthleteTime(name: name, time: time, date: date))
                 }
-                if athlete.times[event] == nil {
-                    athlete.times[event] = AthleteEvent(fastest: nil, slowest: nil, first: nil, last: nil, times: eventTimes)
+                if athlete.events[event] == nil {
+                    athlete.events[event] = AthleteEvent(fastest: nil, slowest: nil, first: nil, last: nil, times: eventTimes)
                 } else {
-                    athlete.times[event]?.times += eventTimes
+                    athlete.events[event]?.times += eventTimes
                 }
             }
         }
         
-        for (eventName, event) in athlete.times {
+        for (eventName, event) in athlete.events {
             // https://stackoverflow.com/questions/24781027/how-do-you-sort-an-array-of-structs-in-swift
-            athlete.times[eventName]?.slowest = event.times.min { $0.time > $1.time }!
-            athlete.times[eventName]?.fastest = event.times.max { $0.time > $1.time}!
-            athlete.times[eventName]?.first = event.times.max { $0.date > $1.date}!
-            athlete.times[eventName]?.last = event.times.min { $0.date > $1.date}!
+            athlete.events[eventName]?.slowest = event.times.min { $0.time > $1.time }!
+            athlete.events[eventName]?.fastest = event.times.max { $0.time > $1.time}!
+            athlete.events[eventName]?.first = event.times.max { $0.date > $1.date}!
+            athlete.events[eventName]?.last = event.times.min { $0.date > $1.date}!
 
         }
         // http://nsdateformatter.com/

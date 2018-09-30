@@ -7,17 +7,47 @@
 //
 
 import UIKit
+import Charts
+import SnapKit
 
 class IndividualStatsController: UIViewController {
-
+    var athleteName = UserDefaults.standard.string(forKey: "athleteName")
+    let sportMode = UserDefaults.standard.string(forKey: "sportMode")
+    var athleteID = UserDefaults.standard.integer(forKey: "athleteID")
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.title = "Stats"
-        self.view.backgroundColor = .white        
-        let athleteName = UserDefaults.standard.string(forKey: "athleteName")!
-        let sportMode = UserDefaults.standard.string(forKey: "sportMode")!
-        let athleteID = UserDefaults.standard.integer(forKey: "athleteID")
-        let athlete = individualAthlete(athleteID: athleteID, athleteName: athleteName, type: sportMode)
+        self.view.backgroundColor = .white
+    }
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
+        let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
+        let chart = LineChartView()
+        var lineChartEntries = [ChartDataEntry]()
+
+        for event in athlete.events.values.first!.times {
+            let point = ChartDataEntry(x: event.time.timeIntervalSince1970, y: event.date.timeIntervalSince1970)
+            print(point)
+            lineChartEntries.append(point)
+        }
+        let line = LineChartDataSet(values: lineChartEntries, label: "Number")
+        line.colors = [.blue]
+        let data = LineChartData()
+        data.addDataSet(line)
+        chart.data = data
+        chart.chartDescription?.text = "My awesome chart"
+        self.view.addSubview(chart)
+        print(athleteName)
+        chart.snp.makeConstraints { (make) in
+            make.centerX.equalTo(self.view)
+            make.centerY.equalTo(self.view)
+            make.height.equalTo(500)
+            make.width.equalTo(500)
+        }
+        print(sportMode)
+        print(athleteID)
+        print(athlete.name)
+        
     }
     
 

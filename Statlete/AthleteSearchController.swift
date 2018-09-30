@@ -31,7 +31,7 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
     var schoolID = ""
     var schoolName = ""
     var sportMode = ""
-    var athleteSelection:((String) -> ())?
+    var athleteSelection:((Int, String) -> ())?
 
     
     override func viewDidLoad() {
@@ -41,7 +41,6 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         //configureSearchController()
         teamRequest(schoolID: self.schoolID, type: self.sportMode) { TokenData, TeamData in
             self.allResultsArray = TeamData["athletes"].arrayValue
-            print(self.allResultsArray)
             self.filteredResultsArray = TeamData["athletes"].arrayValue
             self.tableView.reloadData()
 
@@ -102,13 +101,14 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate, UISea
         } else {
             cellJSON = allResultsArray[indexPath[1]]
         }
-        self.athleteSelection!(cellJSON["Name"].stringValue)
+        print("selected item")
+        self.athleteSelection!(cellJSON["ID"].intValue, cellJSON["Name"].stringValue)
         UserDefaults.standard.set(cellJSON["Name"].stringValue, forKey:"athleteName")
         UserDefaults.standard.set(cellJSON["ID"].intValue, forKey:"athleteID")
-        UserDefaults.standard.set(self.schoolID, forKey:"teamID")
-        UserDefaults.standard.set(self.schoolName, forKey:"teamName")
+        UserDefaults.standard.set(self.schoolID, forKey:"schoolID")
+        UserDefaults.standard.set(self.schoolName, forKey:"schoolName")
         UserDefaults.standard.set(self.sportMode, forKey:"sportMode")
-        UserDefaults.standard.set(true, forKey:"finishedSetup")
+        UserDefaults.standard.set(true, forKey:"setupComplete")
         self.tabBarController?.tabBar.isHidden = false
         self.navigationController?.popViewController(animated: true)
     }

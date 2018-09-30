@@ -47,13 +47,13 @@ class SettingsController: UIViewController {
         CreateModeSwitcher()
         CreateSearchTeamButton()
         if setupComplete {
-            self.schoolName = UserDefaults.standard.string(forKey: "teamName")!
-            self.schoolID = UserDefaults.standard.string(forKey: "teamID")!
+            self.schoolName = UserDefaults.standard.string(forKey: "schoolName")!
+            self.schoolID = UserDefaults.standard.string(forKey: "schoolID")!
             let athleteName = UserDefaults.standard.string(forKey: "athleteName")!
             self.teamButton.setTitle(self.schoolName + " >", for: .normal)
             self.CreateSearchAthleteButton()
             self.athleteButton.setTitle(athleteName + " >", for: .normal)
-            // self.CreateSpectateButton()
+            self.CreateSpectateButton()
         }
 
     }
@@ -75,12 +75,13 @@ class SettingsController: UIViewController {
             athleteSearch.sportMode = modes[segmentedControl.selectedSegmentIndex]
             athleteSearch.schoolID = self.schoolID
             athleteSearch.schoolName = self.schoolName
-            athleteSearch.athleteSelection = { (athleteName) in
+            athleteSearch.athleteSelection = { (_, athleteName) in
                 self.athleteButton.setTitle(athleteName, for: .normal)
+                self.navigationController?.popViewController(animated: true)
             }
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         } else if sender == spectateButton {
-            print("ahhh")
+            print("spectate Button clicked")
         }
     }
 
@@ -91,7 +92,7 @@ class SettingsController: UIViewController {
         self.view.addSubview(segmentedControl)
         segmentedControl.snp.makeConstraints { make in
             make.centerX.equalTo(self.view)
-            make.centerY.equalTo(self.view).offset(-200)
+            make.centerY.equalTo(self.view).offset(-100)
             make.height.equalTo(50)
             make.width.equalTo(300)
         }
@@ -105,7 +106,7 @@ class SettingsController: UIViewController {
         self.view.addSubview(teamButton)
         teamButton.snp.makeConstraints { (make) in
             make.centerX.equalTo(self.view)
-            make.centerY.equalTo(self.view).offset(-100)
+            make.centerY.equalTo(self.view).offset(-200)
             make.height.equalTo(50)
             make.width.equalTo(150)
         }
