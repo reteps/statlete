@@ -45,8 +45,8 @@ func searchRequest(search: String, searchType: String, completionHandler: @escap
                 for row in doc.css("td:nth-child(2)") {
                     let link = row.at_css("a.result-title-tf")!
                     let location = row.at_css("a[target=_blank]")!
-                    let schoolID = link["href"]!.components(separatedBy: "SchoolID=")[1]
-                    searchResults.append(["location": location.text!, "school": link.text!, "id":schoolID])
+                    let schoolID = link["href"]!.components(separatedBy: "=")[1]
+                    searchResults.append(["location": location.text!, "result": link.text!, "id":schoolID])
                 }
             }
             completionHandler(searchResults)
@@ -120,10 +120,11 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
         
         for (eventName, event) in athlete.events {
             // https://stackoverflow.com/questions/24781027/how-do-you-sort-an-array-of-structs-in-swift
+            athlete.events[eventName]?.times = event.times.sorted { $0.date < $1.date }
             athlete.events[eventName]?.slowest = event.times.min { $0.time > $1.time }!
             athlete.events[eventName]?.fastest = event.times.max { $0.time > $1.time}!
-            athlete.events[eventName]?.first = event.times.max { $0.date > $1.date}!
-            athlete.events[eventName]?.last = event.times.min { $0.date > $1.date}!
+            athlete.events[eventName]?.first = event.times[0]
+            athlete.events[eventName]?.last = event.times[event.times.count - 1]
 
         }
         // http://nsdateformatter.com/

@@ -26,7 +26,12 @@ class IndividualStatsController: UIViewController {
         var lineChartEntries = [ChartDataEntry]()
 
         for event in athlete.events.values.first!.times {
-            let point = ChartDataEntry(x: event.time.timeIntervalSince1970, y: event.date.timeIntervalSince1970)
+            // https://stackoverflow.com/questions/41720445/ios-charts-3-0-align-x-labels-dates-with-plots/41959257#41959257
+            let fastest = athlete.events.values.first!.fastest!.time.timeIntervalSince1970
+            let first = athlete.events.values.first!.first!.date.timeIntervalSince1970
+            let timeInSeconds = event.time.timeIntervalSince1970
+            let dateInSeconds = event.date.timeIntervalSince1970
+            let point = ChartDataEntry(x: dateInSeconds - first, y: timeInSeconds - fastest)
             print(point)
             lineChartEntries.append(point)
         }
