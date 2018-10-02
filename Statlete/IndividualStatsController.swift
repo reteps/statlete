@@ -18,41 +18,54 @@ class IndividualStatsController: UIViewController {
         super.viewDidLoad()
         self.view.backgroundColor = .white
     }
+    func createLineChartData(event: [String: AthleteSeason]) -> [LineChartDataSet] {
+        let fastest = event.values.max { $0.fastest!.time > $1.fastest!.time}?.fastest!.date.timeIntervalSince1970
+        let earliest = event.values.min { $0.earliest!.date > $1.earliest!.date}?.earliest!.time.timeIntervalSince1970
+        var lines = [LineChartDataSet]()
+        for (year, season) in event {
+            // https://stackoverflow.com/questions/41720445/ios-charts-3-0-align-x-labels-dates-with-plots/41959257#41959257
+            var lineChartEntries = [ChartDataEntry]()
+            for race in season.times {
+                print(race.date)
+                // https://stackoverflow.com/questions/52337853/date-from-calendar-datecomponents-returning-nil-in-swift/52337942
+                var components = Calendar.current.dateComponents([.day, .month, .year], from: race.date)
+                components.year = 2000
+                let newDate = Calendar.current.date(from: components)
+                let point = ChartDataEntry(x: newDate!.timeIntervalSince1970 - earliest!, y: race.time.timeIntervalSince1970 - fastest!)
+                lineChartEntries.append(point)
+            }
+            let line = LineChartDataSet(values: lineChartEntries, label: year)
+            // https://stackoverflow.com/questions/29779128/how-to-make-a-random-color-with-swift
+            line.colors = [UIColor(
+                red: CGFloat.random(in: 0...1),
+                green: CGFloat.random(in: 0...1),
+                blue: CGFloat.random(in: 0...1),
+                alpha: 1.0)]
+            lines.append(line)
+        }
+        return lines
+    }
+    // https://medium.com/app-coder-io/33-ios-open-source-libraries-that-will-dominate-2017-4762cf3ce449
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
         let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
         let chart = LineChartView()
-        var lineChartEntries = [ChartDataEntry]()
-
-        for event in athlete.events.values.first!.times {
-            // https://stackoverflow.com/questions/41720445/ios-charts-3-0-align-x-labels-dates-with-plots/41959257#41959257
-            let fastest = athlete.events.values.first!.fastest!.time.timeIntervalSince1970
-            let first = athlete.events.values.first!.first!.date.timeIntervalSince1970
-            let timeInSeconds = event.time.timeIntervalSince1970
-            let dateInSeconds = event.date.timeIntervalSince1970
-            let point = ChartDataEntry(x: dateInSeconds - first, y: timeInSeconds - fastest)
-            print(point)
-            lineChartEntries.append(point)
-        }
-        let line = LineChartDataSet(values: lineChartEntries, label: "Number")
-        line.colors = [.blue]
+        let event = athlete.events["5,000 Meters"]!
+        let lines = createLineChartData(event: event)
         let data = LineChartData()
-        data.addDataSet(line)
-        chart.data = data
-        chart.chartDescription?.text = "My awesome chart"
-        self.view.addSubview(chart)
-        print(athleteName)
-        chart.snp.makeConstraints { (make) in
-            make.centerX.equalTo(self.view)
-            make.centerY.equalTo(self.view)
-            make.height.equalTo(500)
-            make.width.equalTo(500)
+        for line in lines {
+            data.addDataSet(line)
         }
-        print(sportMode)
-        print(athleteID)
-        print(athlete.name)
-        
+
+        chart.data = data
+        chart.chartDescription?.text = self.athleteName!
+        self.view.addSubview(chart)
+        chart.snp.makeConstraints { (make) in
+            // http://snapkit.io/docs/
+            // top left bottom right
+            make.edges.equalTo(self.view).inset(UIEdgeInsets(top: 100, left: 0, bottom: 0, right: 0))
+        }
     }
     
 

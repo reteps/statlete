@@ -58,15 +58,16 @@ func searchRequest(search: String, searchType: String, completionHandler: @escap
 struct Athlete {
     var name: String
     var athleteID: Int
-    var events: [String: AthleteEvent]
+    var events: [String: [String: AthleteSeason]]
+    // event: season: times
     
 }
-struct AthleteEvent {
+struct AthleteSeason {
     var fastest: AthleteTime?
     var slowest: AthleteTime?
-    var first: AthleteTime?
-    var last: AthleteTime?
-    var times: [AthleteTime]
+    var earliest: AthleteTime?
+    var latest: AthleteTime?
+    var times: [AthleteTime] // all times (for sorting)
 }
 struct AthleteTime {
     var name: String
@@ -89,15 +90,16 @@ func formatEventTime(s: String) -> Date {
 }
 func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Athlete? {
     let url = URL(string: "https://www.athletic.net/\(type)/Athlete.aspx?AID=\(athleteID)#!/L0")
+    print(url)
     if let doc = try? HTML(url: url!, encoding: .utf8) {
         var athlete = Athlete(name: athleteName, athleteID: athleteID, events: [:])
         for season in doc.css(".season") {
             // https://stackoverflow.com/questions/39677330/how-does-string-substring-work-in-swift
-            let year = season.className!.split(separator: " ")[4].suffix(4)
+            let year = String(season.className!.split(separator: " ")[4].suffix(4))
             let headerTags = season.xpath(".//h5[not(@class) or @class=\"bold\"]")
             for (index, section) in season.css("table").enumerated() {
                 let event = headerTags[index].text!
-                var eventTimes: [AthleteTime] = []
+                var times: [AthleteTime] = []
                 // skip over all non-running events
                 if section.at_css("tr > td:nth-child(2)")!.text!.range(of:"'") != nil {
                     continue
@@ -105,27 +107,34 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                 for race in section.css("tr") {
                     // https://github.com/tid-kijyun/Kanna/issues/127
                     let name = race.at_xpath(".//td[4]/a/text()")!.text!
-                    let raw_time = try? race.at_xpath(".//td[2]/a/text()|.//td[2]/text()")!.text!
-                    let time = formatEventTime(s: raw_time!.replacingOccurrences(of: "h", with: ""))
+                    let rawTime = race.at_xpath(".//td[2]/a/text()|.//td[2]/text()")
+                    if rawTime == nil {
+                        print("skipping")
+                        continue
+                    }
+                    let time = formatEventTime(s: rawTime!.text!.replacingOccurrences(of: "h", with: ""))
                     let date = formatEventDate(s: race.at_css("td[style='width: 60px;']")!.text! + " " + year)
-                    eventTimes.append(AthleteTime(name: name, time: time, date: date))
+                    times.append(AthleteTime(name: name, time: time, date: date))
                 }
                 if athlete.events[event] == nil {
-                    athlete.events[event] = AthleteEvent(fastest: nil, slowest: nil, first: nil, last: nil, times: eventTimes)
+                    athlete.events[event] = [String: AthleteSeason]()
+                } else if athlete.events[event]?[year] == nil {
+                    athlete.events[event]?[year] = AthleteSeason(fastest: nil, slowest: nil, earliest: nil, latest: nil, times: times)
                 } else {
-                    athlete.events[event]?.times += eventTimes
+                    athlete.events[event]?[year]?.times += times
                 }
             }
         }
-        
+        // do this afterward because seasons could be out of order
         for (eventName, event) in athlete.events {
             // https://stackoverflow.com/questions/24781027/how-do-you-sort-an-array-of-structs-in-swift
-            athlete.events[eventName]?.times = event.times.sorted { $0.date < $1.date }
-            athlete.events[eventName]?.slowest = event.times.min { $0.time > $1.time }!
-            athlete.events[eventName]?.fastest = event.times.max { $0.time > $1.time}!
-            athlete.events[eventName]?.first = event.times[0]
-            athlete.events[eventName]?.last = event.times[event.times.count - 1]
-
+            for (year, season) in event {
+                athlete.events[eventName]?[year]?.times = season.times.sorted { $0.date < $1.date }
+            athlete.events[eventName]?[year]?.slowest = season.times.min { $0.time > $1.time }!
+            athlete.events[eventName]?[year]?.fastest = season.times.max { $0.time > $1.time}!
+            athlete.events[eventName]?[year]?.earliest = season.times[0]
+            athlete.events[eventName]?[year]?.latest = season.times[season.times.count - 1]
+            }
         }
         // http://nsdateformatter.com/
         // https://waracle.com/iphone-nsdateformatter-date-formatting-table/
@@ -134,3 +143,4 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
     }
     return nil
 }
+
