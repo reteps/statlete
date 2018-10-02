@@ -21,6 +21,8 @@ class OptionsController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
+        setDefaultValues()
+
     }
     //https://stackoverflow.com/questions/11254697/difference-between-viewdidload-and-viewdidappear
     //https://stackoverflow.com/questions/5630649/what-is-the-difference-between-viewwillappear-and-viewdidappear
@@ -30,7 +32,6 @@ class OptionsController: UIViewController {
         self.setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
             print("setup is complete")
-            setDefaultValues()
             CreateSearchAthleteButton()
             CreateSearchTeamButton()
             let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(handleClick))
@@ -62,13 +63,16 @@ class OptionsController: UIViewController {
         print("button pressed")
         if (sender == teamButton) {
             let teamSearch = TeamSearchController()
-            teamSearch.teamSelection = { (schoolID, schoolName) -> () in
+            teamSearch.teamSelection = { (schoolID, schoolName) in
+                print(schoolID, schoolName)
                 let teamStats = self.tabBarController!.viewControllers![1] as! TeamStatsController
                 self.schoolName = schoolName
                 self.schoolID = schoolID
                 teamStats.schoolID = schoolID
                 teamStats.schoolName = schoolName
                 self.teamButton.setTitle(self.schoolName + " >", for: .normal)
+                self.athleteButton.setTitle("Choose Athlete", for: .normal)
+
             }
             self.navigationController?.pushViewController(teamSearch, animated: true)
             

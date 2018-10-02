@@ -59,7 +59,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearch
             return cell
         }()
         if self.shouldShowSearchResults {
-            cell.textLabel?.text = searchResultsArray[indexPath.row]["school"]!
+            cell.textLabel?.text = searchResultsArray[indexPath.row]["result"]!
             cell.detailTextLabel?.text = searchResultsArray[indexPath.row]["location"]!
         }
         
@@ -71,7 +71,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearch
         // self.isHidden = true
         // https://www.codementor.io/kevinfarst/exploring-swift-closures-ar1ns9xn6
         let cell = searchResultsArray[indexPath[1]]
-        self.teamSelection!(cell["id"]!, cell["school"]!)
+        self.teamSelection!(cell["id"]!, cell["result"]!)
         searchController.isActive = false
         self.navigationController?.popViewController(animated: true)
     }

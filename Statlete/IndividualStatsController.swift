@@ -14,10 +14,8 @@ class IndividualStatsController: UIViewController {
     var athleteName = UserDefaults.standard.string(forKey: "athleteName")
     let sportMode = UserDefaults.standard.string(forKey: "sportMode")
     var athleteID = UserDefaults.standard.integer(forKey: "athleteID")
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.view.backgroundColor = .white
-    }
+    let chart = LineChartView()
+
     func createLineChartData(event: [String: AthleteSeason]) -> [LineChartDataSet] {
         let fastest = event.values.max { $0.fastest!.time > $1.fastest!.time}?.fastest!.date.timeIntervalSince1970
         let earliest = event.values.min { $0.earliest!.date > $1.earliest!.date}?.earliest!.time.timeIntervalSince1970
@@ -50,7 +48,7 @@ class IndividualStatsController: UIViewController {
         super.viewDidAppear(animated)
         // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
         let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
-        let chart = LineChartView()
+        
         let event = athlete.events["5,000 Meters"]!
         let lines = createLineChartData(event: event)
         let data = LineChartData()
@@ -58,25 +56,18 @@ class IndividualStatsController: UIViewController {
             data.addDataSet(line)
         }
 
-        chart.data = data
-        chart.chartDescription?.text = self.athleteName!
-        self.view.addSubview(chart)
-        chart.snp.makeConstraints { (make) in
+        self.chart.data = data
+        self.chart.chartDescription?.text = self.athleteName!
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.view.backgroundColor = .white
+        self.view.addSubview(self.chart)
+        self.chart.snp.makeConstraints { (make) in
             // http://snapkit.io/docs/
             // top left bottom right
             make.edges.equalTo(self.view).inset(UIEdgeInsets(top: 100, left: 0, bottom: 0, right: 0))
         }
     }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
