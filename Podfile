@@ -9,4 +9,7 @@ target 'Statlete' do
     pod 'SwiftyJSON', '~> 4.0'
     pod 'Charts', '~>3.0'
     pod 'FontAwesome.swift', '~>1.4'
+    pod 'RxSwift', '~>4.0'
+    pod 'ChameleonFramework/Swift', :git => 'https://github.com/ViccAlexander/Chameleon.git'
+    pod 'RxCocoa', '~>4.0'
 end

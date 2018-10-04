@@ -143,4 +143,3 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
     }
     return nil
 }
-

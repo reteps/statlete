@@ -1,18 +1,27 @@
 PODS:
   - Alamofire (4.7.3)
+  - ChameleonFramework/Default (2.1.0)
+  - ChameleonFramework/Swift (2.1.0):
+    - ChameleonFramework/Default
   - Charts (3.2.0):
     - Charts/Core (= 3.2.0)
   - Charts/Core (3.2.0)
   - FontAwesome.swift (1.4.4)
   - Kanna (4.0.2)
+  - RxCocoa (4.3.0):
+    - RxSwift (~> 4.0)
+  - RxSwift (4.3.0)
   - SnapKit (4.0.1)
   - SwiftyJSON (4.1.0)
 
 DEPENDENCIES:
   - Alamofire (~> 4.7)
+  - ChameleonFramework/Swift (from `https://github.com/ViccAlexander/Chameleon.git`)
   - Charts (~> 3.0)
   - FontAwesome.swift (~> 1.4)
   - Kanna (~> 4.0.0)
+  - RxCocoa
+  - RxSwift (~> 4.0)
   - SnapKit (~> 4.0.0)
   - SwiftyJSON (~> 4.0)
 
@@ -22,17 +31,31 @@ SPEC REPOS:
     - Charts
     - FontAwesome.swift
     - Kanna
+    - RxCocoa
+    - RxSwift
     - SnapKit
     - SwiftyJSON
 
+EXTERNAL SOURCES:
+  ChameleonFramework:
+    :git: https://github.com/ViccAlexander/Chameleon.git
+
+CHECKOUT OPTIONS:
+  ChameleonFramework:
+    :commit: 6dd284bde21ea2e7f9fd89bc36f40df16e16369d
+    :git: https://github.com/ViccAlexander/Chameleon.git
+
 SPEC CHECKSUMS:
   Alamofire: c7287b6e5d7da964a70935e5db17046b7fde6568
+  ChameleonFramework: d21a3cc247abfe5e37609a283a8238b03575cf64
   Charts: 680c8328bd5e90cb14f67e00d2176f3113d19141
   FontAwesome.swift: 17b93524b9f61136a8566344517b8556ed584e87
   Kanna: c60b61d72554bf04ed1ee074f9b379855cab4892
+  RxCocoa: 71b9cce833fbcb89a8eec11816dd225830c2bd3c
+  RxSwift: a9717a34df3179fe63563f76e046ad345078dd3a
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
   SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
 
-PODFILE CHECKSUM: 102b27a3ef7fa1d05ccaef3aad77c04388ef17a3
+PODFILE CHECKSUM: ad60ccb30a121da881630909ceb2fd064025b37c
 
 COCOAPODS: 1.5.3

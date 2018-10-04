@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import RxSwift
+import RxCocoa
 
 class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearchResultsUpdating {
 
@@ -33,6 +35,8 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearch
         
         
     }
+    // https://www.thedroidsonroids.com/blog/rxswift-by-examples-1-the-basics/
+
     func configureTableView() {
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
         // let displayWidth: CGFloat = self.view.frame.size.width

@@ -18,10 +18,10 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://www.appcoda.com/swift-delegate/
         let options = UINavigationController(rootViewController: OptionsController())
         let individual = IndividualStatsController()
-        let team = TeamStatsController()
-        let rankings = TeamRankingsController()
-        self.viewControllers = [options, team, individual, rankings]
-        let viewControllerIcons: [FontAwesome] = [.slidersH, .users, .user, .medal]
+        // let team = TeamStatsController()
+        // let rankings = TeamRankingsController()
+        self.viewControllers = [options, individual]
+        let viewControllerIcons: [FontAwesome] = [.slidersH, .user] //.users*, .medal
         for index in 0..<self.viewControllers!.count {
             
             let icon = UIImage.fontAwesomeIcon(name: viewControllerIcons[index], style: .solid, textColor: UIColor.black, size: CGSize(width: 40, height: 40))
@@ -38,7 +38,7 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         if setupComplete && spectatorMode {
             self.selectedIndex = 1
         } else if setupComplete {
-            self.selectedIndex = 2
+            self.selectedIndex = 1
         } else {
             self.selectedIndex = 0
         }

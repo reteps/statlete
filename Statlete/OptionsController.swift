@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import RxSwift
+import ChameleonFramework
 
 class OptionsController: UIViewController {
     var teamButton = UIButton()
@@ -21,7 +23,9 @@ class OptionsController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
+        self.setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         setDefaultValues()
+        
 
     }
     //https://stackoverflow.com/questions/11254697/difference-between-viewdidload-and-viewdidappear
@@ -29,7 +33,6 @@ class OptionsController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         print("view appearing")
-        self.setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
             print("setup is complete")
             CreateSearchAthleteButton()
