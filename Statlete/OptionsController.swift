@@ -20,6 +20,7 @@ class OptionsController: UIViewController {
     var sportMode = ""
     var athleteID = 0
     var setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
+    let disposeBag = DisposeBag()
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
@@ -66,17 +67,15 @@ class OptionsController: UIViewController {
         print("button pressed")
         if (sender == teamButton) {
             let teamSearch = TeamSearchController()
-            teamSearch.teamSelection = { (schoolID, schoolName) in
-                print(schoolID, schoolName)
+            teamSearch.selectedTeam.asObservable().subscribe(onNext: { team in
                 let teamStats = self.tabBarController!.viewControllers![1] as! TeamStatsController
-                self.schoolName = schoolName
-                self.schoolID = schoolID
-                teamStats.schoolID = schoolID
-                teamStats.schoolName = schoolName
+                self.schoolID = team["id"]!
+                self.schoolName = team["result"]!
+                teamStats.schoolID = self.schoolID
+                teamStats.schoolName = self.schoolName
                 self.teamButton.setTitle(self.schoolName + " >", for: .normal)
                 self.athleteButton.setTitle("Choose Athlete", for: .normal)
-
-            }
+            }).disposed(by: disposeBag)
             self.navigationController?.pushViewController(teamSearch, animated: true)
             
         } else if (sender == athleteButton) {
@@ -105,7 +104,7 @@ class OptionsController: UIViewController {
             make.centerX.equalTo(self.view)
             make.centerY.equalTo(self.view).offset(0)
             make.height.equalTo(50)
-            make.width.equalTo(150)
+            make.width.equalTo(300)
         }
     }
     func CreateSearchTeamButton() {
@@ -119,7 +118,7 @@ class OptionsController: UIViewController {
             make.centerX.equalTo(self.view)
             make.centerY.equalTo(self.view).offset(-200)
             make.height.equalTo(50)
-            make.width.equalTo(150)
+            make.width.equalTo(300)
         }
     }
 

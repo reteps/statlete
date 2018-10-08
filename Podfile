@@ -12,4 +12,5 @@ target 'Statlete' do
     pod 'RxSwift', '~>4.0'
     pod 'ChameleonFramework/Swift', :git => 'https://github.com/ViccAlexander/Chameleon.git'
     pod 'RxCocoa', '~>4.0'
+    pod 'ReachabilitySwift'
 end

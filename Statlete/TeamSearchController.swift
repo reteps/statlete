@@ -10,99 +10,69 @@ import UIKit
 import RxSwift
 import RxCocoa
 
-class TeamSearchController: UITableViewController, UISearchBarDelegate, UISearchResultsUpdating {
+class TeamSearchController: UITableViewController, UISearchBarDelegate {
 
-    var searchResultsArray = [[String:String]]()
-    var shouldShowSearchResults = false
     var searchController: UISearchController!
     var searchControllerHeight = 0
-    var teamSelection:((String, String) -> ())?
+    let disposeBag = DisposeBag()
+    let selectedTeam = PublishRelay<[String:String]>()
     override func viewDidLoad() {
         super.viewDidLoad()
         print("view loading...")
+        self.tableView.dataSource = nil
+        self.tableView.delegate = nil
+        // self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        // self.tableView.register(cellClass: myCell.self, forCellReuseIdentifier: "Cell")
         configureTableView()
         configureSearchController()
+        configureObservables()
     }
     func configureSearchController() {
         searchController = UISearchController(searchResultsController: nil)
         searchController.dimsBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search here..."
+
         searchController.searchBar.delegate = self
-        searchController.searchResultsUpdater = self
         searchController.searchBar.sizeToFit()
         searchController.definesPresentationContext = true
         self.tableView.tableHeaderView = searchController.searchBar
-        
-        
     }
+    func configureObservables() {
+        // https://medium.com/@navdeepsingh_2336/creating-an-ios-app-with-mvvm-and-rxswift-in-minutes-b8800633d2e8
+        // https://github.com/ReactiveX/RxSwift/issues/1714
+        let cancelTextObservable = self.searchController.searchBar.rx.textDidEndEditing.map({ _ in
+            return ""
+        })
+        let searchTextObservable = self.searchController.searchBar.rx.text.orEmpty.asObservable()
+        Observable.of(cancelTextObservable, searchTextObservable).merge()
+        .throttle(0.1, scheduler: MainScheduler.instance)
+            .flatMapLatest { text in
+                    return searchRequest(search: text, searchType: "t:t")
+            }
+            .bind(to: self.tableView.rx.items) { myTableView, row, element in
+                // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
+                let cell = myTableView.dequeueReusableCell(withIdentifier: "cell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
+                
+                cell.textLabel?.text = element["result"]!
+                cell.detailTextLabel?.text = element["location"]!
+                return cell
+            }.disposed(by: disposeBag)
+        
+        self.tableView.rx.modelSelected([String:String].self).bind(to: self.selectedTeam).disposed(by: disposeBag)
+        self.selectedTeam.asObservable().subscribe(onNext: { _ in
+            self.navigationController?.popViewController(animated: true)
+        })
+        // self.navigationController?.popViewController(animated: true)
+        // https://medium.com/@dhruv.n.singh/passing-data-between-viewcontrollers-using-rxswift-be763fe10ba7
+
+    }
+
     // https://www.thedroidsonroids.com/blog/rxswift-by-examples-1-the-basics/
 
     func configureTableView() {
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
-        // let displayWidth: CGFloat = self.view.frame.size.width
         let displayHeight: CGFloat = self.view.frame.size.height
-        
-        //myTableView = UITableView(frame: CGRect(x: 0, y: barHeight, width: displayWidth, height: displayHeight - barHeight))
-        //myTableView.dataSource = self
-        //myTableView.delegate = self
         self.tableView.rowHeight = (displayHeight - barHeight) / 10
-        //myTableView.isHidden = true
-        //self.view.addSubview(myTableView)
     }
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.searchResultsArray.count
-    }
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell: UITableViewCell = {
-            guard let cell = tableView.dequeueReusableCell(withIdentifier: "cell") else {
-                return UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
-            }
-            return cell
-        }()
-        if self.shouldShowSearchResults {
-            cell.textLabel?.text = searchResultsArray[indexPath.row]["result"]!
-            cell.detailTextLabel?.text = searchResultsArray[indexPath.row]["location"]!
-        }
-        
-        return cell
-    }
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        //get the cell based on the indexPath
-        //self.schoolID = searchResultsArray[indexPath[1]]["id"]!
-        // self.isHidden = true
-        // https://www.codementor.io/kevinfarst/exploring-swift-closures-ar1ns9xn6
-        let cell = searchResultsArray[indexPath[1]]
-        self.teamSelection!(cell["id"]!, cell["result"]!)
-        searchController.isActive = false
-        self.navigationController?.popViewController(animated: true)
-    }
-    func updateSearchResults(for searchController: UISearchController) {
-        let searchString = searchController.searchBar.text
-        if (searchString!.count >= 3) {
-            searchRequest(search: searchString!, searchType: "t:t") { response in
-                self.searchResultsArray = response
-                self.tableView.reloadData()
-            }
-        } else if searchResultsArray != [] {
-            searchResultsArray = []
-            self.tableView.reloadData()
-        }
-    }
-    public func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        self.shouldShowSearchResults = true
-        
-        self.tableView.reloadData()
-    }
-    
-    
-    public func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        self.shouldShowSearchResults = false
-        self.tableView.reloadData()
-        
-    }
-
 
 }

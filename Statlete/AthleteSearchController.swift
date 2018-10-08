@@ -27,14 +27,13 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         print("view loading...")
-        teamRequest(schoolID: self.schoolID, type: self.sportMode) { TokenData, TeamData in
-            self.allResultsArray = TeamData["athletes"].arrayValue
-            self.filteredResultsArray = TeamData["athletes"].arrayValue
-            self.tableView.reloadData()
-
+        teamRequest(schoolID: self.schoolID, type: self.sportMode).subscribe({ data in
+            //print(data)
         }
+        )
         self.configureSearchController()
     }
+    // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
     func configureSearchController() {
         searchController = UISearchController(searchResultsController: nil)
         searchController.dimsBackgroundDuringPresentation = false
@@ -47,6 +46,7 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
             self.filteredResultsArray = self.allResultsArray.filter( {
                     query == "" || $0["Name"].stringValue.lowercased().contains(query.lowercased())
             })
+        //self.filteredResultsArray.
             self.tableView.reloadData()
         }).disposed(by: disposeBag)
         self.tableView.tableHeaderView = searchController.searchBar

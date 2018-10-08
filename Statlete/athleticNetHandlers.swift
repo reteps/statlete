@@ -10,49 +10,64 @@ import Foundation
 import Alamofire
 import Kanna
 import SwiftyJSON
-
-func teamRequest(schoolID: String, type: String = "CrossCountry", completionHandler: @escaping (JSON, JSON) -> ()) {
-    let url = URL(string: "https://www.athletic.net/\(type)/School.aspx?SchoolID=\(schoolID)")!
-
-    Alamofire.request(url).responseString { response in
-        let htmlString = response.result.value!
-        let rawTokenData = htmlString.matchingStrings(regex: "constant\\(\"params\", (.+)\\)")[0][1]
-        let rawTeamData = htmlString.matchingStrings(regex: "constant\\(\"initialData\", (.+)\\)")[0][1]
-        let jsonTokenData = rawTokenData.data(using: .utf8, allowLossyConversion: false)!
-        let jsonTeamData = rawTeamData.data(using: .utf8, allowLossyConversion: false)!
-        let parsedTokenData = try! JSON(data: jsonTokenData)
-        let parsedTeamData = try! JSON(data: jsonTeamData)
-        completionHandler(parsedTokenData, parsedTeamData)
+import RxCocoa
+import RxSwift
+// http://adamborek.com/creating-observable-create-just-deferred/
+// https://github.com/NavdeepSinghh/RxSwift_MVVM_Finished/blob/master/Networking/ViewController.swift
+func teamRequest(schoolID: String, type: String = "CrossCountry") -> Observable<JSON> {
+    return Observable.create { observer in
+        let url = URL(string: "https://www.athletic.net/\(type)/School.aspx?SchoolID=\(schoolID)")!
+        Alamofire.request(url)
+        .responseString { response in
+            let htmlString = response.result.value!
+            let rawTokenData = htmlString.matchingStrings(regex: "constant\\(\"params\", (.+)\\)")[0][1]
+            let rawTeamData = htmlString.matchingStrings(regex: "constant\\(\"initialData\", (.+)\\)")[0][1]
+            let jsonTokenData = rawTokenData.data(using: .utf8, allowLossyConversion: false)!
+            let jsonTeamData = rawTeamData.data(using: .utf8, allowLossyConversion: false)!
+            let parsedTokenData = try! JSON(data: jsonTokenData)
+            let parsedTeamData = try! JSON(data: jsonTeamData)
+            observer.onNext(parsedTokenData)
+            observer.onNext(parsedTeamData)
+            observer.onCompleted()
+        }
+        return Disposables.create()
     }
 
 }
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
-
-func searchRequest(search: String, searchType: String, completionHandler: @escaping ([[String: String]]) -> ()) {
+// https://stackoverflow.com/questions/52656378/bind-alamofire-request-to-table-view-using-rxswift/52656720?noredirect=1#comment92244571_52656720
+func searchRequest(search: String, searchType: String) -> Observable<[[String:String]]> {
     let payload: [String: Any] = [
         "q": search,
         "fq": searchType,
         "start": 0
     ]
-    
+    if search.count < 3 {
+        return Observable.just([[String:String]]())
+    }
     let url = URL(string: "https://www.athletic.net/Search.aspx/runSearch")!
-    Alamofire.request(url, method: .post, parameters: payload, encoding: JSONEncoding.default).responseJSON { response in
-        let json = response.data
-        do {
-            var searchResults: [[String: String]] = []
-            let parsedJson = JSON(json!)
-            if let doc = try? Kanna.HTML(html: parsedJson["d"]["results"].stringValue, encoding: .utf8) {
+    return Observable.create { observer in
+        Alamofire.request(url, method: .post, parameters: payload, encoding: JSONEncoding.default).responseJSON { response in
+            let json = response.data
+            var results = [[String:String]]()
+
+            do {
+                var parsedJson = JSON(json!)
+
+                let doc = try! Kanna.HTML(html: parsedJson["d"]["results"].stringValue, encoding: .utf8)
                 for row in doc.css("td:nth-child(2)") {
                     let link = row.at_css("a.result-title-tf")!
                     let location = row.at_css("a[target=_blank]")!
                     let schoolID = link["href"]!.components(separatedBy: "=")[1]
-                    searchResults.append(["location": location.text!, "result": link.text!, "id":schoolID])
+                    results.append(["location": location.text!, "result": link.text!, "id": schoolID])
                 }
+            } catch let error {
+                observer.onError(error)
             }
-            completionHandler(searchResults)
-        } catch let error {
-            print(error)
+            observer.onNext(results)
+            observer.onCompleted()
         }
+        return Disposables.create()
     }
 }
 struct Athlete {
@@ -60,7 +75,7 @@ struct Athlete {
     var athleteID: Int
     var events: [String: [String: AthleteSeason]]
     // event: season: times
-    
+
 }
 struct AthleteSeason {
     var fastest: AthleteTime?
@@ -101,7 +116,7 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                 let event = headerTags[index].text!
                 var times: [AthleteTime] = []
                 // skip over all non-running events
-                if section.at_css("tr > td:nth-child(2)")!.text!.range(of:"'") != nil {
+                if section.at_css("tr > td:nth-child(2)")!.text!.range(of: "'") != nil {
                     continue
                 }
                 for race in section.css("tr") {
@@ -130,15 +145,15 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
             // https://stackoverflow.com/questions/24781027/how-do-you-sort-an-array-of-structs-in-swift
             for (year, season) in event {
                 athlete.events[eventName]?[year]?.times = season.times.sorted { $0.date < $1.date }
-            athlete.events[eventName]?[year]?.slowest = season.times.min { $0.time > $1.time }!
-            athlete.events[eventName]?[year]?.fastest = season.times.max { $0.time > $1.time}!
-            athlete.events[eventName]?[year]?.earliest = season.times[0]
-            athlete.events[eventName]?[year]?.latest = season.times[season.times.count - 1]
+                athlete.events[eventName]?[year]?.slowest = season.times.min { $0.time > $1.time }!
+                athlete.events[eventName]?[year]?.fastest = season.times.max { $0.time > $1.time }!
+                athlete.events[eventName]?[year]?.earliest = season.times[0]
+                athlete.events[eventName]?[year]?.latest = season.times[season.times.count - 1]
             }
         }
         // http://nsdateformatter.com/
         // https://waracle.com/iphone-nsdateformatter-date-formatting-table/
-        
+
         return athlete
     }
     return nil

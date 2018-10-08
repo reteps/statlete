@@ -10,6 +10,8 @@ import UIKit
 import Alamofire
 import Kanna
 import SnapKit
+import RxSwift
+import RxCocoa
 
 
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
@@ -38,6 +40,7 @@ class SettingsController: UIViewController {
     let spectateButton = UIButton()
     var schoolID = ""
     var schoolName = ""
+    let disposeBag = DisposeBag()
     var setupComplete = false
     let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
 
@@ -60,13 +63,14 @@ class SettingsController: UIViewController {
     @objc func buttonAction(sender: UIButton!) {
         if (sender == teamButton) {
             let teamSearch = TeamSearchController()
-            teamSearch.teamSelection = { (schoolID, schoolName) -> () in
-                self.schoolID = schoolID
-                self.schoolName = schoolName
-                self.teamButton.setTitle(schoolName + " >", for: .normal)
+            teamSearch.selectedTeam.asObservable().debug("receive").subscribe(onNext: { team in
+                self.schoolID = team["id"]!
+                self.schoolName = team["result"]!
+                self.teamButton.setTitle(self.schoolName + " >", for: .normal)
                 self.CreateSearchAthleteButton()
                 self.CreateSpectateButton()
-            }
+            }).disposed(by: disposeBag)
+            print("pushing team search")
             self.navigationController?.pushViewController(teamSearch, animated: true)
 
         } else if sender == athleteButton {
