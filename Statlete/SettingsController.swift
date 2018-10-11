@@ -79,10 +79,10 @@ class SettingsController: UIViewController {
             athleteSearch.sportMode = modes[segmentedControl.selectedSegmentIndex]
             athleteSearch.schoolID = self.schoolID
             athleteSearch.schoolName = self.schoolName
-            athleteSearch.athleteSelection = { (_, athleteName) in
+            /*athleteSearch.athleteSelection = { (_, athleteName) in
                 self.athleteButton.setTitle(athleteName, for: .normal)
                 self.navigationController?.popViewController(animated: true)
-            }
+            }*/
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         } else if sender == spectateButton {
             print("spectate Button clicked")

@@ -68,11 +68,11 @@ class OptionsController: UIViewController {
         if (sender == teamButton) {
             let teamSearch = TeamSearchController()
             teamSearch.selectedTeam.asObservable().subscribe(onNext: { team in
-                let teamStats = self.tabBarController!.viewControllers![1] as! TeamStatsController
+                //let teamStats = self.tabBarController!.viewControllers![1] as! InvididualStatsController
                 self.schoolID = team["id"]!
                 self.schoolName = team["result"]!
-                teamStats.schoolID = self.schoolID
-                teamStats.schoolName = self.schoolName
+                //teamStats.schoolID = self.schoolID
+                //teamStats.schoolName = self.schoolName
                 self.teamButton.setTitle(self.schoolName + " >", for: .normal)
                 self.athleteButton.setTitle("Choose Athlete", for: .normal)
             }).disposed(by: disposeBag)
@@ -83,14 +83,13 @@ class OptionsController: UIViewController {
             athleteSearch.sportMode = self.sportMode
             athleteSearch.schoolID = self.schoolID
             athleteSearch.schoolName = self.schoolName
-            athleteSearch.athleteSelection = { (athleteID, athleteName) in
-                
+            /*athleteSearch.selectedAthlete.asObservable().subscribe(onNext: {athlete in
                 self.athleteButton.setTitle(athleteName, for: .normal)
-                let indivStats = self.tabBarController!.viewControllers![2] as! IndividualStatsController
+                let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
                 indivStats.athleteName = athleteName
                 indivStats.athleteID = athleteID
 
-            }
+            })*/
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         }
     }

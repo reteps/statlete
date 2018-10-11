@@ -47,6 +47,7 @@ class IndividualStatsController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
+        // https://blog.pusher.com/handling-internet-connection-reachability-swift/
         let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
         
         let event = athlete.events["5,000 Meters"]!

@@ -13,24 +13,19 @@ import RxCocoa
 
 class AthleteSearchController: UITableViewController, UISearchBarDelegate {
 
-    var filteredResultsArray = [JSON()]
-    var allResultsArray = [JSON()]
+    var data = Variable(JSON())
     var shouldShowSearchResults = false
     var searchController: UISearchController!
     var searchControllerHeight = 0
     var schoolID = ""
     var schoolName = ""
     var sportMode = ""
-    var athleteSelection:((Int, String) -> ())?
     let disposeBag = DisposeBag()
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         print("view loading...")
-        teamRequest(schoolID: self.schoolID, type: self.sportMode).subscribe({ data in
-            //print(data)
-        }
-        )
+
         self.configureSearchController()
     }
     // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
@@ -41,53 +36,29 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
         searchController.searchBar.delegate = self
         searchController.searchBar.sizeToFit()
         searchController.definesPresentationContext = true
-        searchController.searchBar.rx.text.orEmpty.subscribe(onNext: { query in
-            
-            self.filteredResultsArray = self.allResultsArray.filter( {
-                    query == "" || $0["Name"].stringValue.lowercased().contains(query.lowercased())
-            })
-        //self.filteredResultsArray.
-            self.tableView.reloadData()
-        }).disposed(by: disposeBag)
-        self.tableView.tableHeaderView = searchController.searchBar
+        self.tableView.delegate = nil
+        self.tableView.dataSource = nil
         self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        
-    }
+        // https://stackoverflow.com/questions/42179134/how-to-filter-array-of-observable-element-rxswift
+        // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
+        let allAthletes = teamRequest(schoolID: self.schoolID).map { $0[1]["athletes"].array! }
+        let searchFilter = PublishSubject<String>() // publishes changes
+    
+        Observable.combineLatest(allAthletes, searchFilter) { athletes, text in
+                athletes.filter { athlete in
+                    return text == "" || athlete["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil
+                }
+            }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self)) { (row, element, cell) in
+            cell.textLabel?.text = element["Name"].stringValue
+        }.disposed(by: disposeBag)
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return self.filteredResultsArray.count
-    }
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        return 1
-    }
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell")!
-        cell.textLabel?.text = filteredResultsArray[indexPath.row]["Name"].stringValue
+        searchController.searchBar.rx.text.orEmpty.bind(to: searchFilter).disposed(by: disposeBag)
         
-        return cell
+        self.tableView.rx.modelSelected(JSON.self).subscribe(onNext: { model in
+            print(model)
+        }).disposed(by: disposeBag)
+
+        self.tableView.tableHeaderView = searchController.searchBar
     }
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        var cellJSON: JSON
-        cellJSON = filteredResultsArray[indexPath[1]]
-        print("selected item")
-        self.athleteSelection!(cellJSON["ID"].intValue, cellJSON["Name"].stringValue)
-        UserDefaults.standard.set(cellJSON["Name"].stringValue, forKey:"athleteName")
-        UserDefaults.standard.set(cellJSON["ID"].intValue, forKey:"athleteID")
-        UserDefaults.standard.set(self.schoolID, forKey:"schoolID")
-        UserDefaults.standard.set(self.schoolName, forKey:"schoolName")
-        UserDefaults.standard.set(self.sportMode, forKey:"sportMode")
-        UserDefaults.standard.set(true, forKey:"setupComplete")
-        self.tabBarController?.tabBar.isHidden = false
-        self.navigationController?.popViewController(animated: true)
-    }
-    
-    
-    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
-        self.filteredResultsArray = self.allResultsArray
-        self.tableView.reloadData()
-        
-    }
-    
-    
 }
 

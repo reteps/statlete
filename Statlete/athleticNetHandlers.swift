@@ -14,7 +14,7 @@ import RxCocoa
 import RxSwift
 // http://adamborek.com/creating-observable-create-just-deferred/
 // https://github.com/NavdeepSinghh/RxSwift_MVVM_Finished/blob/master/Networking/ViewController.swift
-func teamRequest(schoolID: String, type: String = "CrossCountry") -> Observable<JSON> {
+func teamRequest(schoolID: String, type: String = "CrossCountry") -> Observable<[JSON]> {
     return Observable.create { observer in
         let url = URL(string: "https://www.athletic.net/\(type)/School.aspx?SchoolID=\(schoolID)")!
         Alamofire.request(url)
@@ -26,13 +26,17 @@ func teamRequest(schoolID: String, type: String = "CrossCountry") -> Observable<
             let jsonTeamData = rawTeamData.data(using: .utf8, allowLossyConversion: false)!
             let parsedTokenData = try! JSON(data: jsonTokenData)
             let parsedTeamData = try! JSON(data: jsonTeamData)
-            observer.onNext(parsedTokenData)
-            observer.onNext(parsedTeamData)
+            observer.onNext([parsedTokenData, parsedTeamData])
             observer.onCompleted()
         }
         return Disposables.create()
     }
 
+}
+struct TeamAthlete {
+    var Name: String
+    var Gender: String
+    var ID: Int
 }
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
 // https://stackoverflow.com/questions/52656378/bind-alamofire-request-to-table-view-using-rxswift/52656720?noredirect=1#comment92244571_52656720
