@@ -86,7 +86,6 @@ class SettingsController: UIViewController {
                 self.athleteButton.setTitle(athlete["Name"].stringValue, for: .normal)
                 // set userdefault values to save information
                 
-                UserDefaults.standard.set(athlete["Name"].stringValue, forKey:"athleteName")
                 UserDefaults.standard.set(athlete["ID"].intValue,
                              forKey: "athleteID")
                 UserDefaults.standard.set(self.sportMode,
@@ -97,6 +96,8 @@ class SettingsController: UIViewController {
                              forKey: "schoolName")
                 // THIS HAPPENS LAST!!! Triggers subscribe event
                 UserDefaults.standard.set(true, forKey:"setupComplete")
+                UserDefaults.standard.set(athlete["Name"].stringValue, forKey:"athleteName")
+
                 self.navigationController?.popViewController(animated: true)
             }).disposed(by: disposeBag)
             self.navigationController?.pushViewController(athleteSearch, animated: true)

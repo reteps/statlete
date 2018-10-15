@@ -115,6 +115,7 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
         for season in doc.css(".season") {
             // https://stackoverflow.com/questions/39677330/how-does-string-substring-work-in-swift
             let year = String(season.className!.split(separator: " ")[4].suffix(4))
+            print(year)
             let headerTags = season.xpath(".//h5[not(@class) or @class=\"bold\"]")
             for (index, section) in season.css("table").enumerated() {
                 let event = headerTags[index].text!
@@ -137,7 +138,8 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                 }
                 if athlete.events[event] == nil {
                     athlete.events[event] = [String: AthleteSeason]()
-                } else if athlete.events[event]?[year] == nil {
+                }
+                if athlete.events[event]?[year] == nil {
                     athlete.events[event]?[year] = AthleteSeason(fastest: nil, slowest: nil, earliest: nil, latest: nil, times: times)
                 } else {
                     athlete.events[event]?[year]?.times += times
