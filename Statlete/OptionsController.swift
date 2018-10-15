@@ -8,6 +8,7 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 import ChameleonFramework
 
 class OptionsController: UIViewController {
@@ -19,13 +20,32 @@ class OptionsController: UIViewController {
     var athleteName = ""
     var sportMode = ""
     var athleteID = 0
-    var setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
+    var setupComplete = PublishRelay<Bool>()
     let disposeBag = DisposeBag()
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
-        self.setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
-        setDefaultValues()
+        let setup = UserDefaults.standard.rx.observe(Bool.self, "setupComplete")
+        setup.subscribe(onNext: { complete in
+            print("setup changed: it is \(complete)")
+            if complete == true {
+                self.tabBarController?.tabBar.isHidden = false
+                self.navigationController?.isNavigationBarHidden = false
+                self.CreateSearchAthleteButton()
+                self.CreateSearchTeamButton()
+                let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(self.handleClick))
+                self.navigationItem.leftBarButtonItem = settingsButton
+                self.setDefaultValues()
+                self.teamButton.setTitle(self.schoolName, for: .normal)
+                self.athleteButton.setTitle(self.athleteName, for: .normal)
+            } else {
+                let settings = SettingsController()
+                self.tabBarController?.tabBar.isHidden = true
+                settings.setupComplete = false
+                self.navigationController?.isNavigationBarHidden = true
+                self.navigationController?.pushViewController(settings, animated: true)
+            }
+        }).disposed(by: disposeBag)
         
 
     }
@@ -33,21 +53,7 @@ class OptionsController: UIViewController {
     //https://stackoverflow.com/questions/5630649/what-is-the-difference-between-viewwillappear-and-viewdidappear
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("view appearing")
-        if setupComplete {
-            print("setup is complete")
-            CreateSearchAthleteButton()
-            CreateSearchTeamButton()
-            let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(handleClick))
-            self.navigationItem.leftBarButtonItem = settingsButton
-        } else {
-            print("setup unfinished")
-            let settings = SettingsController()
-            self.tabBarController?.tabBar.isHidden = true
-            settings.setupComplete = setupComplete
-            self.navigationController?.isNavigationBarHidden = true
-            self.navigationController?.pushViewController(settings, animated: true)
-        }
+        print("view appearing...")
     }
     func setDefaultValues() {
         self.sportMode = UserDefaults.standard.string(forKey: "sportMode")!
@@ -60,7 +66,7 @@ class OptionsController: UIViewController {
     // https://stackoverflow.com/questions/27651507/passing-data-between-tab-viewed-controllers-in-swift
     @objc func handleClick(sender: UIBarButtonItem) {
         let settings = SettingsController()
-        settings.setupComplete = setupComplete
+        settings.setupComplete = true
         self.navigationController?.pushViewController(settings, animated: true)
     }
     @objc func buttonAction(sender: UIButton!) {
@@ -82,14 +88,13 @@ class OptionsController: UIViewController {
             let athleteSearch = AthleteSearchController()
             athleteSearch.sportMode = self.sportMode
             athleteSearch.schoolID = self.schoolID
-            athleteSearch.schoolName = self.schoolName
-            /*athleteSearch.selectedAthlete.asObservable().subscribe(onNext: {athlete in
-                self.athleteButton.setTitle(athleteName, for: .normal)
+            athleteSearch.selectedAthlete.asObservable().subscribe(onNext: {athlete in
+                self.athleteButton.setTitle(athlete["Name"].stringValue, for: .normal)
                 let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
-                indivStats.athleteName = athleteName
-                indivStats.athleteID = athleteID
-
-            })*/
+                indivStats.athleteName = athlete["Name"].stringValue
+                indivStats.athleteID = athlete["ID"].intValue
+                
+            })
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         }
     }

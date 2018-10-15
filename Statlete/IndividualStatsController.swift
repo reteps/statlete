@@ -59,6 +59,9 @@ class IndividualStatsController: UIViewController {
 
         self.chart.data = data
         self.chart.chartDescription?.text = self.athleteName!
+        self.chart.chartDescription?.textColor = UIColor.black
+        self.chart.chartDescription?.position = CGPoint(x: self.chart.frame.width / 2, y: 30)
+
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -67,7 +70,7 @@ class IndividualStatsController: UIViewController {
         self.chart.snp.makeConstraints { (make) in
             // http://snapkit.io/docs/
             // top left bottom right
-            make.edges.equalTo(self.view).inset(UIEdgeInsets(top: 100, left: 0, bottom: 0, right: 0))
+            make.edges.equalTo(self.view).inset(UIEdgeInsets(top: 30, left: 0, bottom: 50, right: 0))
         }
     }
 

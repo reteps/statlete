@@ -40,12 +40,14 @@ class SettingsController: UIViewController {
     let spectateButton = UIButton()
     var schoolID = ""
     var schoolName = ""
+    var sportMode = "!"
     let disposeBag = DisposeBag()
     var setupComplete = false
     let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("Settings view loader...")
         self.view.backgroundColor = .white
         CreateModeSwitcher()
         CreateSearchTeamButton()
@@ -76,14 +78,29 @@ class SettingsController: UIViewController {
         } else if sender == athleteButton {
             let athleteSearch = AthleteSearchController()
             let modes = ["CrossCountry", "TrackAndField"]
-            athleteSearch.sportMode = modes[segmentedControl.selectedSegmentIndex]
+            self.sportMode = modes[segmentedControl.selectedSegmentIndex]
+            athleteSearch.sportMode = self.sportMode
             athleteSearch.schoolID = self.schoolID
             athleteSearch.schoolName = self.schoolName
-            /*athleteSearch.athleteSelection = { (_, athleteName) in
-                self.athleteButton.setTitle(athleteName, for: .normal)
+            athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
+                self.athleteButton.setTitle(athlete["Name"].stringValue, for: .normal)
+                // set userdefault values to save information
+                
+                UserDefaults.standard.set(athlete["Name"].stringValue, forKey:"athleteName")
+                UserDefaults.standard.set(athlete["ID"].intValue,
+                             forKey: "athleteID")
+                UserDefaults.standard.set(self.sportMode,
+                             forKey: "sportMode")
+                UserDefaults.standard.set(self.schoolID,
+                             forKey: "schoolID")
+                UserDefaults.standard.set(self.schoolName,
+                             forKey: "schoolName")
+                // THIS HAPPENS LAST!!! Triggers subscribe event
+                UserDefaults.standard.set(true, forKey:"setupComplete")
                 self.navigationController?.popViewController(animated: true)
-            }*/
+            }).disposed(by: disposeBag)
             self.navigationController?.pushViewController(athleteSearch, animated: true)
+
         } else if sender == spectateButton {
             print("spectate Button clicked")
         }
