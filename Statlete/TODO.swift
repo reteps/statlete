@@ -18,3 +18,6 @@ https://medium.com/app-coder-io/33-ios-open-source-libraries-that-will-dominate-
  reactive swift
  https://github.com/ReactiveX/RxSwift
  */
+/* linear trendline
+function [[x,y]]
+https://math.stackexchange.com/questions/204020/what-is-the-equation-used-to-calculate-a-linear-trendline*/
