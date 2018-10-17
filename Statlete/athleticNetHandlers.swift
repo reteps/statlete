@@ -115,7 +115,6 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
         for season in doc.css(".season") {
             // https://stackoverflow.com/questions/39677330/how-does-string-substring-work-in-swift
             let year = String(season.className!.split(separator: " ")[4].suffix(4))
-            print(year)
             let headerTags = season.xpath(".//h5[not(@class) or @class=\"bold\"]")
             for (index, section) in season.css("table").enumerated() {
                 let event = headerTags[index].text!
@@ -129,11 +128,10 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                     let name = race.at_xpath(".//td[4]/a/text()")!.text!
                     let rawTime = race.at_xpath(".//td[2]/a/text()|.//td[2]/text()")
                     if rawTime == nil {
-                        print("skipping")
                         continue
                     }
                     let time = formatEventTime(s: rawTime!.text!.replacingOccurrences(of: "h", with: ""))
-                    let date = formatEventDate(s: race.at_css("td[style='width: 60px;']")!.text! + " " + year)
+                    let date = formatEventDate(s: race.at_css("td[style='width: 60px;']")!.text! + " \(year)")
                     times.append(AthleteTime(name: name, time: time, date: date))
                 }
                 if athlete.events[event] == nil {
@@ -151,10 +149,12 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
             // https://stackoverflow.com/questions/24781027/how-do-you-sort-an-array-of-structs-in-swift
             for (year, season) in event {
                 athlete.events[eventName]?[year]?.times = season.times.sorted { $0.date < $1.date }
-                athlete.events[eventName]?[year]?.slowest = season.times.min { $0.time > $1.time }!
-                athlete.events[eventName]?[year]?.fastest = season.times.max { $0.time > $1.time }!
-                athlete.events[eventName]?[year]?.earliest = season.times[0]
-                athlete.events[eventName]?[year]?.latest = season.times[season.times.count - 1]
+                athlete.events[eventName]?[year]?.slowest = season.times.min { $0.time > $1.time }
+                athlete.events[eventName]?[year]?.fastest = season.times.max { $0.time > $1.time }
+                if season.times.count != 0 { // season with no times bug
+                    athlete.events[eventName]?[year]?.earliest = season.times[0]
+                    athlete.events[eventName]?[year]?.latest = season.times[season.times.count - 1]
+                }
             }
         }
         // http://nsdateformatter.com/

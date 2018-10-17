@@ -95,8 +95,9 @@ class SettingsController: UIViewController {
                 UserDefaults.standard.set(self.schoolName,
                              forKey: "schoolName")
                 // THIS HAPPENS LAST!!! Triggers subscribe event
-                UserDefaults.standard.set(true, forKey:"setupComplete")
                 UserDefaults.standard.set(athlete["Name"].stringValue, forKey:"athleteName")
+
+                UserDefaults.standard.set(true, forKey:"setupComplete")
 
                 self.navigationController?.popViewController(animated: true)
             }).disposed(by: disposeBag)

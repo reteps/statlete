@@ -8,6 +8,8 @@ PODS:
   - Charts/Core (3.2.0)
   - FontAwesome.swift (1.4.4)
   - Kanna (4.0.2)
+  - M13Checkbox (3.2.2)
+  - ReachabilitySwift (4.2.1)
   - RxCocoa (4.3.0):
     - RxSwift (~> 4.0)
   - RxSwift (4.3.0)
@@ -20,6 +22,8 @@ DEPENDENCIES:
   - Charts (~> 3.0)
   - FontAwesome.swift (~> 1.4)
   - Kanna (~> 4.0.0)
+  - M13Checkbox
+  - ReachabilitySwift
   - RxCocoa (~> 4.0)
   - RxSwift (~> 4.0)
   - SnapKit (~> 4.0.0)
@@ -31,6 +35,8 @@ SPEC REPOS:
     - Charts
     - FontAwesome.swift
     - Kanna
+    - M13Checkbox
+    - ReachabilitySwift
     - RxCocoa
     - RxSwift
     - SnapKit
@@ -51,11 +57,13 @@ SPEC CHECKSUMS:
   Charts: 680c8328bd5e90cb14f67e00d2176f3113d19141
   FontAwesome.swift: 17b93524b9f61136a8566344517b8556ed584e87
   Kanna: c60b61d72554bf04ed1ee074f9b379855cab4892
+  M13Checkbox: a8c2491cfbbca10797925fd0b9154a782bf40d89
+  ReachabilitySwift: 35720ffea59c1c76d15f885be77fd33e33985427
   RxCocoa: 71b9cce833fbcb89a8eec11816dd225830c2bd3c
   RxSwift: a9717a34df3179fe63563f76e046ad345078dd3a
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
   SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
 
-PODFILE CHECKSUM: 16bfb885a34eee76934e24e3abc03db3556e126e
+PODFILE CHECKSUM: f5f52d3009df60340e1972ac15216e6172b056bf
 
 COCOAPODS: 1.5.3
