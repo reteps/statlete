@@ -87,6 +87,7 @@ struct AthleteSeason {
     var earliest: AthleteTime?
     var latest: AthleteTime?
     var times: [AthleteTime] // all times (for sorting)
+    var shown: Bool
 }
 struct AthleteTime {
     var name: String
@@ -105,6 +106,7 @@ func formatEventTime(s: String) -> Date {
     } else {
         dateFormatter.dateFormat = "ss.SS"
     }
+    print(s)
     return dateFormatter.date(from: s)!
 }
 func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Athlete? {
@@ -138,7 +140,7 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                     athlete.events[event] = [String: AthleteSeason]()
                 }
                 if athlete.events[event]?[year] == nil {
-                    athlete.events[event]?[year] = AthleteSeason(fastest: nil, slowest: nil, earliest: nil, latest: nil, times: times)
+                    athlete.events[event]?[year] = AthleteSeason(fastest: nil, slowest: nil, earliest: nil, latest: nil, times: times, shown: true)
                 } else {
                     athlete.events[event]?[year]?.times += times
                 }
@@ -163,4 +165,97 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
         return athlete
     }
     return nil
+}
+
+func teamTimes(type: String, teamID: String, year: String = "", gender: String = "M") -> [String: [TeamTimeResult]] {
+    var urlString = "https://www.athletic.net/CrossCountry/Team.aspx?SchoolID=\(teamID)&S=\(year)"
+    if type == "CrossCountry" {
+        return _CrossCountryTimesParser(url: urlString, gender: gender)
+    }
+    var newGender = "men"
+    if gender == "F" {
+        newGender = "women"
+    }
+    urlString = "https://www.athletic.net/TrackAndField/EventRecords.aspx?SchoolID=\(teamID)&S=\(year)"
+    return _TrackAndFieldTimesParser(url: urlString, gender: newGender)
+}
+
+struct TeamTimeResult {
+    var rank: Int
+    var grade: Int
+    var time: AthleteTime
+}
+func _CrossCountryTimesParser(url: String, gender: String) -> [String: [TeamTimeResult]] {
+    print(url)
+    var results = [String: [TeamTimeResult]]()
+    if let doc = try? HTML(url: URL(string: url)!, encoding: .utf8) {
+        for distance in doc.css(".distance") {
+            
+            let eventName = distance.at_xpath(".//h3/text()")!.text!
+            print(eventName)
+            results[eventName] = [TeamTimeResult]()
+            let year = doc.at_css("#h_clCurSeason")!.text!
+            if let table = try distance.at_css(".\(gender) > table") {
+                for result in table.css("tr") {
+                    let rawRank = result.at_css("td")!.text
+                    let rank: Int
+                    if rawRank == "" {
+                        rank = results[eventName]!.last!.rank
+                    } else {
+                        rank = Int(rawRank!.prefix(rawRank!.count - 1))!
+                    }
+                    let grade = result.at_xpath(".//td[2]")!.text!
+                    let name = result.at_css("a")!.text!
+                    let rawTime = result.at_xpath(".//td[4]/a/text()")!.text!
+                    print(rank, grade, name, rawTime)
+                    let rawDate = result.at_xpath(".//td[5]")!.text!
+                    let raceName = result.at_xpath(".//td[6]")!.text!
+                    let time = formatEventTime(s: rawTime.replacingOccurrences(of: "h", with: ""))
+                    let date = formatEventDate(s: rawDate + " \(year)")
+                    let athleteTime = AthleteTime(name: raceName, time: time, date: date)
+                    let timeResult = TeamTimeResult(rank: rank, grade: Int(grade)!, time: athleteTime)
+                    results[eventName]!.append(timeResult)
+                    
+                }
+            }
+            
+        }
+    }
+    return results
+}
+func _TrackAndFieldTimesParser(url: String, gender: String) -> [String: [TeamTimeResult]] {
+    print(url)
+    var results = [String: [TeamTimeResult]]()
+    if let doc = try? HTML(url: URL(string: url)!, encoding: .utf8) {
+        let year = doc.at_css("#h_clCurSeason")!.text!.prefix(4)
+        print(year)
+        let table = doc.at_css("div#\(gender) > table")!
+        for result in table.css("tr") {
+            var eventName = ""
+            result.text!
+            if result.at_css(".l") != nil {
+                eventName = result.text!
+                print(eventName)
+                continue
+            }
+            let rank = result.at_css("td")!.text!
+            let grade = result.at_xpath(".//td[2]")!.text!
+            let name = result.at_css("a")!.text!
+            let rawTime = result.at_xpath(".//td[5]/a/text()|.//td[5]/text()")!.text!
+            if rawTime.range(of: "'") != nil {
+                continue
+            }
+            if results[eventName] == nil {
+                results[eventName] = [TeamTimeResult]()
+            }
+            let rawDate = result.at_xpath(".//td[6]")!.text!
+            print(rawDate)
+            let time = formatEventTime(s: rawTime.replacingOccurrences(of: "h", with: ""))
+            let date = formatEventDate(s: rawDate + " \(year)")
+            let athleteTime = AthleteTime(name: name, time: time, date: date)
+            let timeResult = TeamTimeResult(rank: Int(rank.prefix(rank.count - 1))!, grade: Int(grade)!, time: athleteTime)
+            results[eventName]!.append(timeResult)
+        }
+    }
+    return results
 }

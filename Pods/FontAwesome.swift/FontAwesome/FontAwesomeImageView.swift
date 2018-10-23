@@ -24,10 +24,9 @@ import UIKit
 
 @IBDesignable public class FontAwesomeImageView: UIImageView {
 
-    @IBInspectable public var cssCode: String = "fa-font-awesome-flag"
+    @IBInspectable public var cssCode: String = "fa-square-o"
     @IBInspectable public var imageColor: UIColor = .black
     @IBInspectable public var imageBackgroundColor: UIColor = .clear
-    @IBInspectable public var styleName: String = "Brands"
 
     public override func awakeFromNib() {
         super.awakeFromNib()
@@ -53,8 +52,7 @@ extension FontAwesomeImageView: FontAwesomeImageRepresentable {
     }
 
     var imageConfigs: [ImageConfig] {
-        guard let style = FontAwesomeStyle(rawValue: styleName.lowercased()) else { return [] }
-        return [(cssCode, style, imageColor, imageBackgroundColor)]
+        return [(cssCode, imageColor, imageBackgroundColor)]
     }
 
 }

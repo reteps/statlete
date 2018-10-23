@@ -27,7 +27,6 @@ class OptionsController: UIViewController {
         self.view.backgroundColor = .white
         let setup = UserDefaults.standard.rx.observe(Bool.self, "setupComplete")
         setup.subscribe(onNext: { complete in
-            print("setup changed: it is \(complete)")
             if complete == true {
                 self.tabBarController?.tabBar.isHidden = false
                 self.navigationController?.isNavigationBarHidden = false

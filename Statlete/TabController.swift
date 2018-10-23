@@ -18,10 +18,10 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://www.appcoda.com/swift-delegate/
         let options = UINavigationController(rootViewController: OptionsController())
         let individual = IndividualStatsController()
-        // let team = TeamStatsController()
+        let team = TeamStatsController()
         // let rankings = TeamRankingsController()
-        self.viewControllers = [options, individual]
-        let viewControllerIcons: [FontAwesome] = [.slidersH, .user] //.users*, .medal
+        self.viewControllers = [options, individual, team]
+        let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users]//*, .medal
         for index in 0..<self.viewControllers!.count {
             
             let icon = UIImage.fontAwesomeIcon(name: viewControllerIcons[index], style: .solid, textColor: UIColor.black, size: CGSize(width: 40, height: 40))

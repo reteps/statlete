@@ -32,9 +32,6 @@ import UIKit
         }
     }
 
-    @IBInspectable
-    public var styleName: String = "Brands"
-
     private var iconView = UILabel()
 
     override init(frame: CGRect) {
@@ -67,9 +64,7 @@ import UIKit
     override public func layoutSubviews() {
         super.layoutSubviews()
         self.clipsToBounds = true
-        let size = bounds.size.width < bounds.size.height ? bounds.size.width : bounds.size.height
-        let style = FontAwesomeStyle(rawValue: styleName) ?? .solid
-        self.iconView.font = UIFont.fontAwesome(ofSize: size, style: style)
+        self.iconView.font = UIFont.fontAwesome(ofSize: bounds.size.width < bounds.size.height ? bounds.size.width : bounds.size.height)
         self.iconView.frame = CGRect(origin: CGPoint(x: 0, y: 0), size: CGSize(width: bounds.size.width, height: bounds.size.height))
     }
 }
