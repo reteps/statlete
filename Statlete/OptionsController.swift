@@ -78,7 +78,7 @@ class OptionsController: UIViewController {
                 self.schoolName = team["result"]!
                 //teamStats.schoolID = self.schoolID
                 //teamStats.schoolName = self.schoolName
-                self.teamButton.setTitle(self.schoolName + " >", for: .normal)
+                self.teamButton.setTitle(self.schoolName, for: .normal)
                 self.athleteButton.setTitle("Choose Athlete", for: .normal)
             }).disposed(by: disposeBag)
             self.navigationController?.pushViewController(teamSearch, animated: true)

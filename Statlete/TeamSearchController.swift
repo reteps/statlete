@@ -60,6 +60,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate {
         
         self.tableView.rx.modelSelected([String:String].self).bind(to: self.selectedTeam).disposed(by: disposeBag)
         self.selectedTeam.asObservable().subscribe(onNext: { _ in
+            self.searchController.isActive = false
             self.navigationController?.popViewController(animated: true)
         })
         // self.navigationController?.popViewController(animated: true)

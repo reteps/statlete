@@ -59,6 +59,7 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
         self.tableView.rx.modelSelected(JSON.self).debug("selectedAthlete").subscribe(onNext: { model in
             
             self.selectedAthlete.accept(model)
+            self.searchController.isActive = false
             self.navigationController?.popViewController(animated: true)
         }).disposed(by: disposeBag)
         
