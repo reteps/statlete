@@ -273,13 +273,13 @@ func _TrackAndFieldTimesParser(url: String, gender: String) -> [String: [String:
         for athlete in doc.at_css("#\(gender)")!.css(".athlete") {
             
             for row in athlete.at_css("table.seasonStats")!.css("tr") {
-                if row.at_xpath(".//td[align='Center']") != nil{
+                if row.at_css("span") != nil {
                 // header
                     print("header")
                 } else if row.at_css("b") != nil {
                     print("event name")
                 // event name
-                } else {
+                } else if row.at_css("a") != nil {
                     print("event result")
                 // event result
                 }
