@@ -20,13 +20,13 @@ open class BalloonMarker: MarkerImage
     open var insets: UIEdgeInsets
     open var minimumSize = CGSize()
     open var valueFormatter: DateFormatter
-    open var years: [String]
+    open var years: [String]?
     fileprivate var label: String?
     fileprivate var _labelSize: CGSize = CGSize()
     fileprivate var _paragraphStyle: NSMutableParagraphStyle?
     fileprivate var _drawAttributes = [NSAttributedString.Key : AnyObject]()
     
-    public init(color: UIColor, font: UIFont, textColor: UIColor, insets: UIEdgeInsets, years: [String])
+    public init(color: UIColor, font: UIFont, textColor: UIColor, insets: UIEdgeInsets, years: [String]? = nil)
     {
         self.color = color
         self.font = font
@@ -183,11 +183,16 @@ open class BalloonMarker: MarkerImage
     }
     
     open override func refreshContent(entry: ChartDataEntry, highlight: Highlight) {
-        // print(entry, highlight)
-        let year = self.years[highlight.dataSetIndex]
-        valueFormatter.dateFormat = "MMM dd, \(year)"
+        print(entry, highlight)
+        if self.years != nil {
+            let year = self.years![highlight.dataSetIndex]
+            valueFormatter.dateFormat = "MMM dd, \(year)"
+        } else {
+            valueFormatter.dateFormat = "MMM dd YYYY"
+        }
         let date = Date(timeIntervalSince1970: entry.x)
         let dateString = valueFormatter.string(from: date)
+        print(dateString)
         valueFormatter.dateFormat = "mm:ss.S"
         let time = Date(timeIntervalSince1970: entry.y)
         let timeString = valueFormatter.string(from: time)

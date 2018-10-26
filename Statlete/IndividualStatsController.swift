@@ -145,21 +145,7 @@ class IndividualStatsController: UIViewController {
         self.chart.chartDescription?.textColor = UIColor.black
         self.chart.chartDescription?.position = CGPoint(x: self.chart.frame.width / 2, y: self.chart.frame.height - 30)
     }
-    class MyDateFormatter: IAxisValueFormatter {
-        
-        let timeFormatter: DateFormatter
-        
-        init(_ format: String) {
-            // https://stackoverflow.com/questions/40648284/converting-a-unix-timestamp-into-date-as-string-swift
-            timeFormatter = DateFormatter()
-            timeFormatter.dateFormat = format
-        }
-        
-        public func stringForValue(_ timestamp: Double, axis: AxisBase?) -> String {
-            let date = Date(timeIntervalSince1970: timestamp)
-            return timeFormatter.string(from: date)
-        }
-    }
+
     class CustomizedCheckBox {
         let checkbox: M13Checkbox
         init() {
@@ -212,5 +198,20 @@ class IndividualStatsController: UIViewController {
                 make.top.equalTo(checkbox.snp.bottom)
             }
         }
+    }
+}
+class MyDateFormatter: IAxisValueFormatter {
+    
+    let timeFormatter: DateFormatter
+    
+    init(_ format: String) {
+        // https://stackoverflow.com/questions/40648284/converting-a-unix-timestamp-into-date-as-string-swift
+        timeFormatter = DateFormatter()
+        timeFormatter.dateFormat = format
+    }
+    
+    public func stringForValue(_ timestamp: Double, axis: AxisBase?) -> String {
+        let date = Date(timeIntervalSince1970: timestamp)
+        return timeFormatter.string(from: date)
     }
 }
