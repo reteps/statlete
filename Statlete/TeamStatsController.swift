@@ -31,7 +31,7 @@ class TeamStatsController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         let times = teamTimes(type: self.sportMode!, teamID: self.schoolID!)
-        let line = createLine(meetEvent: times["5,000 Meters"]!, sortIndex: -1)
+        let line = createLine(meetEvent: times["5,000 Meters"]!, sortIndex: 7)
         createChart(lines: [line])
         
         
@@ -64,7 +64,7 @@ class TeamStatsController: UIViewController {
             if sortIndex! > 0 {
                 label += " (first \(sortIndex!))"
             } else {
-                label += " (last \(abs(sortIndex!))"
+                label += " (last \(abs(sortIndex!)))"
             }
         }
         for key in orderedKeys {
