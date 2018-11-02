@@ -10,6 +10,7 @@ import UIKit
 import RxSwift
 import RxCocoa
 import ChameleonFramework
+import SwiftyJSON
 
 class OptionsController: UIViewController {
     var teamButton = UIButton()
@@ -25,26 +26,26 @@ class OptionsController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
-        let setup = UserDefaults.standard.rx.observe(Bool.self, "setupComplete")
-        setup.subscribe(onNext: { complete in
-            if complete == true {
+        self.title = "Options"
+        let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
+        if setupComplete {
+                print("setup Complete")
                 self.tabBarController?.tabBar.isHidden = false
                 self.navigationController?.isNavigationBarHidden = false
-                self.CreateSearchAthleteButton()
-                self.CreateSearchTeamButton()
-                let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(self.handleClick))
-                self.navigationItem.leftBarButtonItem = settingsButton
-                self.setDefaultValues()
+                setDefaultValues()
+                initSearchTeamButton()
+                initSearchAthleteButton()
+                initSettingsBarButton()
                 self.teamButton.setTitle(self.schoolName, for: .normal)
                 self.athleteButton.setTitle(self.athleteName, for: .normal)
             } else {
+                print("setup is not complete")
                 let settings = SettingsController()
                 self.tabBarController?.tabBar.isHidden = true
                 settings.setupComplete = false
                 self.navigationController?.isNavigationBarHidden = true
                 self.navigationController?.pushViewController(settings, animated: true)
             }
-        }).disposed(by: disposeBag)
         
 
     }
@@ -63,67 +64,102 @@ class OptionsController: UIViewController {
     }
 
     // https://stackoverflow.com/questions/27651507/passing-data-between-tab-viewed-controllers-in-swift
-    @objc func handleClick(sender: UIBarButtonItem) {
-        let settings = SettingsController()
-        settings.setupComplete = true
-        self.navigationController?.pushViewController(settings, animated: true)
+    func initSettingsBarButton() {
+        let settingsButton = UIBarButtonItem(title: "Settings", style: .plain, target: self, action: nil)
+        settingsButton.rx.tap.subscribe(onNext: {
+            let settings = SettingsController()
+            settings.setupComplete = true
+            self.navigationController?.pushViewController(settings, animated: true)
+        }).disposed(by: self.disposeBag)
+        self.navigationItem.leftBarButtonItem = settingsButton
     }
-    @objc func buttonAction(sender: UIButton!) {
-        print("button pressed")
-        if (sender == teamButton) {
-            let teamSearch = TeamSearchController()
-            teamSearch.selectedTeam.asObservable().subscribe(onNext: { team in
-                //let teamStats = self.tabBarController!.viewControllers![1] as! InvididualStatsController
-                self.schoolID = team["id"]!
-                self.schoolName = team["result"]!
-                //teamStats.schoolID = self.schoolID
-                //teamStats.schoolName = self.schoolName
-                self.teamButton.setTitle(self.schoolName, for: .normal)
-                self.athleteButton.setTitle("Choose Athlete", for: .normal)
-            }).disposed(by: disposeBag)
-            self.navigationController?.pushViewController(teamSearch, animated: true)
-            
-        } else if (sender == athleteButton) {
-            let athleteSearch = AthleteSearchController()
-            athleteSearch.sportMode = self.sportMode
-            athleteSearch.schoolID = self.schoolID
-            athleteSearch.selectedAthlete.asObservable().subscribe(onNext: {athlete in
-                self.athleteButton.setTitle(athlete["Name"].stringValue, for: .normal)
-                let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
-                indivStats.athleteName = athlete["Name"].stringValue
-                indivStats.athleteID = athlete["ID"].intValue
-                
-            })
-            self.navigationController?.pushViewController(athleteSearch, animated: true)
-        }
-    }
-    func CreateSearchAthleteButton() {
+    func initSearchAthleteButton() {
         athleteButton.backgroundColor = lightBlue
         athleteButton.setTitle(self.athleteName, for: .normal)
         athleteButton.layer.cornerRadius = 10
-        athleteButton.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
+        // credit to @danielt1263 on slack
+        print(self.schoolID, self.sportMode)
+        athleteButton.rx.tap.debug("athleteOptions").flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: self.sportMode))
+            .subscribe(onNext: { athlete in
+
+                let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
+                self.athleteName = athlete["Name"].stringValue
+                self.athleteID = athlete["ID"].intValue
+                indivStats.athleteName = self.athleteName
+                indivStats.athleteID = self.athleteID
+                self.athleteButton.setTitle(self.athleteName, for: .normal)
+            }).disposed(by: disposeBag)
         self.view.addSubview(athleteButton)
         athleteButton.snp.makeConstraints { (make) in
             make.centerX.equalTo(self.view)
-            make.centerY.equalTo(self.view).offset(0)
+            make.centerY.equalTo(self.view)
             make.height.equalTo(50)
             make.width.equalTo(300)
         }
     }
-    func CreateSearchTeamButton() {
+    func initSearchTeamButton() {
         teamButton.backgroundColor = lightBlue
         teamButton.clipsToBounds = true
         teamButton.setTitle(self.schoolName, for: .normal)
         teamButton.layer.cornerRadius = 10
-        teamButton.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
+        teamButton.rx.tap.debug("teamOptions").flatMapFirst(presentTeamController(on: self.navigationController!))
+        .subscribe(onNext: { team in
+            print(team)
+            self.schoolID = team["id"]!
+            self.schoolName = team["result"]!
+            self.teamButton.setTitle(self.schoolName, for: .normal)
+            self.athleteButton.setTitle("Choose Athlete", for: .normal)
+        })
+        .disposed(by: disposeBag)
         self.view.addSubview(teamButton)
         teamButton.snp.makeConstraints { (make) in
             make.centerX.equalTo(self.view)
-            make.centerY.equalTo(self.view).offset(-200)
+            make.centerY.equalTo(self.view).multipliedBy(0.75)
             make.height.equalTo(50)
             make.width.equalTo(300)
         }
     }
 
     
+}
+func presentAthleteController(on navigation: UINavigationController, teamID: String, sportMode: String) -> () -> Observable<JSON> {
+    return { [weak navigation] in
+        Observable.create { observer in
+            guard let nav = navigation else {
+                print("error 2")
+                return Disposables.create()
+            }
+            let viewController = AthleteSearchController()
+            viewController.schoolID = teamID
+            viewController.sportMode = sportMode
+            let disposable = viewController
+                .selectedAthlete
+                .bind(to: observer)
+            nav.pushViewController(viewController, animated: true)
+
+            return Disposables.create {
+                nav.popViewController(animated: true)
+                disposable.dispose()
+            }
+        }
+    }
+}
+func presentTeamController(on nav: UINavigationController) -> () -> Observable<[String:String]> {
+    return { [weak nav] in
+        Observable.create { observer in
+            guard let nav = nav else {
+                print("error!!")
+                return Disposables.create()
+            }
+            let viewController = TeamSearchController()
+            let disposable = viewController
+                .selectedTeam
+                .bind(to: observer)
+            nav.pushViewController(viewController, animated: true)
+            return Disposables.create {
+                nav.popViewController(animated: true)
+                disposable.dispose()
+            }
+        }
+    }
 }

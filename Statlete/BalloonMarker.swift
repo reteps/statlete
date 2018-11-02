@@ -183,7 +183,6 @@ open class BalloonMarker: MarkerImage
     }
     
     open override func refreshContent(entry: ChartDataEntry, highlight: Highlight) {
-        print(entry, highlight)
         if self.years != nil {
             let year = self.years![highlight.dataSetIndex]
             valueFormatter.dateFormat = "MMM dd, \(year)"
@@ -192,7 +191,6 @@ open class BalloonMarker: MarkerImage
         }
         let date = Date(timeIntervalSince1970: entry.x)
         let dateString = valueFormatter.string(from: date)
-        print(dateString)
         valueFormatter.dateFormat = "mm:ss.S"
         let time = Date(timeIntervalSince1970: entry.y)
         let timeString = valueFormatter.string(from: time)

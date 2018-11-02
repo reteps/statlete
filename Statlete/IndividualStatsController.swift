@@ -21,9 +21,12 @@ class IndividualStatsController: UIViewController {
     var scrollView = UIScrollView()
     var contentView = UIView()
     var settingsView = UIView()
-    var event = [String: [AthleteTime]]()
+    var infoView = UIView()
+    var events = [String: [String: [AthleteTime]]]()
     var lines = [LineChartDataSet]()
-    
+    let picker = UIPickerView()
+    let showPicker = UIButton()
+    let disposeBag = DisposeBag()
     let colors = [UIColor(hexString: "7ad3c0")!,
     UIColor(hexString: "61a3ce")!,
     UIColor(hexString: "b283c6")!,
@@ -75,42 +78,96 @@ class IndividualStatsController: UIViewController {
         super.viewDidAppear(animated)
         // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
         // https://blog.pusher.com/handling-internet-connection-reachability-swift/
-        let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
-        // TODO: event picker
-        self.event = athlete.events["5,000 Meters"]!
-        self.lines = createLineChartData(event: event)
-        createChart(lines: lines)
-        let orderedYears = self.event.keys.sorted()
-        createCheckboxesAndConstrain(orderedYears: orderedYears)
-        self.contentView.addSubview(self.settingsView)
         // Clears old checkboxes
         for view in self.settingsView.subviews {
             view.removeFromSuperview()
         }
+        let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
+        // TODO: event picker
+        self.events = athlete.events
+        let event = self.events.first!.value
+        self.lines = createLineChartData(event: event)
+        let orderedYears = event.keys.sorted()
+        createChart(lines: lines, orderedYears: orderedYears)
+        createCheckboxesAndConstrain(orderedYears: orderedYears)
+        self.picker.delegate = nil
+        self.picker.dataSource = nil
+        Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
+            return "\(item)"
+            }.disposed(by: disposeBag)
+                // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
         // Constrains settingsView to contentView
-        self.settingsView.snp.makeConstraints { (make) in
-            make.top.equalTo(self.chart.snp.bottom).offset(20)
-            make.left.equalTo(self.contentView.snp.left).offset(20)
-            make.right.equalTo(self.contentView.snp.centerX).offset(-20)
-            make.bottom.equalTo(self.contentView.snp.bottom)
-        }
-        
+
 
     }
 
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
-        constrainScollAndContent()
-        self.contentView.addSubview(self.chart)
-        self.chart.snp.makeConstraints { (make) in
-            make.top.equalTo(self.contentView)
-            make.left.right.equalTo(self.contentView)
-            make.height.equalTo(self.scrollView)
+        initScrollViewAndContent()
+        initChart()
+        initSettingsView()
+        initInfoView()
+        initPickerView()
+        initPicker()
+    }
+    func initSettingsView() {
+        self.contentView.addSubview(self.settingsView)
+        self.settingsView.snp.makeConstraints { (make) in
+            make.top.equalTo(self.chart.snp.bottom).offset(20)
+            make.left.equalTo(self.contentView).offset(20)
+            make.right.equalTo(self.contentView.snp.centerX).offset(-20)
+            make.bottom.equalTo(self.contentView)
         }
+    }
+    func initInfoView() {
+        self.contentView.addSubview(self.infoView)
+        self.infoView.snp.makeConstraints { (make) in
+            make.top.equalTo(self.chart.snp.bottom).offset(20)
+            make.left.equalTo(self.contentView.snp.centerX).offset(20)
+            make.right.equalTo(self.contentView).offset(-20)
+            make.bottom.equalTo(self.contentView)
+        }
+        
+    }
+    func initPickerView() {
+        self.infoView.addSubview(self.showPicker)
+        self.showPicker.setTitle("Event", for: .normal)
+        self.showPicker.setTitleColor(.black, for: .normal)
+        self.showPicker.rx.tap.subscribe(onNext: {
+            self.picker.isHidden = false
+            
+        }).disposed(by: disposeBag)
+        
+        self.showPicker.snp.makeConstraints { (make) in
+            
+            make.edges.equalTo(self.infoView)
+        }
+    }
+    func initPicker() {
+        self.view.addSubview(self.picker)
+        self.picker.backgroundColor = .white
+        self.picker.snp.makeConstraints { (make) in
+            make.left.right.equalTo(self.view)
+            make.top.equalTo(self.view).offset(300)
+            make.bottom.equalTo(self.view)
+        }
+        self.picker.isHidden = true
+        self.picker.rx.modelSelected(String.self).subscribe(onNext: { item in
+            self.picker.isHidden = true
+            let event = self.events[item[0]]!
+            self.lines = self.createLineChartData(event: event)
+            let orderedYears = event.keys.sorted()
+            self.createChart(lines: self.lines, orderedYears: orderedYears)
+            for view in self.settingsView.subviews {
+                view.removeFromSuperview()
+            }
+            self.createCheckboxesAndConstrain(orderedYears: orderedYears)
+            
+        }).disposed(by: disposeBag)
 
     }
-    func constrainScollAndContent() {
+    func initScrollViewAndContent() {
         // https://stackoverflow.com/questions/2944294/how-do-i-auto-size-a-uiscrollview-to-fit-the-content
         // https://stackoverflow.com/questions/10518790/how-to-set-content-size-of-uiscrollview-dynamically
         self.view.addSubview(self.scrollView)
@@ -124,28 +181,36 @@ class IndividualStatsController: UIViewController {
             make.width.equalTo(self.scrollView)
         }
     }
-    func createChart(lines: [LineChartDataSet]) {
+    func createChart(lines: [LineChartDataSet], orderedYears: [String]) {
         let data = LineChartData()
         for line in lines {
             data.addDataSet(line)
         }
         self.chart.data = data
-        // https://github.com/danielgindi/Charts/issues/943
         self.chart.leftAxis.valueFormatter = MyDateFormatter("mm:s.S")
+        self.chart.chartDescription?.text = self.athleteName!
+        let marker = BalloonMarker(color: UIColor.white, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 7.0, left: 7.0, bottom: 7.0, right: 7.0), years: orderedYears)
+        marker.minimumSize = CGSize(width: 75.0, height: 35.0)
+        self.chart.marker = marker
+        // https://github.com/danielgindi/Charts/issues/943
+
+    }
+    func initChart() {
+        self.contentView.addSubview(self.chart)
+        self.chart.snp.makeConstraints { (make) in
+            make.top.equalTo(self.contentView)
+            make.left.right.equalTo(self.contentView)
+            make.height.equalTo(self.scrollView)
+        }
         self.chart.xAxis.valueFormatter = MyDateFormatter("MMM dd")
         self.chart.xAxis.labelPosition = .bottom
         self.chart.rightAxis.enabled = false
         // https://github.com/PhilJay/MPAndroidChart/wiki
-        let orderedYears = event.keys.sorted()
         // https://stackoverflow.com/questions/38212750/create-a-markerview-when-user-clicks-on-chart
-        let marker = BalloonMarker(color: UIColor.white, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 7.0, left: 7.0, bottom: 7.0, right: 7.0), years: orderedYears)
-        marker.minimumSize = CGSize(width: 75.0, height: 35.0)
-        self.chart.marker = marker
-        self.chart.chartDescription?.text = self.athleteName!
+
         self.chart.chartDescription?.textColor = UIColor.black
         self.chart.chartDescription?.position = CGPoint(x: self.chart.frame.width / 2, y: self.chart.frame.height - 30)
     }
-
     class CustomizedCheckBox {
         let checkbox: M13Checkbox
         init() {
@@ -178,7 +243,8 @@ class IndividualStatsController: UIViewController {
         }
         // Constrains first checkbox to settingsView frame
         checks[0].snp.makeConstraints { (make) in
-            make.top.left.equalTo(self.settingsView)
+            make.top.equalTo(self.settingsView)
+            make.left.equalTo(self.settingsView)
             make.width.height.equalTo(50)
         }
         // Constrains last checkbox to settingsView frame

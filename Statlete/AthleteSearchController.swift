@@ -17,20 +17,17 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
     var searchController: UISearchController!
     var searchControllerHeight = 0
     var schoolID = ""
-    var schoolName = ""
     var sportMode = ""
-    let selectedAthlete = PublishRelay<JSON>()
+    let selectedAthlete = PublishSubject<JSON>()
     let disposeBag = DisposeBag()
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("view loading...")
-
-        self.configureSearchController()
+        initSearchController()
         configureRxSwift()
     }
     // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
-    func configureSearchController() {
+    func initSearchController() {
         searchController = UISearchController(searchResultsController: nil)
         searchController.dimsBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search for athlete here..."
@@ -56,12 +53,9 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
             cell.textLabel?.text = element["Name"].stringValue
         }.disposed(by: disposeBag)
         
-        self.tableView.rx.modelSelected(JSON.self).debug("selectedAthlete").subscribe(onNext: { model in
-            
-            self.selectedAthlete.accept(model)
+        self.tableView.rx.modelSelected(JSON.self).debug("selectedAthlete").do(onNext: { _ in
             self.searchController.isActive = false
-            self.navigationController?.popViewController(animated: true)
-        }).disposed(by: disposeBag)
+        }).take(1).bind(to: self.selectedAthlete).disposed(by: disposeBag)
         
 
     }

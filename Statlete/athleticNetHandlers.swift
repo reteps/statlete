@@ -15,9 +15,11 @@ import RxSwift
 // http://adamborek.com/creating-observable-create-just-deferred/
 // https://github.com/NavdeepSinghh/RxSwift_MVVM_Finished/blob/master/Networking/ViewController.swift
 // Returns team information like a list of athletes from a schoolID
-func teamRequest(schoolID: String, type: String = "CrossCountry") -> Observable<[JSON]> {
+func teamRequest(schoolID: String, type: String) -> Observable<[JSON]> {
+    print("making teamRequest with schoolID=\(schoolID) and type=\(type)")
     return Observable.create { observer in
         let url = URL(string: "https://www.athletic.net/\(type)/School.aspx?SchoolID=\(schoolID)")!
+        
         Alamofire.request(url)
         .responseString { response in
             let htmlString = response.result.value!
@@ -134,6 +136,8 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                     let rawTime = race.at_xpath(".//td[2]/a/text()|.//td[2]/text()")
                     if rawTime == nil {
                         continue
+                    } else if rawTime!.text! == "NT" || rawTime!.text! == "DNF" {
+                        continue
                     }
                     let rawTimeTag = race.at_xpath(".//td[2]/a")
                     let resultID = (rawTimeTag != nil) ? rawTimeTag!["href"] : nil
@@ -145,7 +149,7 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                     athlete.events[event] = [String: [AthleteTime]]()
                 }
                 if athlete.events[event]?[year] == nil {
-                    athlete.events[event]?[year] = [AthleteTime]()
+                    athlete.events[event]?[year] = times
                 } else {
                     athlete.events[event]?[year]? += times
                 }

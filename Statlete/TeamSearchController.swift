@@ -13,21 +13,15 @@ import RxCocoa
 class TeamSearchController: UITableViewController, UISearchBarDelegate {
 
     var searchController: UISearchController!
-    var searchControllerHeight = 0
     let disposeBag = DisposeBag()
-    let selectedTeam = PublishRelay<[String:String]>()
+    let selectedTeam = PublishSubject<[String:String]>()
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("view loading...")
-        self.tableView.dataSource = nil
-        self.tableView.delegate = nil
-        // self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        // self.tableView.register(cellClass: myCell.self, forCellReuseIdentifier: "Cell")
-        configureTableView()
-        configureSearchController()
+        initTableView()
+        initSearchController()
         configureObservables()
     }
-    func configureSearchController() {
+    func initSearchController() {
         searchController = UISearchController(searchResultsController: nil)
         searchController.dimsBackgroundDuringPresentation = false
         searchController.searchBar.placeholder = "Search here..."
@@ -58,11 +52,10 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate {
                 return cell
             }.disposed(by: disposeBag)
         
-        self.tableView.rx.modelSelected([String:String].self).bind(to: self.selectedTeam).disposed(by: disposeBag)
-        self.selectedTeam.asObservable().subscribe(onNext: { _ in
+        self.tableView.rx.modelSelected([String:String].self).do(onNext: { _ in
             self.searchController.isActive = false
-            self.navigationController?.popViewController(animated: true)
-        })
+
+        }).take(1).bind(to: self.selectedTeam).disposed(by: disposeBag)
         // self.navigationController?.popViewController(animated: true)
         // https://medium.com/@dhruv.n.singh/passing-data-between-viewcontrollers-using-rxswift-be763fe10ba7
 
@@ -70,7 +63,9 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate {
 
     // https://www.thedroidsonroids.com/blog/rxswift-by-examples-1-the-basics/
 
-    func configureTableView() {
+    func initTableView() {
+        self.tableView.dataSource = nil
+        self.tableView.delegate = nil
         let barHeight: CGFloat = UIApplication.shared.statusBarFrame.size.height
         let displayHeight: CGFloat = self.view.frame.size.height
         self.tableView.rowHeight = (displayHeight - barHeight) / 10

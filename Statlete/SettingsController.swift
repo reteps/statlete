@@ -12,6 +12,7 @@ import Kanna
 import SnapKit
 import RxSwift
 import RxCocoa
+import SwiftyJSON
 
 
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
@@ -37,78 +38,49 @@ class SettingsController: UIViewController {
     let teamButton = UIButton()
     let segmentedControl = UISegmentedControl(items: ["Cross Country", "Track"])
     let athleteButton = UIButton()
-    let spectateButton = UIButton()
     var schoolID = ""
     var schoolName = ""
-    var sportMode = "!"
+    var sportMode = ""
+    var athleteID = 0
+    var athleteName = ""
     let disposeBag = DisposeBag()
     var setupComplete = false
+    var completedSettings = PublishSubject<[[String:String]:JSON]>()
     let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
         print("Settings view loader...")
         self.view.backgroundColor = .white
-        CreateModeSwitcher()
-        CreateSearchTeamButton()
+        initModeSwitcher()
+        initSearchTeamButton()
+        self.title = "Setup"
         if setupComplete {
+            self.title = "Settings"
+            initSearchAthleteButton()
+            // set button names and retreive settings
             self.schoolName = UserDefaults.standard.string(forKey: "schoolName")!
             self.schoolID = UserDefaults.standard.string(forKey: "schoolID")!
-            let athleteName = UserDefaults.standard.string(forKey: "athleteName")!
+            self.athleteName = UserDefaults.standard.string(forKey: "athleteName")!
             self.teamButton.setTitle(self.schoolName + " >", for: .normal)
-            self.CreateSearchAthleteButton()
-            self.athleteButton.setTitle(athleteName + " >", for: .normal)
-            self.CreateSpectateButton()
+            self.athleteButton.setTitle(self.athleteName + " >", for: .normal)
         }
 
     }
-    @objc func buttonAction(sender: UIButton!) {
-        if (sender == teamButton) {
-            let teamSearch = TeamSearchController()
-            teamSearch.selectedTeam.asObservable().debug("receive").subscribe(onNext: { team in
-                self.schoolID = team["id"]!
-                self.schoolName = team["result"]!
-                self.teamButton.setTitle(self.schoolName + " >", for: .normal)
-                self.CreateSearchAthleteButton()
-                self.CreateSpectateButton()
-            }).disposed(by: disposeBag)
-            print("pushing team search")
-            self.navigationController?.pushViewController(teamSearch, animated: true)
-
-        } else if sender == athleteButton {
-            let athleteSearch = AthleteSearchController()
-            let modes = ["CrossCountry", "TrackAndField"]
-            self.sportMode = modes[segmentedControl.selectedSegmentIndex]
-            athleteSearch.sportMode = self.sportMode
-            athleteSearch.schoolID = self.schoolID
-            athleteSearch.schoolName = self.schoolName
-            athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
-                self.athleteButton.setTitle(athlete["Name"].stringValue, for: .normal)
-                // set userdefault values to save information
-                
-                UserDefaults.standard.set(athlete["ID"].intValue,
-                             forKey: "athleteID")
-                UserDefaults.standard.set(self.sportMode,
-                             forKey: "sportMode")
-                UserDefaults.standard.set(self.schoolID,
-                             forKey: "schoolID")
-                UserDefaults.standard.set(self.schoolName,
-                             forKey: "schoolName")
-                // THIS HAPPENS LAST!!! Triggers subscribe event
-                UserDefaults.standard.set(athlete["Name"].stringValue, forKey:"athleteName")
-
-                UserDefaults.standard.set(true, forKey:"setupComplete")
-
-                self.navigationController?.popViewController(animated: true)
-            }).disposed(by: disposeBag)
-            self.navigationController?.pushViewController(athleteSearch, animated: true)
-
-        } else if sender == spectateButton {
-            print("spectate Button clicked")
-        }
+    func saveSettings() {
+            UserDefaults.standard.set(self.athleteID,
+            forKey: "athleteID")
+            UserDefaults.standard.set(self.sportMode,
+            forKey: "sportMode")
+            UserDefaults.standard.set(self.schoolID,
+            forKey: "schoolID")
+            UserDefaults.standard.set(self.schoolName,
+            forKey: "schoolName")
+            UserDefaults.standard.set(self.athleteName,
+            forKey:"athleteName")
     }
-
-    func CreateModeSwitcher() {
+    func initModeSwitcher() {
+        
         segmentedControl.selectedSegmentIndex = selectedSegmentIndex
         let font: [NSAttributedString.Key : Any] = [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)]
         segmentedControl.setTitleTextAttributes(font, for: .normal)
@@ -120,50 +92,50 @@ class SettingsController: UIViewController {
             make.width.equalTo(300)
         }
     }
-    func CreateSearchTeamButton() {
+    func initSearchTeamButton() {
         teamButton.backgroundColor = lightBlue
         teamButton.clipsToBounds = true
         teamButton.setTitle("Select Team", for: .normal)
         teamButton.layer.cornerRadius = 10
-        teamButton.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
+        // slack
+        teamButton.rx.tap.debug("team_settings").flatMapFirst(presentTeamController(on: self.navigationController!))
+            .subscribe(onNext: { team in
+                self.schoolID = team["id"]!
+                self.schoolName = team["result"]!
+                self.teamButton.setTitle(self.schoolName, for: .normal)
+                self.athleteButton.setTitle("Choose Athlete", for: .normal)
+            }).disposed(by: disposeBag)
+        
         self.view.addSubview(teamButton)
         teamButton.snp.makeConstraints { (make) in
             make.centerX.equalTo(self.view)
             make.centerY.equalTo(self.view).offset(-200)
             make.height.equalTo(50)
-            make.width.equalTo(150)
+            make.width.equalTo(300)
         }
     }
-    func CreateSearchAthleteButton() {
+    func initSearchAthleteButton() {
         athleteButton.backgroundColor = lightBlue
         athleteButton.setTitle("Choose Athlete", for: .normal)
         athleteButton.layer.cornerRadius = 10
-        athleteButton.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
+        athleteButton.rx.tap.debug("athlete_settings").do(onNext: { _ in
+            let modes = ["CrossCountry", "TrackAndField"]
+            self.sportMode = modes[self.segmentedControl.selectedSegmentIndex]
+        }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: self.sportMode))
+            .subscribe(onNext: { athlete in
+                let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
+                self.athleteID = athlete["ID"].intValue
+                self.athleteName = athlete["Name"].stringValue
+                indivStats.athleteName = self.athleteName
+                indivStats.athleteID = self.athleteID
+                self.athleteButton.setTitle(self.athleteName, for: .normal)
+                self.saveSettings()
+            }).disposed(by: disposeBag)
         self.view.addSubview(athleteButton)
         athleteButton.snp.makeConstraints { (make) in
-            make.centerX.equalTo(self.view).offset(-90)
-            make.centerY.equalTo(self.view).offset(0)
+            make.centerX.centerY.equalTo(self.view)
             make.height.equalTo(50)
-            make.width.equalTo(150)
+            make.width.equalTo(300)
         }
     }
-    func CreateSpectateButton() {
-        spectateButton.backgroundColor = .white
-        let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
-        spectateButton.layer.borderColor = lightBlue.cgColor
-        spectateButton.layer.cornerRadius = 10
-        spectateButton.layer.borderWidth = 1
-        spectateButton.setTitleColor(lightBlue, for: .normal)
-        spectateButton.setTitle("Spectate Team", for: .normal)
-        spectateButton.addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
-        self.view.addSubview(spectateButton)
-        spectateButton.snp.makeConstraints { (make) in
-            make.centerX.equalTo(self.view).offset(90)
-            make.centerY.equalTo(self.view).offset(0)
-            make.height.equalTo(50)
-            make.width.equalTo(150)
-        }
-    }
-
-
 }

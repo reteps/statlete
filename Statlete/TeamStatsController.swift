@@ -26,12 +26,14 @@ class TeamStatsController: UIViewController {
             make.top.equalTo(self.contentView)
             make.left.right.equalTo(self.contentView)
             make.height.equalTo(self.scrollView)
+            make.bottom.equalTo(self.contentView)
+
         }
     }
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         let times = teamTimes(type: self.sportMode!, teamID: self.schoolID!)
-        let line = createLine(meetEvent: times["5,000 Meters"]!, sortIndex: -1)
+        let line = createLine(meetEvent: times["5,000 Meters"]!)
         createChart(lines: [line])
         
         
@@ -48,15 +50,15 @@ class TeamStatsController: UIViewController {
         self.chart.xAxis.labelPosition = .bottom
         self.chart.rightAxis.enabled = false
         self.chart.chartDescription?.text = self.schoolName!
-        let marker = BalloonMarker(color: UIColor.blue, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 7.0, left: 7.0, bottom: 7.0, right: 7.0))
+        let marker = BalloonMarker(color: UIColor.white, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 3.0, left: 7.0, bottom: 7.0, right: 7.0))
         print("marker = \(marker)")
-        marker.minimumSize = CGSize(width: 75.0, height: 35.0)
+        marker.minimumSize = CGSize(width: 75.0, height: 40.0)
         self.chart.marker = marker
-        
+        print("marker added.")
         self.chart.chartDescription?.textColor = UIColor.black
         self.chart.chartDescription?.position = CGPoint(x: self.chart.frame.width / 2, y: self.chart.frame.height - 30)
     }
-    func createLine(meetEvent: [Date: Meet], sortIndex: Int?) -> LineChartDataSet {
+    func createLine(meetEvent: [Date: Meet], sortIndex: Int? = nil) -> LineChartDataSet {
         var dataSeries = [ChartDataEntry]()
         let orderedKeys = meetEvent.keys.sorted()
         var label = "Average Time"
@@ -64,7 +66,7 @@ class TeamStatsController: UIViewController {
             if sortIndex! > 0 {
                 label += " (first \(sortIndex!))"
             } else {
-                label += " (last \(abs(sortIndex!))"
+                label += " (last \(abs(sortIndex!)))"
             }
         }
         for key in orderedKeys {
@@ -113,5 +115,5 @@ class TeamStatsController: UIViewController {
             make.width.equalTo(self.scrollView)
         }
     }
-
+    //
 }
