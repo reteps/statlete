@@ -25,7 +25,8 @@ class IndividualStatsController: UIViewController {
     var events = [String: [String: [AthleteTime]]]()
     var lines = [LineChartDataSet]()
     let picker = UIPickerView()
-    let showPicker = UIButton()
+    let pickerBar = UIToolbar()
+    let selectedEvent = UITextField()
     let disposeBag = DisposeBag()
     let colors = [UIColor(hexString: "7ad3c0")!,
     UIColor(hexString: "61a3ce")!,
@@ -93,7 +94,7 @@ class IndividualStatsController: UIViewController {
         self.picker.delegate = nil
         self.picker.dataSource = nil
         Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
-            return "\(item)"
+            return item
             }.disposed(by: disposeBag)
                 // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
         // Constrains settingsView to contentView
@@ -108,6 +109,7 @@ class IndividualStatsController: UIViewController {
         initChart()
         initSettingsView()
         initInfoView()
+        initPickerBar()
         initPickerView()
         initPicker()
     }
@@ -131,30 +133,22 @@ class IndividualStatsController: UIViewController {
         
     }
     func initPickerView() {
-        self.infoView.addSubview(self.showPicker)
-        self.showPicker.setTitle("Event", for: .normal)
-        self.showPicker.setTitleColor(.black, for: .normal)
-        self.showPicker.rx.tap.subscribe(onNext: {
-            self.picker.isHidden = false
-            
-        }).disposed(by: disposeBag)
+        self.infoView.addSubview(self.selectedEvent)
+        self.selectedEvent.text = "Change Event"
+        self.selectedEvent.textColor = .black
+        self.selectedEvent.isUserInteractionEnabled = true
+        self.selectedEvent.inputView = self.picker
+        self.selectedEvent.inputAccessoryView = self.pickerBar
         
-        self.showPicker.snp.makeConstraints { (make) in
+        self.selectedEvent.snp.makeConstraints { (make) in
             
             make.edges.equalTo(self.infoView)
         }
     }
     func initPicker() {
-        self.view.addSubview(self.picker)
         self.picker.backgroundColor = .white
-        self.picker.snp.makeConstraints { (make) in
-            make.left.right.equalTo(self.view)
-            make.top.equalTo(self.view).offset(300)
-            make.bottom.equalTo(self.view)
-        }
-        self.picker.isHidden = true
         self.picker.rx.modelSelected(String.self).subscribe(onNext: { item in
-            self.picker.isHidden = true
+            self.selectedEvent.resignFirstResponder()
             let event = self.events[item[0]]!
             self.lines = self.createLineChartData(event: event)
             let orderedYears = event.keys.sorted()
@@ -165,6 +159,16 @@ class IndividualStatsController: UIViewController {
             self.createCheckboxesAndConstrain(orderedYears: orderedYears)
             
         }).disposed(by: disposeBag)
+
+    }
+    func initPickerBar() {
+        let doneButton = UIBarButtonItem(title: "Done", style: .plain, target: nil, action: nil)
+        doneButton.rx.tap.subscribe(onNext: { _ in
+            self.selectedEvent.resignFirstResponder()
+        }).disposed(by: disposeBag)
+        self.pickerBar.setItems([doneButton], animated: false)
+        self.pickerBar.sizeToFit()
+        self.pickerBar.isUserInteractionEnabled = true
 
     }
     func initScrollViewAndContent() {

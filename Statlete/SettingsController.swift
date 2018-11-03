@@ -53,19 +53,25 @@ class SettingsController: UIViewController {
         print("Settings view loader...")
         self.view.backgroundColor = .white
         initModeSwitcher()
-        initSearchTeamButton()
         self.title = "Setup"
+        retrieveDefaults()
+        initSearchTeamButton()
+
         if setupComplete {
+            print("settings complete")
             self.title = "Settings"
             initSearchAthleteButton()
-            // set button names and retreive settings
-            self.schoolName = UserDefaults.standard.string(forKey: "schoolName")!
-            self.schoolID = UserDefaults.standard.string(forKey: "schoolID")!
-            self.athleteName = UserDefaults.standard.string(forKey: "athleteName")!
+            initSearchTeamButton()
             self.teamButton.setTitle(self.schoolName + " >", for: .normal)
             self.athleteButton.setTitle(self.athleteName + " >", for: .normal)
         }
 
+    }
+    func retrieveDefaults() {
+        self.schoolName = UserDefaults.standard.string(forKey: "schoolName")!
+        self.schoolID = UserDefaults.standard.string(forKey: "schoolID")!
+        self.sportMode = UserDefaults.standard.string(forKey: "sportMode")!
+        self.athleteName = UserDefaults.standard.string(forKey: "athleteName")!
     }
     func saveSettings() {
             UserDefaults.standard.set(self.athleteID,
@@ -98,7 +104,7 @@ class SettingsController: UIViewController {
         teamButton.setTitle("Select Team", for: .normal)
         teamButton.layer.cornerRadius = 10
         // slack
-        teamButton.rx.tap.debug("team_settings").flatMapFirst(presentTeamController(on: self.navigationController!))
+        teamButton.rx.tap.flatMapFirst(presentTeamController(on: self.navigationController!))
             .subscribe(onNext: { team in
                 self.schoolID = team["id"]!
                 self.schoolName = team["result"]!
@@ -118,9 +124,10 @@ class SettingsController: UIViewController {
         athleteButton.backgroundColor = lightBlue
         athleteButton.setTitle("Choose Athlete", for: .normal)
         athleteButton.layer.cornerRadius = 10
-        athleteButton.rx.tap.debug("athlete_settings").do(onNext: { _ in
+        athleteButton.rx.tap.do(onNext: { _ in
             let modes = ["CrossCountry", "TrackAndField"]
             self.sportMode = modes[self.segmentedControl.selectedSegmentIndex]
+            print(self.sportMode)
         }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: self.sportMode))
             .subscribe(onNext: { athlete in
                 let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController

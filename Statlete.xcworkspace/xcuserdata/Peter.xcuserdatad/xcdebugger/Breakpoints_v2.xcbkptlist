@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Statlete/athleticNetHandlers.swift"
-            timestampString = "562858324.610049"
+            timestampString = "562901996.551002"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "391"
-            endingLineNumber = "391"
+            startingLineNumber = "390"
+            endingLineNumber = "390"
             landmarkName = "_CrossCountryTimesParser(url:gender:)"
             landmarkType = "9">
          </BreakpointContent>

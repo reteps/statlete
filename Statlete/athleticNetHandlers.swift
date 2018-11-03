@@ -16,7 +16,6 @@ import RxSwift
 // https://github.com/NavdeepSinghh/RxSwift_MVVM_Finished/blob/master/Networking/ViewController.swift
 // Returns team information like a list of athletes from a schoolID
 func teamRequest(schoolID: String, type: String) -> Observable<[JSON]> {
-    print("making teamRequest with schoolID=\(schoolID) and type=\(type)")
     return Observable.create { observer in
         let url = URL(string: "https://www.athletic.net/\(type)/School.aspx?SchoolID=\(schoolID)")!
         

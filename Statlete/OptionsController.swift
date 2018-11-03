@@ -130,8 +130,10 @@ func presentAthleteController(on navigation: UINavigationController, teamID: Str
                 return Disposables.create()
             }
             let viewController = AthleteSearchController()
+            print("teamID=\(teamID),\(sportMode)")
             viewController.schoolID = teamID
             viewController.sportMode = sportMode
+
             let disposable = viewController
                 .selectedAthlete
                 .bind(to: observer)

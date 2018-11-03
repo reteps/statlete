@@ -33,7 +33,11 @@ class TeamStatsController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         let times = teamTimes(type: self.sportMode!, teamID: self.schoolID!)
+<<<<<<< HEAD
         let line = createLine(meetEvent: times["5,000 Meters"]!)
+=======
+        let line = createLine(meetEvent: times["5,000 Meters"]!, sortIndex: 7)
+>>>>>>> 0989473967d94d4122b08cd9bab9468bdb18c78d
         createChart(lines: [line])
         
         
