@@ -46,7 +46,7 @@ import UIKit
         }
         updateFontAttributes { (state, font) in
             var attributes = titleTextAttributes(for: state) ?? [:]
-            attributes[NSAttributedStringKey.font] = font
+            attributes[NSAttributedString.Key.font] = font
             setTitleTextAttributes(attributes, for: state)
         }
     }
@@ -63,11 +63,11 @@ extension FontAwesomeSegmentedControl: FontAwesomeTextRepresentable {
         return size
     }
 
-    static func supportedStates() -> [UIControlState] {
+    static func supportedStates() -> [UIControl.State] {
         if #available(iOS 9.0, *) {
-            return [.normal, .highlighted, .disabled, .focused, .selected, .application, .reserved]
+            return [UIControl.State.normal, UIControl.State.highlighted, UIControl.State.disabled, UIControl.State.focused, UIControl.State.selected, UIControl.State.application, UIControl.State.reserved]
         } else {
-            return [.normal, .highlighted, .disabled, .selected, .application, .reserved]
+            return [UIControl.State.normal, UIControl.State.highlighted, UIControl.State.disabled, UIControl.State.selected, UIControl.State.application, UIControl.State.reserved]
         }
     }
 

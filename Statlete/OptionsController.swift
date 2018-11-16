@@ -26,7 +26,7 @@ class OptionsController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
-        self.title = "Options"
+        self.navigationItem.title = "Options"
         let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
                 print("setup Complete")
@@ -69,6 +69,7 @@ class OptionsController: UIViewController {
         settingsButton.rx.tap.subscribe(onNext: {
             let settings = SettingsController()
             settings.setupComplete = true
+            settings.sportMode = self.sportMode
             self.navigationController?.pushViewController(settings, animated: true)
         }).disposed(by: self.disposeBag)
         self.navigationItem.leftBarButtonItem = settingsButton
@@ -102,9 +103,8 @@ class OptionsController: UIViewController {
         teamButton.clipsToBounds = true
         teamButton.setTitle(self.schoolName, for: .normal)
         teamButton.layer.cornerRadius = 10
-        teamButton.rx.tap.debug("teamOptions").flatMapFirst(presentTeamController(on: self.navigationController!))
+        teamButton.rx.tap.flatMapFirst(presentTeamController(on: self.navigationController!))
         .subscribe(onNext: { team in
-            print(team)
             self.schoolID = team["id"]!
             self.schoolName = team["result"]!
             self.teamButton.setTitle(self.schoolName, for: .normal)
@@ -125,17 +125,20 @@ class OptionsController: UIViewController {
 func presentAthleteController(on navigation: UINavigationController, teamID: String, sportMode: String) -> () -> Observable<JSON> {
     return { [weak navigation] in
         Observable.create { observer in
+            print("AC",teamID, sportMode)
             guard let nav = navigation else {
                 print("error 2")
                 return Disposables.create()
             }
             let viewController = AthleteSearchController()
-            print("teamID=\(teamID),\(sportMode)")
             viewController.schoolID = teamID
             viewController.sportMode = sportMode
 
             let disposable = viewController
                 .selectedAthlete
+                .takeWhile { _ in
+                    return navigation != nil
+                }
                 .bind(to: observer)
             nav.pushViewController(viewController, animated: true)
 
@@ -156,6 +159,9 @@ func presentTeamController(on nav: UINavigationController) -> () -> Observable<[
             let viewController = TeamSearchController()
             let disposable = viewController
                 .selectedTeam
+                .takeWhile { _ in
+                    return nav != nil
+                }
                 .bind(to: observer)
             nav.pushViewController(viewController, animated: true)
             return Disposables.create {

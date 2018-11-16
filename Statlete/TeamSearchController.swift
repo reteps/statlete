@@ -52,7 +52,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate {
                 return cell
             }.disposed(by: disposeBag)
         
-        self.tableView.rx.modelSelected([String:String].self).do(onNext: { _ in
+        self.tableView.rx.modelSelected([String:String].self).debug("selectedTeam").do(onNext: { _ in
             self.searchController.isActive = false
 
         }).take(1).bind(to: self.selectedTeam).disposed(by: disposeBag)

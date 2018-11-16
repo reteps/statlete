@@ -34,7 +34,6 @@ extension String {
 class SettingsController: UIViewController {
     
     // Create Initial Variables
-    var selectedSegmentIndex: Int = 0
     let teamButton = UIButton()
     let segmentedControl = UISegmentedControl(items: ["Cross Country", "Track"])
     let athleteButton = UIButton()
@@ -50,18 +49,15 @@ class SettingsController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("Settings view loader...")
         self.view.backgroundColor = .white
         initModeSwitcher()
-        self.title = "Setup"
-        retrieveDefaults()
+        self.navigationItem.title = "Setup"
         initSearchTeamButton()
 
         if setupComplete {
-            print("settings complete")
-            self.title = "Settings"
+            retrieveDefaults()
+            self.navigationItem.title = "Settings"
             initSearchAthleteButton()
-            initSearchTeamButton()
             self.teamButton.setTitle(self.schoolName + " >", for: .normal)
             self.athleteButton.setTitle(self.athleteName + " >", for: .normal)
         }
@@ -84,10 +80,12 @@ class SettingsController: UIViewController {
             forKey: "schoolName")
             UserDefaults.standard.set(self.athleteName,
             forKey:"athleteName")
+            UserDefaults.standard.set(true,
+            forKey:"setupComplete")
     }
     func initModeSwitcher() {
-        
-        segmentedControl.selectedSegmentIndex = selectedSegmentIndex
+        let modes = ["":0,"CrossCountry":0,"TrackAndField":1]
+        segmentedControl.selectedSegmentIndex = modes[self.sportMode]!
         let font: [NSAttributedString.Key : Any] = [NSAttributedString.Key.font : UIFont.systemFont(ofSize: 17)]
         segmentedControl.setTitleTextAttributes(font, for: .normal)
         self.view.addSubview(segmentedControl)
@@ -109,6 +107,9 @@ class SettingsController: UIViewController {
                 self.schoolID = team["id"]!
                 self.schoolName = team["result"]!
                 self.teamButton.setTitle(self.schoolName, for: .normal)
+                if !self.setupComplete {
+                    self.initSearchAthleteButton()
+                }
                 self.athleteButton.setTitle("Choose Athlete", for: .normal)
             }).disposed(by: disposeBag)
         
@@ -120,6 +121,12 @@ class SettingsController: UIViewController {
             make.width.equalTo(300)
         }
     }
+    func getSchoolID() -> String {
+        return self.schoolID
+    }
+    func getSportMode() -> String {
+        return self.sportMode
+    }
     func initSearchAthleteButton() {
         athleteButton.backgroundColor = lightBlue
         athleteButton.setTitle("Choose Athlete", for: .normal)
@@ -127,8 +134,9 @@ class SettingsController: UIViewController {
         athleteButton.rx.tap.do(onNext: { _ in
             let modes = ["CrossCountry", "TrackAndField"]
             self.sportMode = modes[self.segmentedControl.selectedSegmentIndex]
-            print(self.sportMode)
-        }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: self.sportMode))
+            print("SM:"+self.sportMode)
+            print(self.schoolID)
+        }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: getSchoolID(), sportMode: getSportMode()))
             .subscribe(onNext: { athlete in
                 let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
                 self.athleteID = athlete["ID"].intValue
@@ -136,6 +144,9 @@ class SettingsController: UIViewController {
                 indivStats.athleteName = self.athleteName
                 indivStats.athleteID = self.athleteID
                 self.athleteButton.setTitle(self.athleteName, for: .normal)
+                if !self.setupComplete {
+                    self.setupComplete = true
+                }
                 self.saveSettings()
             }).disposed(by: disposeBag)
         self.view.addSubview(athleteButton)

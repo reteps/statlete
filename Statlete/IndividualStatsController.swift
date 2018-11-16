@@ -245,6 +245,7 @@ class IndividualStatsController: UIViewController {
             label.textColor = .black
             checks.append(checkbox)
         }
+        // TODO UIStack View
         // Constrains first checkbox to settingsView frame
         checks[0].snp.makeConstraints { (make) in
             make.top.equalTo(self.settingsView)

@@ -140,7 +140,7 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
                     }
                     let rawTimeTag = race.at_xpath(".//td[2]/a")
                     let resultID = (rawTimeTag != nil) ? rawTimeTag!["href"] : nil
-                    let time = formatEventTime(s: rawTime!.text!.replacingOccurrences(of: "h", with: ""))
+                    let time = formatEventTime(s: rawTime!.text!.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil))
                     let date = formatEventDate(s: race.at_css("td[style='width: 60px;']")!.text! + " \(year)")
                     times.append(AthleteTime(name: meetName, meetID: meetID, resultID: resultID, time: time, date: date))
                 }
@@ -198,7 +198,7 @@ func _CrossCountryRecordParser(url: String, gender: String) -> [String: [TeamTim
                     let rawTime = result.at_xpath(".//td[4]/a/text()")!.text!
                     let rawDate = result.at_xpath(".//td[5]")!.text!
                     let raceName = result.at_xpath(".//td[6]")!.text!
-                    let time = formatEventTime(s: rawTime.replacingOccurrences(of: "h", with: ""))
+                    let time = formatEventTime(s: rawTime.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil))
                     let date = formatEventDate(s: rawDate + " \(year)")
                     // TODO: Fill in meetID and resultID
                     let athleteTime = AthleteTime(name: raceName, meetID: nil, resultID: nil, time: time, date: date)
@@ -239,7 +239,7 @@ func _TrackAndFieldRecordParser(url: String, gender: String) -> [String: [TeamTi
                 results[eventName] = [TeamTimeResult]()
             }
             let rawDate = result.at_xpath(".//td[6]")!.text!
-            let time = formatEventTime(s: rawTime.replacingOccurrences(of: "h", with: "").replacingOccurrences(of: "c", with: ""))
+            let time = formatEventTime(s: rawTime.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil))
             let date = formatEventDate(s: rawDate + " \(year)")
             let athleteTime = AthleteTime(name: name, meetID: nil, resultID: nil, time: time, date: date)
             let timeResult = TeamTimeResult(rank: rank, grade: grade, time: athleteTime)
@@ -296,7 +296,7 @@ func _TrackAndFieldTimesParser(url: String, gender: String) -> [String: [Date: M
                     let meetTag = row.at_xpath(".//td[7]/a")!
                     let meetName = meetTag.text!
                     let meetID = meetTag["href"]!
-                    let time = formatEventTime(s: rawTime.replacingOccurrences(of: "[awc]", with: "", options: .regularExpression, range: nil))
+                    let time = formatEventTime(s: rawTime.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil))
 
                     let date = formatEventDate(s: rawDate + " \(year)")
                     let timeEvent = AthleteTime(name: athleteName, meetID: nil, resultID: nil, time: time, date: date)
@@ -389,3 +389,123 @@ func _CrossCountryTimesParser(url: String, gender: String) -> [String: [Date: Me
     }
     return results
 }
+
+func getCalendar(year: String, sport: String, schoolID: String) -> Observable<[JSON]> {
+    var urlSport = "tf"
+    if sport == "CrossCountry" {
+        urlSport = "xc"
+    }
+    let url = "https://www.athletic.net/api/v1/\(urlSport)Team/GetCalendar?teamID=\(schoolID)&seasonID=\(year)&editPermission=false"
+    return Observable.create { observer in
+    teamRequest(schoolID: schoolID, type: sport).map { $0[0]["publicToken"].stringValue }.subscribe(onNext: { token in
+        let headers: HTTPHeaders = [
+            "authid": schoolID,
+            "authtoken": token
+        ]
+        Alamofire.request(url, headers: headers).responseJSON { response in
+            let json = JSON(response.result.value!)
+            observer.onNext(json.arrayValue)
+            observer.onCompleted()
+        }
+    })
+        return Disposables.create()
+    }
+}
+
+func meetInfo(sport: String, meetID: String) -> Observable<[JSON]> {
+    return Observable.create { observer in
+        let url = URL(string: "https://www.athletic.net/\(sport)/meet/\(meetID)/results")!
+        
+        Alamofire.request(url)
+            .responseString { response in
+                let htmlString = response.result.value!
+                let rawTokenData = htmlString.matchingStrings(regex: "constant\\(\"params\", (.+)\\)")[0][1]
+                let rawTeamData = htmlString.matchingStrings(regex: "constant\\(\"initialData\", (.+)\\)")[0][1]
+                let jsonTokenData = rawTokenData.data(using: .utf8, allowLossyConversion: false)!
+                let jsonTeamData = rawTeamData.data(using: .utf8, allowLossyConversion: false)!
+                let parsedTokenData = try! JSON(data: jsonTokenData)
+                let parsedTeamData = try! JSON(data: jsonTeamData)
+                observer.onNext([parsedTokenData, parsedTeamData])
+                observer.onCompleted()
+        }
+        return Disposables.create()
+    }
+}
+struct MeetEvent {
+    var Name: String
+    var URL: String
+    var Gender: String
+    
+}
+
+
+func meetInfoFor(sportMode: String) -> (JSON) -> Observable<[MeetEvent]> {
+    return { meet in
+        if (sportMode == "CrossCountry") {
+            return meetInfo(sport: sportMode, meetID: meet["MeetID"].stringValue)
+                .map {
+                    $0[1]["divisions"].arrayValue
+                }.map { divisions in
+                    divisions.map { division in
+                        let raceID = division["IDMeetDiv"].stringValue
+                        let meetID = meet["MeetID"].stringValue
+                        let url = "https://www.athletic.net/CrossCountry/meet/\(meetID)/results/\(raceID)"
+                        return MeetEvent(Name: division["DivName"].stringValue, URL: url, Gender: division["Gender"].stringValue)
+                    }
+                }
+        }
+        
+        return meetInfo(sport: sportMode, meetID: meet["MeetID"].stringValue).map {
+            $0[1]["events"].arrayValue
+        }.map { events in
+            events.filter { $0["Measure"].stringValue == "M" }.map { event in
+                let meetID = meet["MeetID"].stringValue
+                let eventShort = event["EventShort"].stringValue
+                let gender = event["Gender"].stringValue
+                let divNum = "1"
+                let url = "https://www.athletic.net/TrackAndField/meet/\(meetID)/results/\(gender.lowercased())/\(divNum)/\(eventShort)"
+                return MeetEvent(Name: event["Event"].stringValue, URL: url, Gender: gender)
+            }
+        }
+    }
+}
+func getRaceInfo(url: String) -> Observable<[JSON]> {
+    return Observable.create { observer in
+        let url = URL(string: url)!
+        
+        Alamofire.request(url)
+            .responseString { response in
+                let htmlString = response.result.value!
+                let rawTokenData = htmlString.matchingStrings(regex: "constant\\(\"params\", (.+)\\)")[0][1]
+                let rawTeamData = htmlString.matchingStrings(regex: "constant\\(\"initialData\", (.+)\\)")[0][1]
+                let jsonTokenData = rawTokenData.data(using: .utf8, allowLossyConversion: false)!
+                let jsonTeamData = rawTeamData.data(using: .utf8, allowLossyConversion: false)!
+                let parsedTokenData = try! JSON(data: jsonTokenData)
+                let parsedTeamData = try! JSON(data: jsonTeamData)
+                observer.onNext([parsedTokenData, parsedTeamData])
+                observer.onCompleted()
+        }
+        return Disposables.create()
+    }
+}
+struct RaceResult {
+    var Result: String
+    var SortValue: Double
+    var Place: Int
+    var AthleteID: Int
+    var FirstName: String
+    var LastName: String
+    var Grade: String
+    var AgeGrade: String
+    var Gender: String
+    var TeamID: Int
+    var SchoolName: String
+    var TeamCode: String
+    var sr: Bool
+    var pr: Bool
+    var ShortCode: String
+}
+func raceInfoFor(url: String) -> Observable<[JSON]> {
+    return getRaceInfo(url: url).map { $0[1]["results"].arrayValue }
+}
+

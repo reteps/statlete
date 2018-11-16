@@ -18,9 +18,9 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://www.appcoda.com/swift-delegate/
         let options = UINavigationController(rootViewController: OptionsController())
         let individual = IndividualStatsController()
-        let team = TeamStatsController()
+        let meets = UINavigationController(rootViewController: MeetViewController())
         // let rankings = TeamRankingsController()
-        self.viewControllers = [options, individual, team]
+        self.viewControllers = [options, individual, meets]
         let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users]//*, .medal
         for index in 0..<self.viewControllers!.count {
             

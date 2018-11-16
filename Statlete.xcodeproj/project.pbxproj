@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		600EAE123AB3C4E8B593701B /* Pods_Statlete.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6544A8E92BDB626B3C75D41B /* Pods_Statlete.framework */; };
 		D003589B2157F48A008D4B64 /* TabController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D003589A2157F48A008D4B64 /* TabController.swift */; };
+		D04CAB53219DCCAE00BD7470 /* IndividualMeetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */; };
+		D0591FB7219A5D0800FDA8B7 /* MeetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */; };
 		D06F8439215C54CB00CFDF3E /* IndividualStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */; };
 		D074CD0521518949004AA7BB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D074CD0421518949004AA7BB /* AppDelegate.swift */; };
 		D074CD0A21518949004AA7BB /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D074CD0821518949004AA7BB /* Main.storyboard */; };
@@ -20,7 +22,6 @@
 		D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */; };
 		D07A4B83215E5E94009CF6C5 /* OptionsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D07A4B82215E5E94009CF6C5 /* OptionsController.swift */; };
 		D09E68B521750D8F005662E3 /* BalloonMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09E68B421750D8F005662E3 /* BalloonMarker.swift */; };
-		D0C4BDE5215ED28500FFD45A /* TeamStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C4BDE4215ED28500FFD45A /* TeamStatsController.swift */; };
 		D0C4BDE7215ED33400FFD45A /* TeamRankingsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C4BDE6215ED33400FFD45A /* TeamRankingsController.swift */; };
 		D0C4BDED2163D40200FFD45A /* TODO.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C4BDEC2163D40200FFD45A /* TODO.swift */; };
 		D0C4BDEF216575CF00FFD45A /* themeGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0C4BDEE216575CF00FFD45A /* themeGenerator.swift */; };
@@ -31,6 +32,8 @@
 		720A11A2CFC22BBC5F5AA572 /* Pods-Statlete.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Statlete.debug.xcconfig"; path = "Pods/Target Support Files/Pods-Statlete/Pods-Statlete.debug.xcconfig"; sourceTree = "<group>"; };
 		96C2B824457F7AFAFA1D7C22 /* Pods-Statlete.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Statlete.release.xcconfig"; path = "Pods/Target Support Files/Pods-Statlete/Pods-Statlete.release.xcconfig"; sourceTree = "<group>"; };
 		D003589A2157F48A008D4B64 /* TabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabController.swift; sourceTree = "<group>"; };
+		D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualMeetController.swift; sourceTree = "<group>"; };
+		D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetViewController.swift; sourceTree = "<group>"; };
 		D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualStatsController.swift; sourceTree = "<group>"; };
 		D074CD0121518949004AA7BB /* Statlete.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Statlete.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D074CD0421518949004AA7BB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -44,7 +47,6 @@
 		D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = athleticNetHandlers.swift; sourceTree = "<group>"; };
 		D07A4B82215E5E94009CF6C5 /* OptionsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OptionsController.swift; sourceTree = "<group>"; };
 		D09E68B421750D8F005662E3 /* BalloonMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalloonMarker.swift; sourceTree = "<group>"; };
-		D0C4BDE4215ED28500FFD45A /* TeamStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamStatsController.swift; sourceTree = "<group>"; };
 		D0C4BDE6215ED33400FFD45A /* TeamRankingsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamRankingsController.swift; sourceTree = "<group>"; };
 		D0C4BDEC2163D40200FFD45A /* TODO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TODO.swift; sourceTree = "<group>"; };
 		D0C4BDEE216575CF00FFD45A /* themeGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = themeGenerator.swift; sourceTree = "<group>"; };
@@ -97,8 +99,9 @@
 				D0C4BDEC2163D40200FFD45A /* TODO.swift */,
 				D07A4B82215E5E94009CF6C5 /* OptionsController.swift */,
 				D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */,
-				D0C4BDE4215ED28500FFD45A /* TeamStatsController.swift */,
 				D0C4BDE6215ED33400FFD45A /* TeamRankingsController.swift */,
+				D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */,
+				D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */,
 				D075D7432153D49D00787AB0 /* SettingsController.swift */,
 				D075D74921571FCC00787AB0 /* TeamSearchController.swift */,
 				D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */,
@@ -264,11 +267,12 @@
 				D07A4B83215E5E94009CF6C5 /* OptionsController.swift in Sources */,
 				D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */,
 				D0C4BDE7215ED33400FFD45A /* TeamRankingsController.swift in Sources */,
+				D04CAB53219DCCAE00BD7470 /* IndividualMeetController.swift in Sources */,
 				D0C4BDEF216575CF00FFD45A /* themeGenerator.swift in Sources */,
 				D09E68B521750D8F005662E3 /* BalloonMarker.swift in Sources */,
+				D0591FB7219A5D0800FDA8B7 /* MeetViewController.swift in Sources */,
 				D003589B2157F48A008D4B64 /* TabController.swift in Sources */,
 				D075D74A21571FCC00787AB0 /* TeamSearchController.swift in Sources */,
-				D0C4BDE5215ED28500FFD45A /* TeamStatsController.swift in Sources */,
 				D075D74821571FAA00787AB0 /* AthleteSearchController.swift in Sources */,
 				D075D7442153D49D00787AB0 /* SettingsController.swift in Sources */,
 				D074CD0521518949004AA7BB /* AppDelegate.swift in Sources */,
