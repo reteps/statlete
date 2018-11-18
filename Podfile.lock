@@ -6,10 +6,15 @@ PODS:
   - Charts (3.2.0):
     - Charts/Core (= 3.2.0)
   - Charts/Core (3.2.0)
-  - FontAwesome.swift (1.4.0)
+  - Differentiator (3.1.0)
+  - FontAwesome.swift (1.4.4)
   - Kanna (4.0.2)
   - M13Checkbox (3.2.2)
   - RxCocoa (4.3.0):
+    - RxSwift (~> 4.0)
+  - RxDataSources (3.1.0):
+    - Differentiator (~> 3.0)
+    - RxCocoa (~> 4.0)
     - RxSwift (~> 4.0)
   - RxSwift (4.3.0)
   - SnapKit (4.0.1)
@@ -19,10 +24,11 @@ DEPENDENCIES:
   - Alamofire (~> 4.7)
   - ChameleonFramework/Swift (from `https://github.com/ViccAlexander/Chameleon.git`)
   - Charts (~> 3.0)
-  - FontAwesome.swift (= 1.4.0)
+  - FontAwesome.swift (~> 1.4.1)
   - Kanna (~> 4.0.0)
   - M13Checkbox (from `https://github.com/Marxon13/M13Checkbox.git`, branch `swift_4_2`)
   - RxCocoa (~> 4.0)
+  - RxDataSources (~> 3.0)
   - RxSwift (~> 4.0)
   - SnapKit (~> 4.0.0)
   - SwiftyJSON (~> 4.0)
@@ -31,9 +37,11 @@ SPEC REPOS:
   https://github.com/cocoapods/specs.git:
     - Alamofire
     - Charts
+    - Differentiator
     - FontAwesome.swift
     - Kanna
     - RxCocoa
+    - RxDataSources
     - RxSwift
     - SnapKit
     - SwiftyJSON
@@ -57,14 +65,16 @@ SPEC CHECKSUMS:
   Alamofire: c7287b6e5d7da964a70935e5db17046b7fde6568
   ChameleonFramework: d21a3cc247abfe5e37609a283a8238b03575cf64
   Charts: 680c8328bd5e90cb14f67e00d2176f3113d19141
-  FontAwesome.swift: a9b9c4aa4feb54edda5e52b2e0be244450768edb
+  Differentiator: be49ca3408f0ecfc761e4c7763d20c62be01b9ad
+  FontAwesome.swift: 17b93524b9f61136a8566344517b8556ed584e87
   Kanna: c60b61d72554bf04ed1ee074f9b379855cab4892
   M13Checkbox: 82182615a76646475b451ebe448a998f77f8cc6e
   RxCocoa: 71b9cce833fbcb89a8eec11816dd225830c2bd3c
+  RxDataSources: a843bad90c29817f5923ec8163f4af2de084ceb3
   RxSwift: a9717a34df3179fe63563f76e046ad345078dd3a
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
   SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
 
-PODFILE CHECKSUM: 42195a0d395f784f4e7b944bb1ea22ba4e143bd1
+PODFILE CHECKSUM: d822052f0a84ba600e74bdc44849d6b206451d96
 
 COCOAPODS: 1.5.3

@@ -33,14 +33,17 @@ class IndividualStatsController: UIViewController {
     UIColor(hexString: "b283c6")!,
     UIColor(hexString: "c45850")!]
     // Takes an event and returns an array of lines based on the data
-    func createLineChartData(event: [String: [AthleteTime]]) -> [LineChartDataSet] {
+    func createLineChartData(event: [String: [AthleteTime]]?) -> [LineChartDataSet] {
         var lines = [LineChartDataSet]()
-        let orderedYears = event.keys.sorted()
+        if event == nil {
+            return lines
+        }
+        let orderedYears = (event == nil) ? [String]() : event!.keys.sorted()
         // let orderedYears = eventKeys.sort(by: { Int($0) < Int($1) }).sorted()
         for i in 0..<orderedYears.count {
             // https://stackoverflow.com/questions/41720445/ios-charts-3-0-align-x-labels-dates-with-plots/41959257#41959257
             let year = orderedYears[i]
-            let season = event[year]!
+            let season = event![year]!
             var lineChartEntries = [ChartDataEntry]()
             for race in season {
                 // https://stackoverflow.com/questions/52337853/date-from-calendar-datecomponents-returning-nil-in-swift/52337942
@@ -86,11 +89,13 @@ class IndividualStatsController: UIViewController {
         let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
         // TODO: event picker
         self.events = athlete.events
-        let event = self.events.first!.value
+        let event = self.events.first?.value
         self.lines = createLineChartData(event: event)
-        let orderedYears = event.keys.sorted()
+        let orderedYears = (event == nil) ? [String]() : event!.keys.sorted()
         createChart(lines: lines, orderedYears: orderedYears)
-        createCheckboxesAndConstrain(orderedYears: orderedYears)
+        if event != nil {
+            createCheckboxesAndConstrain(orderedYears: orderedYears)
+        }
         self.picker.delegate = nil
         self.picker.dataSource = nil
         Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in

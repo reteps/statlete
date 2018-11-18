@@ -42,7 +42,8 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
     func configureRxSwift() {
         // https://stackoverflow.com/questions/42179134/how-to-filter-array-of-observable-element-rxswift
         // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
-        let allAthletes = teamRequest(schoolID: self.schoolID, type: self.sportMode).map { $0[1]["athletes"].arrayValue }
+        let url = "https://www.athletic.net/\(self.sportMode)/School.aspx?SchoolID=\(self.schoolID)"
+        let allAthletes = dataRequest(url: url).map { $0[1]["athletes"].arrayValue }
         let searchFilter = self.searchController.searchBar.rx.text.orEmpty.asObservable()
         let cancelFilter = self.searchController.searchBar.rx.textDidEndEditing.map( { "" } )
         let combinedFilter = Observable.of(searchFilter, cancelFilter).merge()

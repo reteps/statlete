@@ -73,7 +73,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         
         self.tableView.rx.modelSelected(JSON.self).debug("selected").filter {
             return $0["MeetHasResults"].intValue == 1
-        }.flatMap(meetInfoFor(sportMode: self.sportMode!))
+        }.flatMap(meetInfoFor(sport: self.sportMode!))
         .do(onNext: { _ in
             self.pickerContainer.isHidden = false
             self.pickerContainer.isExclusiveTouch = true

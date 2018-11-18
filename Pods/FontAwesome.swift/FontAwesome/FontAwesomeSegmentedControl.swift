@@ -25,6 +25,7 @@ import UIKit
 @IBDesignable public class FontAwesomeSegmentedControl: UISegmentedControl {
 
     @IBInspectable public var isFontAwesomeCSSCode: Bool = true
+    @IBInspectable public var styleName: String = "Brands"
     @IBInspectable public var size: CGFloat = 22.0
 
     public override func awakeFromNib() {
@@ -46,7 +47,7 @@ import UIKit
         }
         updateFontAttributes { (state, font) in
             var attributes = titleTextAttributes(for: state) ?? [:]
-            attributes[NSAttributedString.Key.font] = font
+            attributes[NSAttributedStringKey.font] = font
             setTitleTextAttributes(attributes, for: state)
         }
     }
@@ -54,20 +55,23 @@ import UIKit
 }
 
 extension FontAwesomeSegmentedControl: FontAwesomeTextRepresentable {
-
     var isTextCSSCode: Bool {
         return isFontAwesomeCSSCode
+    }
+
+    var fontStyle: FontAwesomeStyle {
+        return FontAwesomeStyle(rawValue: styleName) ?? .solid
     }
 
     var textSize: CGFloat {
         return size
     }
 
-    static func supportedStates() -> [UIControl.State] {
+    static func supportedStates() -> [UIControlState] {
         if #available(iOS 9.0, *) {
-            return [UIControl.State.normal, UIControl.State.highlighted, UIControl.State.disabled, UIControl.State.focused, UIControl.State.selected, UIControl.State.application, UIControl.State.reserved]
+            return [.normal, .highlighted, .disabled, .focused, .selected, .application, .reserved]
         } else {
-            return [UIControl.State.normal, UIControl.State.highlighted, UIControl.State.disabled, UIControl.State.selected, UIControl.State.application, UIControl.State.reserved]
+            return [.normal, .highlighted, .disabled, .selected, .application, .reserved]
         }
     }
 
