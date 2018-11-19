@@ -159,9 +159,6 @@ func presentTeamController(on nav: UINavigationController) -> () -> Observable<[
             let viewController = TeamSearchController()
             let disposable = viewController
                 .selectedTeam
-                .takeWhile { _ in
-                    return nav != nil
-                }
                 .bind(to: observer)
             nav.pushViewController(viewController, animated: true)
             return Disposables.create {

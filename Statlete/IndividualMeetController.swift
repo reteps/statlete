@@ -24,33 +24,35 @@ extension UIAlertController {
         }
     }
     
-    static func present(
-        in viewController: UIViewController,
-        title: String?,
-        message: String?,
-        style: UIAlertController.Style,
-        actions: [AlertAction])
-        -> Observable<Int>
-    {
-        return Observable.create { observer in
-            let alertController = UIAlertController(title: title, message: message, preferredStyle: style)
-            
-            actions.enumerated().forEach { index, action in
-                let action = UIAlertAction(title: action.title, style: action.style) { _ in
-                    observer.onNext(index)
-                    observer.onCompleted()
+        static func present(
+            in viewController: UIViewController,
+            title: String?,
+            message: String?,
+            style: UIAlertController.Style,
+            options: [String])
+            -> Observable<Int>
+        {
+            return Observable.create { observer in
+                let alertController = UIAlertController(title: title, message: message, preferredStyle: style)
+                let actions = options.enumerated().map { offset, element in
+                    UIAlertAction(title: element, style: .default, handler: { _ in fulfill(offset) })
                 }
-                alertController.addAction(action)
+                actions.enumerated().forEach { index, action in
+                    let action = UIAlertAction(title: action.title, style: action.style) { _ in
+                        observer.onNext(index)
+                        observer.onCompleted()
+                    }
+                    alertController.addAction(action)
+                }
+                
+                viewController.present(alertController, animated: true, completion: nil)
+                return Disposables.create {
+                    // Dismisses on .dispose()
+                    alertController.dismiss(animated: true, completion: nil)
+                }
             }
             
-            viewController.present(alertController, animated: true, completion: nil)
-            return Disposables.create {
-                // Dismisses on .dispose()
-                alertController.dismiss(animated: true, completion: nil)
-            }
         }
-        
-    }
     
 }
 
@@ -72,7 +74,6 @@ class IndividualMeetController: UIViewController {
     let tableView = UITableView()
     var filterActionSheet = UIAlertController()
     let testButton = UIButton()
-    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.addSubview(self.tableView)
@@ -86,8 +87,9 @@ class IndividualMeetController: UIViewController {
             make.edges.equalToSuperview()
         }
         self.testButton.setTitle("Filter", for: .normal)
-        self.testButton.rx.tap.subscribe(onNext: {
-            self.presentActionSheet()
+        self.testButton.rx.tap.flatMap { _ in
+            let options = ["Time (Descending)", "Time(Ascending)", "Alphabetical (Ascending)",  "Alphabetical (Descending)", "Team (Descending)"]
+            return UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, options: options)
         })
         self.filterView.backgroundColor = .blue
         self.tableView.snp.makeConstraints { make in
@@ -114,13 +116,13 @@ class IndividualMeetController: UIViewController {
         let actions: [UIAlertController.AlertAction] = [
             .action(title: "Time (Descending)", style: .default),
             .action(title: "Time (Ascending)", style: .default),
-
+            .action(title: "Alphabetical (Ascending)", style: .default),
+            .action(title: "Alphabetical (Ascending)", style: .default),
+            .action(title: "Team", style: .default),
             .action(title: "Cancel", style: .cancel)
         ]
         UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, actions: actions)
-        .subscribe(onNext: { buttonIndex in
-            print(buttonIndex)
-        })
+            .bind(to: sortIndex)
         .disposed(by: disposeBag)
         
 
@@ -151,26 +153,14 @@ class IndividualMeetController: UIViewController {
         }, titleForHeaderInSection: { dataSource, index in
             return dataSource.sectionModels[index].Name
         })
-        raceInfoFor(url: self.meet!.URL, sport: self.meet!.Sport).map { race in
+        let raceRounds = raceInfoFor(url: self.meet!.URL, sport: self.meet!.Sport).map { race in
             return race.Rounds
-            
-            }.bind(to: tableView.rx.items(dataSource: dataSource))
+        }
+        sortIndex.startWith(0).withLatestFrom(raceRounds) {
+            index, requests in
+        }
+        raceRounds.bind(to: tableView.rx.items(dataSource: dataSource))
             .disposed(by: disposeBag)
-        /*
-        raceInfoFor(url: meet!.URL, sport: meet!.Sport)
-            .filter { _ in
-                return self.bindResults == true
-            }.flatMapLatest {
-                $0.Rounds
-            }.bind(to: self.tableView.rx.items) { myTableView, row, element in
-                // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
-                let cell = myTableView.dequeueReusableCell(withIdentifier: "ResultCell") as! ResultCell
-                cell.placeLabel.text = element.Name
-                cell.nameLabel.text = element.AthleteName
-                cell.timeLabel.text = element["Result"].stringValue.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil)
-
-                return cell
-            }.disposed(by: disposeBag)*/
         
     }
 }
@@ -185,8 +175,6 @@ class ResultCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         
-        print(self.contentView.frame.width)
-        print(self.contentView.frame.height)
         self.contentView.addSubview(placeLabel)
         self.contentView.addSubview(nameLabel)
         self.contentView.addSubview(timeLabel)

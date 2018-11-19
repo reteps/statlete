@@ -95,6 +95,7 @@ func formatEventTime(s: String) -> Date {
 // Returns an Athlete from an athleteID
 
 func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Athlete? {
+    print(athleteID, athleteName, type)
     let url = URL(string: "https://www.athletic.net/\(type)/Athlete.aspx?AID=\(athleteID)#!/L0")
     if let doc = try? HTML(url: url!, encoding: .utf8) {
         var athlete = Athlete(name: athleteName, athleteID: athleteID, events: [:])

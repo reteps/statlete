@@ -121,22 +121,16 @@ class SettingsController: UIViewController {
             make.width.equalTo(300)
         }
     }
-    func getSchoolID() -> String {
-        return self.schoolID
-    }
-    func getSportMode() -> String {
-        return self.sportMode
-    }
     func initSearchAthleteButton() {
         athleteButton.backgroundColor = lightBlue
         athleteButton.setTitle("Choose Athlete", for: .normal)
         athleteButton.layer.cornerRadius = 10
         athleteButton.rx.tap.do(onNext: { _ in
             let modes = ["CrossCountry", "TrackAndField"]
-            self.sportMode = modes[self.segmentedControl.selectedSegmentIndex]
+            self.sportMode = ["CrossCountry", "TrackAndField"][self.segmentedControl.selectedSegmentIndex]
             print("SM:"+self.sportMode)
-            print(self.schoolID)
-        }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: getSchoolID(), sportMode: getSportMode()))
+            print("ID:"+self.schoolID)
+        }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: ["CrossCountry", "TrackAndField"][self.segmentedControl.selectedSegmentIndex]))
             .subscribe(onNext: { athlete in
                 let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
                 self.athleteID = athlete["ID"].intValue
