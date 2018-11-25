@@ -59,11 +59,11 @@ class IndividualMeetController: UIViewController {
     
     var meet: MeetEvent? = nil
     var disposeBag = DisposeBag()
-    var bindResults: Bool = true
     var filterView = UIView()
     let tableView = UITableView()
     var filterActionSheet = UIAlertController()
     let filterButton = UIButton()
+    let searchBar = UISearchBar()
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.addSubview(self.tableView)
@@ -71,16 +71,26 @@ class IndividualMeetController: UIViewController {
         self.filterView.snp.makeConstraints { make in
             make.width.left.right.equalTo(self.view)
             make.top.equalTo(self.topLayoutGuide.snp.bottom)
-            make.height.equalTo(100)
+            make.height.equalTo(40)
         }
         self.filterView.addSubview(self.filterButton)
-        self.filterButton.snp.makeConstraints { make in
-            make.edges.equalToSuperview()
+        self.filterView.addSubview(self.searchBar)
+        self.searchBar.snp.makeConstraints { make in
+            make.top.bottom.right.equalToSuperview()
+            make.left.equalTo(self.filterButton.snp.right)
         }
-        self.filterButton.setTitle("Filter", for: .normal)
-        self.filterView.backgroundColor = .blue
+        self.filterButton.snp.makeConstraints { make in
+            make.top.bottom.left.equalToSuperview()
+            make.width.equalTo(100)
+        }
+        self.searchBar.rx.text.orEmpty.subscribe( onNext: { text in
+            print(text)
+        })
+        self.filterButton.setTitle("Sort", for: .normal)
+        self.filterView.backgroundColor = .white
+        self.filterButton.setTitleColor(.black, for: .normal)
         self.tableView.snp.makeConstraints { make in
-            make.top.equalTo(self.filterView).offset(100)
+            make.top.equalTo(self.filterView).offset(40)
             make.left.right.bottom.equalTo(self.view)
         }
         self.tableView.delegate = nil

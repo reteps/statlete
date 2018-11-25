@@ -67,7 +67,7 @@ struct AthleteTime {
     var meetID: String? // Optional for use in other functions
     var resultID: String? // Race may not have result ID
     var time: Date
-    var date: Date
+    var date: Date    
 }
 // Helper function, formats a date
 func formatEventDate(s: String) -> Date {

@@ -30,6 +30,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     let yearPickerBar = UIToolbar()
     let yearPickerContainer = UIView()
     let races = PublishSubject<[JSON]>()
+    let dateFormatter = DateFormatter()
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         self.meetPickerContainer.isExclusiveTouch = false
@@ -42,55 +43,15 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         self.view.backgroundColor = .white
         self.tableView.delegate = nil
         self.tableView.dataSource = nil
-        // Meet Picker
-        meetPicker.delegate = nil
-        meetPicker.dataSource = nil
-        self.view.addSubview(meetPickerContainer)
-        meetPickerContainer.addSubview(self.meetPicker)
-        meetPickerContainer.addSubview(self.meetPickerBar)
-        meetPickerContainer.backgroundColor = .white
-        meetPickerContainer.snp.makeConstraints { make in
-            make.left.right.bottom.width.equalTo(self.view)
-            make.top.equalTo(self.view.snp.centerY)
-            //make.top.equalTo(self.view.snp.centerY)
-        }
-        self.meetPicker.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalTo(self.meetPickerContainer)
-            make.top.equalTo(self.meetPickerContainer).offset(50)
-        }
-        self.meetPickerBar.snp.makeConstraints { make in
-            make.leading.trailing.top.equalTo(self.meetPickerContainer)
-            make.height.equalTo(50)
-        }
-        // Year Picker
-        yearPicker.delegate = nil
-        yearPicker.dataSource = nil
-        self.view.addSubview(yearPickerContainer)
-        yearPickerContainer.addSubview(self.yearPicker)
-        yearPickerContainer.addSubview(self.yearPickerBar)
-        yearPickerContainer.backgroundColor = .white
-        yearPickerContainer.snp.makeConstraints { make in
-            make.left.right.bottom.width.equalTo(self.view)
-            make.top.equalTo(self.view.snp.centerY)
-            //make.top.equalTo(self.view.snp.centerY)
-        }
-        self.yearPicker.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalTo(self.yearPickerContainer)
-            make.top.equalTo(self.yearPickerContainer).offset(50)
-        }
-        self.yearPickerBar.snp.makeConstraints { make in
-            make.leading.trailing.top.equalTo(self.yearPickerContainer)
-            make.height.equalTo(50)
-        }
         
         self.tableView.estimatedRowHeight = 40
         self.tableView.rowHeight = UITableView.automaticDimension
 
         self.navigationItem.title = self.schoolName
-
-
-        initPicker()
-        initPickerBar()
+        initMeetPickerView()
+        initMeetPicker()
+        initYearPickerView()
+        initYearPicker()
         self.tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
 
         self.navigationItem.leftBarButtonItem = UIBarButtonItem()
@@ -162,32 +123,85 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
                 } else {
                     cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarCheck, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
                 }
+                let rawDate = element["Date"].stringValue
+                self.dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                let date = self.dateFormatter.date(from: rawDate)
+                self.dateFormatter.dateFormat = "MMM dd, Y"
+                cell.meetDate.text = self.dateFormatter.string(from: date!)
                 return cell
             }.disposed(by: disposeBag)
     
     }
-    func initPickerBar() {
-        let doneButton = UIBarButtonItem(title: "Done", style: .plain, target: nil, action: nil)
+    func initMeetPickerView() {
         // https://www.hackingwithswift.com/example-code/uikit/how-to-add-a-flexible-space-to-a-uibarbuttonitem
-        let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        self.view.addSubview(meetPickerContainer)
+        self.meetPickerContainer.addSubview(self.meetPicker)
+        self.meetPickerContainer.addSubview(self.meetPickerBar)
+        self.meetPickerContainer.backgroundColor = .white
+        self.meetPickerContainer.snp.makeConstraints { make in
+            make.left.right.bottom.width.equalTo(self.view)
+            make.top.equalTo(self.view.snp.centerY)
+            //make.top.equalTo(self.view.snp.centerY)
+        }
+
+        
+    }
+    
+    func initMeetPicker() {
+        self.meetPicker.delegate = nil
+        self.meetPicker.dataSource = nil
+        self.meetPicker.backgroundColor = .white
+        self.meetPicker.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalTo(self.meetPickerContainer)
+            make.top.equalTo(self.meetPickerContainer).offset(50)
+        }
+        self.meetPickerBar.snp.makeConstraints { make in
+            make.leading.trailing.top.equalTo(self.meetPickerContainer)
+            make.height.equalTo(50)
+        }
         let cancelButton = UIBarButtonItem(title: "Cancel", style: .plain, target: nil, action: nil)
-        doneButton.rx.tap.subscribe(onNext: { _ in
-            // TODO
-            print(self.meetPicker.selectedRow(inComponent: 0))
-        }).disposed(by: disposeBag)
         
         cancelButton.rx.tap.subscribe(onNext: { _ in
             self.meetPickerContainer.isHidden = true
         }).disposed(by: disposeBag)
-        self.meetPickerBar.setItems([cancelButton, spacer, doneButton], animated: false)
+        self.meetPickerBar.setItems([cancelButton], animated: false)
         self.meetPickerBar.sizeToFit()
         self.meetPickerBar.isUserInteractionEnabled = true
         
     }
-    
-    func initPicker() {
-        self.meetPicker.backgroundColor = .white
+    func initYearPicker() {
+        yearPicker.delegate = nil
+        yearPicker.dataSource = nil
+
+        self.yearPicker.backgroundColor = .white
+        self.yearPicker.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalTo(self.yearPickerContainer)
+            make.top.equalTo(self.yearPickerContainer).offset(50)
+        }
+        self.yearPickerBar.snp.makeConstraints { make in
+            make.leading.trailing.top.equalTo(self.yearPickerContainer)
+            make.height.equalTo(50)
+        }
+        let cancelButton = UIBarButtonItem(title: "Cancel", style: .plain, target: nil, action: nil)
         
+        cancelButton.rx.tap.subscribe(onNext: { _ in
+            self.yearPickerContainer.isHidden = true
+        }).disposed(by: disposeBag)
+        self.yearPickerBar.setItems([cancelButton], animated: false)
+        self.yearPickerBar.sizeToFit()
+        self.yearPickerBar.isUserInteractionEnabled = true
+    }
+    
+    func initYearPickerView() {
+        self.view.addSubview(yearPickerContainer)
+        yearPickerContainer.addSubview(self.yearPicker)
+        yearPickerContainer.addSubview(self.yearPickerBar)
+        yearPickerContainer.backgroundColor = .white
+        yearPickerContainer.snp.makeConstraints { make in
+            make.left.right.bottom.width.equalTo(self.view)
+            make.top.equalTo(self.view.snp.centerY)
+            //make.top.equalTo(self.view.snp.centerY)
+        }
     }
     //
 }
@@ -209,8 +223,12 @@ class MeetCell: UITableViewCell {
         self.meetStatusWrapper.snp.makeConstraints { make in
             make.width.height.equalTo(30)
         }
+        meetDate.font = UIFont.systemFont(ofSize: 10)
+
         self.meetDate.snp.makeConstraints { make in
-            make.height.equalTo(30)
+            make.left.equalTo(meetName)
+            make.top.equalTo(meetName.snp.bottom)
+            make.height.equalTo(10)
         }
     }
     required init?(coder aDecoder: NSCoder) {
