@@ -371,7 +371,15 @@ func _CrossCountryTimesParser(url: String, gender: String) -> [String: [Date: Me
     }
     return results
 }
-
+func getCalendarYears(sport: String, schoolID: String) -> Observable<[String]> {
+    let url = "https://www.athletic.net/\(sport)/School.aspx?SchoolID=\(schoolID)"
+    return dataRequest(url: url).map { data in
+        var newSeasons = data[1]["seasons"].dictionaryValue.map { (key, value) in
+            return value["ID"].stringValue
+        }
+        return newSeasons.sorted().reversed()
+    }
+}
 func getCalendar(year: String, sport: String, schoolID: String) -> Observable<[JSON]> {
     var urlSport = "tf"
     if sport == "CrossCountry" {
@@ -443,6 +451,7 @@ func meetInfoFor(sport: String) -> (JSON) -> Observable<[MeetEvent]> {
 // gets params and initialData from url
 func dataRequest(url: String) -> Observable<[JSON]> {
     return Observable.create { observer in
+        print(url)
         let url = URL(string: url)!
         
         Alamofire.request(url)
@@ -466,7 +475,7 @@ struct RaceResult {
     var AthleteName: String
     var Place: Int?
     var Team: String?
-    var Grade: Int?
+    var Grade: String?
     var isSR: Bool
     var isPR: Bool
     var ResultCode: String?
@@ -482,7 +491,6 @@ struct Round {
 }
 func raceInfoFor(url: String, sport: String) -> Observable<Race> {
     return dataRequest(url: url).map { data in
-        print("RUNNING")
         let results = data[1]["results"].arrayValue
         var rounds = [String: String]()
         if (sport == "TrackAndField") {
@@ -493,20 +501,18 @@ func raceInfoFor(url: String, sport: String) -> Observable<Race> {
             }
         }
         var rawRoundData = [String: [RaceResult]]()
-        print(results)
         results.forEach { result in
             let time = result["Result"].stringValue.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil)
             let athleteName = (result["AthleteName"].string != nil) ? result["AthleteName"].stringValue : result["FirstName"].stringValue + " " + result["LastName"].stringValue
             let place = result["Place"].int
             let team = result["SchoolName"].string
             let sortValue = result["SortValue"].doubleValue
-            let grade = result["Grade"].int
+            let grade = result["Grade"].string
             let isSR = result["sr"].boolValue
             let isPR = result["pr"].boolValue
             let roundName = (result["Round"].string != nil) ? rounds[result["Round"].stringValue]!: "Results"
             let resultCode = result["ShortCode"].string
             let raceStruct = RaceResult(Result: time, SortValue: sortValue, AthleteName: athleteName, Place: place, Team: team,  Grade: grade, isSR: isSR, isPR: isPR, ResultCode: resultCode)
-            print("RUNNING:",athleteName)
             if rawRoundData[roundName] == nil {
                 rawRoundData[roundName] = [RaceResult]()
             }

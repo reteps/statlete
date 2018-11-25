@@ -12,6 +12,9 @@ import RxSwift
 import RxCocoa
 import SwiftyJSON
 import SnapKit
+import FontAwesome_swift
+import SafariServices
+
 class MeetViewController: UITableViewController, UISearchBarDelegate {
     var schoolName = UserDefaults.standard.string(forKey: "schoolName")
     let sportMode = UserDefaults.standard.string(forKey: "sportMode")
@@ -20,14 +23,18 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     var searchController: UISearchController!
     var searchControllerHeight = 0
     let disposeBag = DisposeBag()
-    let picker = UIPickerView()
-    let pickerBar = UIToolbar()
-    let pickerContainer = UIView()
+    let meetPicker = UIPickerView()
+    let meetPickerBar = UIToolbar()
+    let meetPickerContainer = UIView()
+    let yearPicker = UIPickerView()
+    let yearPickerBar = UIToolbar()
+    let yearPickerContainer = UIView()
     let races = PublishSubject<[JSON]>()
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.pickerContainer.isExclusiveTouch = false
-        self.pickerContainer.isHidden = true
+        self.meetPickerContainer.isExclusiveTouch = false
+        self.meetPickerContainer.isHidden = true
+        self.yearPickerContainer.isHidden = true
     }
     
     override func viewDidLoad() {
@@ -35,30 +42,59 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         self.view.backgroundColor = .white
         self.tableView.delegate = nil
         self.tableView.dataSource = nil
-        self.picker.delegate = nil
-        self.picker.dataSource = nil
-        self.tableView.backgroundColor = .orange
-        self.view.addSubview(pickerContainer)
-        self.pickerContainer.addSubview(self.picker)
-        self.pickerContainer.backgroundColor = .purple
-        self.pickerContainer.addSubview(self.pickerBar)
-        pickerContainer.snp.makeConstraints { make in
-            make.left.right.bottom.width.equalTo(self.tableView)
-            make.top.equalTo(self.tableView.snp.centerY)
+        // Meet Picker
+        meetPicker.delegate = nil
+        meetPicker.dataSource = nil
+        self.view.addSubview(meetPickerContainer)
+        meetPickerContainer.addSubview(self.meetPicker)
+        meetPickerContainer.addSubview(self.meetPickerBar)
+        meetPickerContainer.backgroundColor = .white
+        meetPickerContainer.snp.makeConstraints { make in
+            make.left.right.bottom.width.equalTo(self.view)
+            make.top.equalTo(self.view.snp.centerY)
             //make.top.equalTo(self.view.snp.centerY)
         }
-        print(self.pickerContainer.frame.width)
-        self.picker.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalTo(self.pickerContainer)
-            make.top.equalTo(self.pickerContainer).offset(50)
+        self.meetPicker.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalTo(self.meetPickerContainer)
+            make.top.equalTo(self.meetPickerContainer).offset(50)
         }
-        self.pickerBar.snp.makeConstraints { make in
-            make.leading.trailing.top.equalTo(self.pickerContainer)
+        self.meetPickerBar.snp.makeConstraints { make in
+            make.leading.trailing.top.equalTo(self.meetPickerContainer)
             make.height.equalTo(50)
         }
+        // Year Picker
+        yearPicker.delegate = nil
+        yearPicker.dataSource = nil
+        self.view.addSubview(yearPickerContainer)
+        yearPickerContainer.addSubview(self.yearPicker)
+        yearPickerContainer.addSubview(self.yearPickerBar)
+        yearPickerContainer.backgroundColor = .white
+        yearPickerContainer.snp.makeConstraints { make in
+            make.left.right.bottom.width.equalTo(self.view)
+            make.top.equalTo(self.view.snp.centerY)
+            //make.top.equalTo(self.view.snp.centerY)
+        }
+        self.yearPicker.snp.makeConstraints { make in
+            make.leading.trailing.bottom.equalTo(self.yearPickerContainer)
+            make.top.equalTo(self.yearPickerContainer).offset(50)
+        }
+        self.yearPickerBar.snp.makeConstraints { make in
+            make.leading.trailing.top.equalTo(self.yearPickerContainer)
+            make.height.equalTo(50)
+        }
+        
+        self.tableView.estimatedRowHeight = 40
+        self.tableView.rowHeight = UITableView.automaticDimension
+
+        self.navigationItem.title = self.schoolName
+
+
         initPicker()
         initPickerBar()
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        self.tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
+
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem()
+        
         configureRxSwift()
 
     }
@@ -67,28 +103,68 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         // https://stackoverflow.com/questions/42179134/how-to-filter-array-of-observable-element-rxswift
         // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
         // Bind table to getCalendar
-        getCalendar(year: "2018", sport: self.sportMode!, schoolID: self.schoolID!).bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self)) { (row, element, cell) in
-            cell.textLabel?.text = element["Name"].stringValue
-        }.disposed(by: disposeBag)
-        
-        self.tableView.rx.modelSelected(JSON.self).debug("selected").filter {
+
+
+        self.tableView.rx.modelSelected(JSON.self).filter {
+            // filters for results
             return $0["MeetHasResults"].intValue == 1
         }.flatMap(meetInfoFor(sport: self.sportMode!))
         .do(onNext: { _ in
-            self.pickerContainer.isHidden = false
-            self.pickerContainer.isExclusiveTouch = true
+            self.meetPickerContainer.isHidden = false
+            self.meetPickerContainer.isExclusiveTouch = true
         })
-        .bind(to: self.picker.rx.itemTitles) { index, item in
+        .bind(to: self.meetPicker.rx.itemTitles) { index, item in
 
             return item.Name + " (\(item.Gender))"
         }.disposed(by: disposeBag)
         
-        self.picker.rx.modelSelected(MeetEvent.self).subscribe(onNext: { meet in
+        self.meetPicker.rx.modelSelected(MeetEvent.self).subscribe(onNext: { meet in
             print(meet[0].URL)
             let indivMeet = IndividualMeetController()
             indivMeet.meet = meet[0]
             self.navigationController?.pushViewController(indivMeet, animated: true)
         }).disposed(by: disposeBag)
+        let button = UIBarButtonItem(title: "Team", style: .done, target: self, action: nil)
+        button.rx.tap.subscribe(onNext: {
+            let url = "https://www.athletic.net/\(self.sportMode!)/School.aspx?SchoolID=\(self.schoolID!)"
+            let svc = SFSafariViewController(url: URL(string: url)!)
+            self.present(svc, animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+        self.navigationItem.rightBarButtonItem = button
+        let leftButton = UIBarButtonItem()
+        self.navigationItem.leftBarButtonItem = leftButton
+
+        leftButton.rx.tap.flatMap { [weak self] _ in
+            return getCalendarYears(sport: self!.sportMode!, schoolID: self!.schoolID!)
+            }.do(onNext: { _ in
+                self.yearPickerContainer.isHidden = false
+                self.yearPickerContainer.isExclusiveTouch = true
+            })
+            .bind(to: self.yearPicker.rx.itemTitles) { index, item in
+                
+                return item
+            }.disposed(by: disposeBag)
+
+        let yearSelected = self.yearPicker.rx.modelSelected(String.self).startWith(["2018"]).do(onNext: { _ in
+            self.yearPickerContainer.isHidden = true
+            self.yearPickerContainer.isExclusiveTouch = false
+        }).map { $0[0] }
+        
+        yearSelected.bind(to: leftButton.rx.title)
+        yearSelected.flatMap { year in
+            return getCalendar(year: year, sport: self.sportMode!, schoolID: self.schoolID!)
+            }.bind(to:
+            self.tableView.rx.items) { (tableView, row, element) in
+                let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell
+                cell.meetName.text = element["Name"].stringValue
+                if element["MeetHasResults"].intValue == 0 {
+                    cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarTimes, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
+                } else {
+                    cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarCheck, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
+                }
+                return cell
+            }.disposed(by: disposeBag)
+    
     }
     func initPickerBar() {
         let doneButton = UIBarButtonItem(title: "Done", style: .plain, target: nil, action: nil)
@@ -96,20 +172,53 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         let spacer = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         let cancelButton = UIBarButtonItem(title: "Cancel", style: .plain, target: nil, action: nil)
         doneButton.rx.tap.subscribe(onNext: { _ in
-            print("TODO")
+            // TODO
+            print(self.meetPicker.selectedRow(inComponent: 0))
         }).disposed(by: disposeBag)
+        
         cancelButton.rx.tap.subscribe(onNext: { _ in
-            self.pickerContainer.isHidden = true
-        })
-        self.pickerBar.setItems([cancelButton, spacer, doneButton], animated: false)
-        self.pickerBar.sizeToFit()
-        self.pickerBar.isUserInteractionEnabled = true
+            self.meetPickerContainer.isHidden = true
+        }).disposed(by: disposeBag)
+        self.meetPickerBar.setItems([cancelButton, spacer, doneButton], animated: false)
+        self.meetPickerBar.sizeToFit()
+        self.meetPickerBar.isUserInteractionEnabled = true
         
     }
     
     func initPicker() {
-        self.picker.backgroundColor = .white
+        self.meetPicker.backgroundColor = .white
         
     }
     //
+}
+
+class MeetCell: UITableViewCell {
+    let meetName = UILabel()
+    let meetStatusWrapper = UIImageView()
+    let meetDate = UILabel()
+    var disposeBag = DisposeBag()
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.contentView.addSubview(meetName)
+        self.contentView.addSubview(meetStatusWrapper)
+        self.contentView.addSubview(meetDate)
+        self.meetName.snp.makeConstraints { make in
+            make.left.equalTo(self.contentView).offset(30)
+            make.height.equalTo(30)
+        }
+        self.meetStatusWrapper.snp.makeConstraints { make in
+            make.width.height.equalTo(30)
+        }
+        self.meetDate.snp.makeConstraints { make in
+            make.height.equalTo(30)
+        }
+    }
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    // https://github.com/ReactiveX/RxSwift/issues/437
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        disposeBag = DisposeBag() // because life cicle of every cell ends on prepare for reuse
+    }
 }
