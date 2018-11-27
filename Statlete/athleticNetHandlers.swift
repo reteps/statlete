@@ -504,9 +504,13 @@ func raceInfoFor(url: String, sport: String) -> Observable<Race> {
         results.forEach { result in
             let time = result["Result"].stringValue.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil)
             let athleteName = (result["AthleteName"].string != nil) ? result["AthleteName"].stringValue : result["FirstName"].stringValue + " " + result["LastName"].stringValue
-            let place = result["Place"].int
+            var sortValue = result["SortValue"].doubleValue
+            var place = result["Place"].int
+            if sport == "TrackAndField" {
+                sortValue = result["SortInt"].doubleValue
+                place = Int(result["Place"].string ?? "")
+            }
             let team = result["SchoolName"].string
-            let sortValue = result["SortValue"].doubleValue
             let grade = result["Grade"].string
             let isSR = result["sr"].boolValue
             let isPR = result["pr"].boolValue

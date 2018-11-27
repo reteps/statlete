@@ -83,9 +83,7 @@ class IndividualMeetController: UIViewController {
             make.top.bottom.left.equalToSuperview()
             make.width.equalTo(100)
         }
-        self.searchBar.rx.text.orEmpty.subscribe( onNext: { text in
-            print(text)
-        })
+
         self.filterButton.setTitle("Sort", for: .normal)
         self.filterView.backgroundColor = .white
         self.filterButton.setTitleColor(.black, for: .normal)
@@ -128,11 +126,13 @@ class IndividualMeetController: UIViewController {
                 if (item.ResultCode == nil) {
                     cell.infoButton.isHidden = true
                 }
+                
                 cell.infoButton.rx.tap.subscribe(onNext: { _ in
+                    print(item.AthleteName)
                     let url = "https://athletic.net/result/\(item.ResultCode!)"
                     let svc = SFSafariViewController(url: URL(string: url)!)
                     self.present(svc, animated: true, completion: nil)
-                }).disposed(by: self.disposeBag)
+                }).disposed(by: cell.disposeBag)
                 return cell
         }, titleForHeaderInSection: { dataSource, index in
             return dataSource.sectionModels[index].Name
@@ -145,9 +145,9 @@ class IndividualMeetController: UIViewController {
         let sortValue = self.filterButton.rx.tap.flatMap {
             return UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, options: options)
         }.startWith(0)
-        Observable.combineLatest(sortValue, raceRounds) { (index, rounds) in
+        let searchBar = self.searchBar.rx.text.orEmpty
+        Observable.combineLatest(sortValue, raceRounds, searchBar) { (index, rounds, search) in
             var newRounds = rounds
-            print("index: \(index)")
             newRounds = rounds.map { round in
                 var newRound = round
                 switch index {
@@ -162,11 +162,25 @@ class IndividualMeetController: UIViewController {
                 case 3:
                     newRound.items = round.items.sorted { $0.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") > $1.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
                 case 4:
-                    newRound.items = round.items.sorted { $0.Team ?? "" < $1.Team ?? ""}
+                    newRound.items = round.items.sorted {
+                        if $0.Team == $1.Team {
+                            return $0.SortValue < $1.SortValue
+                        }
+                        return $0.Team ?? "" < $1.Team ?? ""
+                    }
                 case 5:
-                    newRound.items = round.items.sorted { $0.Team ?? "" > $1.Team ?? ""}
+                    newRound.items = round.items.sorted {
+                        if $0.Team == $1.Team {
+                            return $0.SortValue < $1.SortValue
+                        }
+                        return $0.Team ?? "" > $1.Team ?? ""
+                    }
                 default:
                     return newRound
+                }
+                if !search.isEmpty {
+                    newRound.items = newRound.items.filter {  return $0.AthleteName.range(of: search, options: .caseInsensitive) != nil || ($0.Team ?? "").range(of: search, options: .caseInsensitive) != nil
+                    }
                 }
                 return newRound
             }
@@ -198,6 +212,7 @@ class ResultCell: UITableViewCell {
         teamLabel.font = UIFont.systemFont(ofSize: 10)
         placeLabel.layer.borderColor = UIColor.black.cgColor
         placeLabel.layer.borderWidth = 2.0
+        placeLabel.font = UIFont.systemFont(ofSize: 11.5)
         placeLabel.layer.cornerRadius = 5.0
         placeLabel.textColor = .black
         placeLabel.snp.makeConstraints { make in
@@ -220,7 +235,7 @@ class ResultCell: UITableViewCell {
         }
         timeLabel.snp.makeConstraints { make in
             make.right.equalTo(self.contentView).offset(-50)
-            make.top.bottom.equalTo(placeLabel)
+            make.top.bottom.equalTo(placeLabel).offset(5)
 
         }
         infoButton.snp.makeConstraints { make in
@@ -238,6 +253,6 @@ class ResultCell: UITableViewCell {
     // https://github.com/ReactiveX/RxSwift/issues/437
     override func prepareForReuse() {
         super.prepareForReuse()
-        disposeBag = DisposeBag() // because life cicle of every cell ends on prepare for reuse
+        self.disposeBag = DisposeBag() // because life cicle of every cell ends on prepare for reuse
     }
 }

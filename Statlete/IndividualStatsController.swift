@@ -12,6 +12,7 @@ import SnapKit
 import M13Checkbox
 import RxSwift
 import RxCocoa
+import FontAwesome_swift
 
 class IndividualStatsController: UIViewController {
     // Defaults
@@ -40,6 +41,7 @@ class IndividualStatsController: UIViewController {
     UIColor(hexString: "c45850")!]
     let disposeBag = DisposeBag()
     var timeFormatter = DateFormatter()
+    var selectedEventName = ""
 
     // Takes an event and returns an array of lines based on the data
     func createLineChartData(event: [String: [AthleteTime]]?) -> [LineChartDataSet] {
@@ -91,11 +93,13 @@ class IndividualStatsController: UIViewController {
         super.viewDidAppear(animated)
         // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
         // https://blog.pusher.com/handling-internet-connection-reachability-swift/
+        reloadData()
+        createPage()
+        // refresh
         // Clears old checkboxes
-        for view in self.checkboxView.subviews {
+        /*for view in self.checkboxView.subviews {
             view.removeFromSuperview()
         }
-        let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
         // TODO: event picker
         self.events = athlete.events
         let event = self.events.first
@@ -103,17 +107,14 @@ class IndividualStatsController: UIViewController {
         let orderedYears = (event == nil) ? [String]() : event!.value.keys.sorted()
         createChart(lines: lines, orderedYears: orderedYears)
         if event != nil {
-            initPickerView()
-            self.selectedEvent.text = event?.key
-            createCheckboxesAndConstrain(orderedYears: orderedYears)
-            let fullString = recordString(event: event!.value)
-            self.infoLabel.text =  self.athleteName! + "\n" + fullString
+            // self.selectedEvent.text = event?.key
+            self.infoLabel.text = self.athleteName!
+            let records = recordString(event: event!.value)
+            createCheckboxesAndConstrain(records: records)
         }
         self.picker.delegate = nil
-        self.picker.dataSource = nil
-        Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
-            return item
-            }.disposed(by: disposeBag)
+        self.picker.dataSource = nil*/
+
                 // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
         // Constrains settingsView to contentView
 
@@ -130,28 +131,72 @@ class IndividualStatsController: UIViewController {
         initPickerView()
 
         initCheckBoxView()
-
-
+        initPickerView()
 
         initInfoView()
         initInfoLabel()
         initPickerBar()
         initPicker()
+        initRefreshControl()
+
+        reloadData()
+        createPage()
     }
-    func recordString(event: [String: [AthleteTime]]) -> String {
+    func initRefreshControl() {
+        let refreshControl = UIRefreshControl()
+        let title = NSLocalizedString("Refreshing Data", comment: "Pull to refresh")
+        refreshControl.attributedTitle = NSAttributedString(string: title)
+        refreshControl.rx.controlEvent(.valueChanged).subscribe ( onNext: { _ in
+            print("refresh")
+            self.createPage()
+            refreshControl.endRefreshing()
+        })
+        scrollView.refreshControl = refreshControl
+    }
+    func reloadData() { // athlete has changed
+        self.picker.delegate = nil
+        self.picker.dataSource = nil
+        let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
+        
+        self.events = athlete.events
+        if self.selectedEventName == "" {
+            self.selectedEventName = self.events.first?.key ?? ""
+        }
+        Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
+            return item
+        }.disposed(by: disposeBag)
+        self.infoLabel.text = self.athleteName!
+
+    }
+    func createPage() { // event has changed
+        let event = self.events[self.selectedEventName]
+        print(event)
+        self.lines = self.createLineChartData(event: event)
+        let orderedYears = (event == nil) ? [String]() : event!.keys.sorted()
+        self.createChart(lines: self.lines, orderedYears: orderedYears)
+        for view in self.checkboxView.subviews {
+            view.removeFromSuperview()
+        }
+        self.selectedEvent.text = self.selectedEventName
+        if event != nil {
+            let fullString = self.recordString(event: event!)
+            print(fullString)
+            self.createCheckboxesAndConstrain(records: fullString)
+        }
+    }
+    func recordString(event: [String: [AthleteTime]]) -> [String: String] {
         self.timeFormatter.dateFormat = "mm:ss.SS"
-        var times = ""
-        for (_, data) in event {
+        var times = [String: String]()
+        for (year, data) in event {
             if (data.count == 0) {
-                times += "\n"
+                times[year] = "N/A"
                 continue
             }
             let fastest = data.max { $0.time > $1.time }
             let formattedTime = self.timeFormatter.string(from: fastest!.time)
             print(formattedTime)
-            times += formattedTime + "\n"
+            times[year] = formattedTime
         }
-        print(recordString)
         return times
     }
     func initCheckBoxView() {
@@ -183,10 +228,12 @@ class IndividualStatsController: UIViewController {
     func initInfoLabel() {
         self.infoView.addSubview(infoLabel)
         // https://stackoverflow.com/questions/2312899/how-to-add-line-break-for-uilabel
-        self.infoLabel.numberOfLines = 0;
         infoLabel.snp.makeConstraints { (make) in
-            make.edges.equalToSuperview()
+            make.top.bottom.equalTo(self.selectedEvent)
+            make.leading.trailing.equalToSuperview()
         }
+        infoLabel.textColor = .black
+        
     }
     func initPickerView() {
         self.settingsView.addSubview(self.selectedEvent)
@@ -195,6 +242,13 @@ class IndividualStatsController: UIViewController {
         self.selectedEvent.isUserInteractionEnabled = true
         self.selectedEvent.inputView = self.picker
         self.selectedEvent.inputAccessoryView = self.pickerBar
+        let imageView = UIImageView()
+        imageView.snp.makeConstraints { make in
+            make.width.height.equalTo(20)
+        }
+        imageView.image = UIImage.fontAwesomeIcon(name: .angleRight, style: .solid, textColor: .black, size: CGSize(width: 20, height: 20))
+        self.selectedEvent.rightView = imageView
+        self.selectedEvent.rightViewMode = .always
         self.selectedEvent.textAlignment = .center
         self.selectedEvent.snp.makeConstraints { (make) in
             make.height.equalTo(50)
@@ -205,17 +259,10 @@ class IndividualStatsController: UIViewController {
         self.picker.backgroundColor = .white
         self.picker.rx.modelSelected(String.self).map { $0[0] }.subscribe(onNext: {  item in
             self.selectedEvent.resignFirstResponder()
-            let event = self.events[item]!
-            self.lines = self.createLineChartData(event: event)
-            let orderedYears = event.keys.sorted()
-            self.createChart(lines: self.lines, orderedYears: orderedYears)
-            for view in self.checkboxView.subviews {
-                view.removeFromSuperview()
-            }
-            self.selectedEvent.text = item
-            let fullString = self.recordString(event: event)
-            self.infoLabel.text = self.athleteName! + "\n" + fullString
-            self.createCheckboxesAndConstrain(orderedYears: orderedYears)
+            self.selectedEventName = item
+
+            self.createPage()
+
             
         }).disposed(by: disposeBag)
 
@@ -251,8 +298,9 @@ class IndividualStatsController: UIViewController {
         }
         self.chart.data = data
         self.chart.leftAxis.valueFormatter = MyDateFormatter("mm:s.S")
-        let marker = BalloonMarker(color: UIColor.white, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 7.0, left: 7.0, bottom: 7.0, right: 7.0), years: orderedYears)
-        marker.minimumSize = CGSize(width: 75.0, height: 35.0)
+        let marker = BalloonMarker(color: UIColor.white, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 5, left: 5, bottom: 10.0, right: 5), years: orderedYears)
+        marker.minimumSize = CGSize(width: 50.0, height: 20.0)
+        marker.chartView = self.chart
         self.chart.marker = marker
         // https://github.com/danielgindi/Charts/issues/943
 
@@ -260,18 +308,17 @@ class IndividualStatsController: UIViewController {
     func initChart() {
         self.contentView.addSubview(self.chart)
         self.chart.snp.makeConstraints { (make) in
-            make.top.equalTo(self.contentView)
-            make.left.right.equalTo(self.contentView)
+            make.top.left.equalTo(self.contentView)
             make.height.equalTo(self.scrollView)
+            make.right.equalTo(self.contentView)//.offset(-20)
         }
         self.chart.xAxis.valueFormatter = MyDateFormatter("MMM dd")
         self.chart.xAxis.labelPosition = .bottom
         self.chart.rightAxis.enabled = false
+        self.chart.drawBordersEnabled = true
+        self.chart.minOffset = 20
         // https://github.com/PhilJay/MPAndroidChart/wiki
         // https://stackoverflow.com/questions/38212750/create-a-markerview-when-user-clicks-on-chart
-
-        self.chart.chartDescription?.textColor = UIColor.black
-        self.chart.chartDescription?.position = CGPoint(x: self.chart.frame.width / 2, y: self.chart.frame.height - 30)
     }
     class CustomizedCheckBox {
         let checkbox: M13Checkbox
@@ -285,16 +332,19 @@ class IndividualStatsController: UIViewController {
             checkbox.boxType = .square
         }
     }
-    func createCheckboxesAndConstrain(orderedYears: [String]) {
+    func createCheckboxesAndConstrain(records: [String: String]) {
         var checks = [M13Checkbox]()
         // Constrains checkboxes + label to settingsView
+        let orderedYears = records.keys.sorted()
+        print(orderedYears)
         for (i, year) in orderedYears.enumerated() {
             let checkbox = CustomizedCheckBox().checkbox
             let label = UILabel()
+            let recordLabel = UILabel()
 
             self.checkboxView.addSubview(checkbox)
             self.checkboxView.addSubview(label)
-
+            self.checkboxView.addSubview(recordLabel) // also clear this
             checkbox.checkedValue = i
             checkbox.addTarget(self, action: #selector(checkboxTapped(_:)), for: UIControlEvents.valueChanged)
             label.snp.makeConstraints { (make) in
@@ -302,6 +352,12 @@ class IndividualStatsController: UIViewController {
                 make.top.bottom.equalTo(checkbox)
                 make.right.equalTo(self.checkboxView)
             }
+            recordLabel.snp.makeConstraints { make in
+                make.top.bottom.equalTo(checkbox)
+                make.left.right.equalTo(self.infoView)
+            }
+            
+            recordLabel.text = records[year]
             label.text = year
             label.textColor = .black
             checks.append(checkbox)

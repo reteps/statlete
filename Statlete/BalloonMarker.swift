@@ -101,7 +101,6 @@ open class BalloonMarker: MarkerImage
         rect.origin.y -= size.height
         
         context.saveGState()
-        
         context.setFillColor(color.cgColor)
         
         if offset.y > 0
@@ -185,7 +184,7 @@ open class BalloonMarker: MarkerImage
     open override func refreshContent(entry: ChartDataEntry, highlight: Highlight) {
         if self.years != nil {
             let year = self.years![highlight.dataSetIndex]
-            valueFormatter.dateFormat = "MMM dd, \(year)"
+            valueFormatter.dateFormat = "MMM dd \(year)"
         } else {
             valueFormatter.dateFormat = "MMM dd YYYY"
         }

@@ -103,7 +103,7 @@ class OptionsController: UIViewController {
         teamButton.clipsToBounds = true
         teamButton.setTitle(self.schoolName, for: .normal)
         teamButton.layer.cornerRadius = 10
-        teamButton.rx.tap.flatMapFirst(presentTeamController(on: self.navigationController!))
+        teamButton.rx.tap.flatMapFirst( presentTeamController(on: self.navigationController!))
         .subscribe(onNext: { team in
             self.schoolID = team["id"]!
             self.schoolName = team["result"]!

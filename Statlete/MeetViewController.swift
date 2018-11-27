@@ -65,24 +65,34 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
         // Bind table to getCalendar
 
-
-        self.tableView.rx.modelSelected(JSON.self).filter {
+        let meetSelected = self.tableView.rx.modelSelected(JSON.self).filter {
             // filters for results
             return $0["MeetHasResults"].intValue == 1
-        }.flatMap(meetInfoFor(sport: self.sportMode!))
+        }
+        meetSelected.flatMap(meetInfoFor(sport: self.sportMode!))
         .do(onNext: { _ in
             self.meetPickerContainer.isHidden = false
             self.meetPickerContainer.isExclusiveTouch = true
         })
         .bind(to: self.meetPicker.rx.itemTitles) { index, item in
-
+                
             return item.Name + " (\(item.Gender))"
         }.disposed(by: disposeBag)
         
-        self.meetPicker.rx.modelSelected(MeetEvent.self).subscribe(onNext: { meet in
-            print(meet[0].URL)
+        let infoTapped = self.meetPickerBar.items![2].rx.tap
+        let meetURL = meetSelected.map { [unowned self] meet -> String in
+            return "https://www.athletic.net/\(self.sportMode!)/meet/\(meet["MeetID"].stringValue)/results"
+        }
+        infoTapped.withLatestFrom(meetURL).subscribe(onNext: { url in
+            let svc = SFSafariViewController(url: URL(string: url)!)
+            self.present(svc, animated: true, completion: nil)
+        }).disposed(by: disposeBag)
+
+        
+        self.meetPicker.rx.modelSelected(MeetEvent.self).map { $0[0] }.subscribe(onNext: { meet in
+            print(meet.URL)
             let indivMeet = IndividualMeetController()
-            indivMeet.meet = meet[0]
+            indivMeet.meet = meet
             self.navigationController?.pushViewController(indivMeet, animated: true)
         }).disposed(by: disposeBag)
         let button = UIBarButtonItem(title: "Team", style: .done, target: self, action: nil)
@@ -128,6 +138,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
                 let date = self.dateFormatter.date(from: rawDate)
                 self.dateFormatter.dateFormat = "MMM dd, Y"
                 cell.meetDate.text = self.dateFormatter.string(from: date!)
+                cell.meetLocation.text = element["Location"].stringValue
                 return cell
             }.disposed(by: disposeBag)
     
@@ -160,14 +171,14 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
             make.height.equalTo(50)
         }
         let cancelButton = UIBarButtonItem(title: "Cancel", style: .plain, target: nil, action: nil)
-        
+        let meetInfoButton = UIBarButtonItem(title: "Meet Info", style: .plain, target: nil, action: nil)
+        let space = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
         cancelButton.rx.tap.subscribe(onNext: { _ in
             self.meetPickerContainer.isHidden = true
         }).disposed(by: disposeBag)
-        self.meetPickerBar.setItems([cancelButton], animated: false)
+        self.meetPickerBar.setItems([cancelButton, space, meetInfoButton], animated: false)
         self.meetPickerBar.sizeToFit()
         self.meetPickerBar.isUserInteractionEnabled = true
-        
     }
     func initYearPicker() {
         yearPicker.delegate = nil
@@ -210,12 +221,17 @@ class MeetCell: UITableViewCell {
     let meetName = UILabel()
     let meetStatusWrapper = UIImageView()
     let meetDate = UILabel()
+    let meetLocation = UILabel()
+    let meetLocationIcon = UIImageView()
     var disposeBag = DisposeBag()
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.contentView.addSubview(meetName)
         self.contentView.addSubview(meetStatusWrapper)
         self.contentView.addSubview(meetDate)
+        self.contentView.addSubview(meetLocation)
+        self.contentView.addSubview(meetLocationIcon)
+
         self.meetName.snp.makeConstraints { make in
             make.left.equalTo(self.contentView).offset(30)
             make.height.equalTo(30)
@@ -223,12 +239,26 @@ class MeetCell: UITableViewCell {
         self.meetStatusWrapper.snp.makeConstraints { make in
             make.width.height.equalTo(30)
         }
+        
         meetDate.font = UIFont.systemFont(ofSize: 10)
 
         self.meetDate.snp.makeConstraints { make in
             make.left.equalTo(meetName)
             make.top.equalTo(meetName.snp.bottom)
             make.height.equalTo(10)
+            make.width.greaterThanOrEqualTo(0)
+        }
+        self.meetLocationIcon.snp.makeConstraints { make in
+            make.left.equalTo(meetDate.snp.right).offset(5)
+            make.width.height.equalTo(10)
+            make.top.equalTo(meetDate)
+        }
+        self.meetLocationIcon.image = UIImage.fontAwesomeIcon(name: .mapMarkerAlt, style: .solid, textColor: .black, size: CGSize(width: 10, height: 10))
+        meetLocation.font = UIFont.systemFont(ofSize: 10)
+        self.meetLocation.snp.makeConstraints { make in
+            make.top.bottom.equalTo(meetDate)
+            make.left.equalTo(meetLocationIcon.snp.right).offset(5)
+            // make.right.equalToSuperview()
         }
     }
     required init?(coder aDecoder: NSCoder) {
