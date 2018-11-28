@@ -53,7 +53,6 @@ class OptionsController: UIViewController {
     //https://stackoverflow.com/questions/5630649/what-is-the-difference-between-viewwillappear-and-viewdidappear
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        print("view appearing...")
     }
     func setDefaultValues() {
         self.sportMode = UserDefaults.standard.string(forKey: "sportMode")!
@@ -80,12 +79,19 @@ class OptionsController: UIViewController {
         athleteButton.layer.cornerRadius = 10
         // credit to @danielt1263 on slack
         print(self.schoolID, self.sportMode)
-        athleteButton.rx.tap.debug("athleteOptions").flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: self.sportMode))
+        athleteButton.rx.tap.debug("athleteOptions").flatMapFirst { [unowned self] _ -> Observable<JSON> in
+            let schoolID = self.schoolID
+            let sportMode = self.sportMode
+            return presentAthleteController(nav: self.navigationController!, teamID: schoolID, sportMode: sportMode)
+            }.do(onNext: { [unowned self] _ in
+                self.navigationController!.popViewController(animated: true)
+            })
             .subscribe(onNext: { athlete in
 
                 let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
                 self.athleteName = athlete["Name"].stringValue
                 self.athleteID = athlete["ID"].intValue
+                indivStats.shouldUpdateData = true
                 indivStats.athleteName = self.athleteName
                 indivStats.athleteID = self.athleteID
                 self.athleteButton.setTitle(self.athleteName, for: .normal)
@@ -103,10 +109,21 @@ class OptionsController: UIViewController {
         teamButton.clipsToBounds = true
         teamButton.setTitle(self.schoolName, for: .normal)
         teamButton.layer.cornerRadius = 10
-        teamButton.rx.tap.flatMapFirst( presentTeamController(on: self.navigationController!))
+        teamButton.rx.tap.flatMapFirst { _ -> Observable<[String: String]> in
+            return presentTeamController(nav: self.navigationController!)
+        }.do(onNext: { [unowned self] _ in
+                self.navigationController!.popViewController(animated: true)
+            })
         .subscribe(onNext: { team in
+            
+            let meetViewNav = self.tabBarController!.viewControllers![2] as! UINavigationController
+            let meetView = meetViewNav.topViewController as! MeetViewController
             self.schoolID = team["id"]!
             self.schoolName = team["result"]!
+            meetView.schoolName = self.schoolName
+            meetView.schoolID = self.schoolID
+            meetView.shouldUpdateData = true
+
             self.teamButton.setTitle(self.schoolName, for: .normal)
             self.athleteButton.setTitle("Choose Athlete", for: .normal)
         })
@@ -122,49 +139,24 @@ class OptionsController: UIViewController {
 
     
 }
-func presentAthleteController(on navigation: UINavigationController, teamID: String, sportMode: String) -> () -> Observable<JSON> {
-    return { [weak navigation] in
-        Observable.create { observer in
-            print("AC",teamID, sportMode)
-            guard let nav = navigation else {
-                print("error 2")
-                return Disposables.create()
-            }
+func presentAthleteController(nav: UINavigationController, teamID: String, sportMode: String) -> Observable<JSON> {
             let viewController = AthleteSearchController()
             viewController.schoolID = teamID
             viewController.sportMode = sportMode
 
-            let disposable = viewController
+            let athlete = viewController
                 .selectedAthlete
-                .takeWhile { _ in
-                    return navigation != nil
-                }
-                .bind(to: observer)
+
             nav.pushViewController(viewController, animated: true)
 
-            return Disposables.create {
-                nav.popViewController(animated: true)
-                disposable.dispose()
-            }
-        }
-    }
+            return athlete
 }
-func presentTeamController(on nav: UINavigationController) -> () -> Observable<[String:String]> {
-    return { [weak nav] in
-        Observable.create { observer in
-            guard let nav = nav else {
-                print("error!!")
-                return Disposables.create()
-            }
-            let viewController = TeamSearchController()
-            let disposable = viewController
-                .selectedTeam
-                .bind(to: observer)
-            nav.pushViewController(viewController, animated: true)
-            return Disposables.create {
-                nav.popViewController(animated: true)
-                disposable.dispose()
-            }
-        }
-    }
+func presentTeamController(nav: UINavigationController) -> Observable<[String: String]> {
+    let viewController = TeamSearchController()
+    
+    let team = viewController
+        .selectedTeam
+    nav.pushViewController(viewController, animated: true)
+    
+    return team
 }

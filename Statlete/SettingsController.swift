@@ -44,6 +44,7 @@ class SettingsController: UIViewController {
     var athleteName = ""
     let disposeBag = DisposeBag()
     var setupComplete = false
+    let additionalInfo = UILabel()
     var completedSettings = PublishSubject<[[String:String]:JSON]>()
     let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
 
@@ -53,7 +54,7 @@ class SettingsController: UIViewController {
         initModeSwitcher()
         self.navigationItem.title = "Setup"
         initSearchTeamButton()
-
+        initAdditionalInfo()
         if setupComplete {
             retrieveDefaults()
             self.navigationItem.title = "Settings"
@@ -62,6 +63,22 @@ class SettingsController: UIViewController {
             self.athleteButton.setTitle(self.athleteName + " >", for: .normal)
         }
 
+    }
+    func initAdditionalInfo() {
+        self.view.addSubview(additionalInfo)
+        additionalInfo.numberOfLines = 0
+        additionalInfo.snp.makeConstraints { make in
+            make.bottom.equalToSuperview().offset(-100)
+            make.left.equalToSuperview().offset(30)
+            make.right.equalToSuperview().offset(-30)
+            make.height.equalTo(100)
+        }
+        additionalInfo.layer.borderWidth = 2;
+        additionalInfo.layer.borderColor = UIColor.black.cgColor
+        additionalInfo.layer.cornerRadius = 10;
+        additionalInfo.clipsToBounds = true;
+        
+        additionalInfo.text = "   Settings are only saved when a new athlete\n   is selected.\n   Created by Peter Stenger"
     }
     func retrieveDefaults() {
         self.schoolName = UserDefaults.standard.string(forKey: "schoolName")!
@@ -95,6 +112,9 @@ class SettingsController: UIViewController {
             make.height.equalTo(50)
             make.width.equalTo(300)
         }
+        segmentedControl.rx.value.changed.subscribe(onNext: { [unowned self] value in
+            self.sportMode = ["CrossCountry", "TrackAndField"][self.segmentedControl.selectedSegmentIndex]
+        }).disposed(by: disposeBag)
     }
     func initSearchTeamButton() {
         teamButton.backgroundColor = lightBlue
@@ -102,8 +122,13 @@ class SettingsController: UIViewController {
         teamButton.setTitle("Select Team", for: .normal)
         teamButton.layer.cornerRadius = 10
         // slack
-        teamButton.rx.tap.flatMapFirst(presentTeamController(on: self.navigationController!))
-            .subscribe(onNext: { team in
+        teamButton.rx.tap.flatMapFirst{ _ -> Observable<[String: String]> in
+            return presentTeamController(nav: self.navigationController!)
+            }
+            .do(onNext: { [unowned self] _ in
+                self.navigationController!.popViewController(animated: true)
+            })
+            .subscribe(onNext: { [unowned self] team in
                 self.schoolID = team["id"]!
                 self.schoolName = team["result"]!
                 self.teamButton.setTitle(self.schoolName, for: .normal)
@@ -125,18 +150,21 @@ class SettingsController: UIViewController {
         athleteButton.backgroundColor = lightBlue
         athleteButton.setTitle("Choose Athlete", for: .normal)
         athleteButton.layer.cornerRadius = 10
-        athleteButton.rx.tap.do(onNext: { _ in
-            let modes = ["CrossCountry", "TrackAndField"]
-            self.sportMode = ["CrossCountry", "TrackAndField"][self.segmentedControl.selectedSegmentIndex]
-            print("SM:"+self.sportMode)
-            print("ID:"+self.schoolID)
-        }).flatMapFirst(presentAthleteController(on: self.navigationController!, teamID: self.schoolID, sportMode: ["CrossCountry", "TrackAndField"][self.segmentedControl.selectedSegmentIndex]))
+        athleteButton.rx.tap.flatMapFirst { [unowned self] _ -> Observable<JSON> in
+            let schoolID = self.schoolID
+            let sportMode = self.sportMode
+            return presentAthleteController(nav: self.navigationController!, teamID: schoolID, sportMode: sportMode)
+            }
+            .do(onNext: { [unowned self] _ in
+                self.navigationController!.popViewController(animated: true)
+            })
             .subscribe(onNext: { athlete in
-                let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
+
+                
                 self.athleteID = athlete["ID"].intValue
                 self.athleteName = athlete["Name"].stringValue
-                indivStats.athleteName = self.athleteName
-                indivStats.athleteID = self.athleteID
+                self.pushChangesToOtherTabs()
+
                 self.athleteButton.setTitle(self.athleteName, for: .normal)
                 if !self.setupComplete {
                     self.setupComplete = true
@@ -149,5 +177,18 @@ class SettingsController: UIViewController {
             make.height.equalTo(50)
             make.width.equalTo(300)
         }
+    }
+    func pushChangesToOtherTabs() {
+        let indivStats = self.tabBarController!.viewControllers![1] as! IndividualStatsController
+        let meetViewNav = self.tabBarController!.viewControllers![2] as! UINavigationController
+        let meetView = meetViewNav.topViewController as! MeetViewController
+        meetView.schoolName = self.schoolName
+        meetView.schoolID = self.schoolID
+        meetView.sportMode = self.sportMode
+        meetView.shouldUpdateData = true
+        indivStats.athleteName = self.athleteName
+        indivStats.athleteID = self.athleteID
+        indivStats.sportMode = self.sportMode
+        indivStats.shouldUpdateData = true
     }
 }

@@ -70,14 +70,7 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate {
         let displayHeight: CGFloat = self.view.frame.size.height
         self.tableView.rowHeight = (displayHeight - barHeight) / 10
     }
-    // https://stackoverflow.com/questions/27713747/execute-action-when-back-bar-button-of-uinavigationcontroller-is-pressed
     override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        if self.isMovingFromParent {
-            print("DISPOSE")
-            self.selectedTeam.dispose()
-        }
+        self.selectedTeam.onCompleted()
     }
-
 }

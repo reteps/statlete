@@ -128,7 +128,6 @@ class IndividualMeetController: UIViewController {
                 }
                 
                 cell.infoButton.rx.tap.subscribe(onNext: { _ in
-                    print(item.AthleteName)
                     let url = "https://athletic.net/result/\(item.ResultCode!)"
                     let svc = SFSafariViewController(url: URL(string: url)!)
                     self.present(svc, animated: true, completion: nil)
@@ -200,6 +199,8 @@ class ResultCell: UITableViewCell {
     let infoButton = UIButton(type: .infoLight)
     let teamLabel = UILabel()
     var disposeBag = DisposeBag()
+    // https://medium.com/app-coder-io/27-ios-open-source-libraries-to-skyrocket-your-development-301b67d3124c
+    // https://medium.com/app-coder-io/33-ios-open-source-libraries-that-will-dominate-2017-4762cf3ce449
     // https://stackoverflow.com/questions/25413239/custom-uitableviewcell-programmatically-using-swift
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)

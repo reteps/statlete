@@ -60,14 +60,8 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
         
 
     }
-    // https://stackoverflow.com/questions/27713747/execute-action-when-back-bar-button-of-uinavigationcontroller-is-pressed
     override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        
-        if self.isMovingFromParent {
-            print("DISPOSE")
-            self.selectedAthlete.dispose()
-        }
+        self.selectedAthlete.onCompleted()
     }
 }
 

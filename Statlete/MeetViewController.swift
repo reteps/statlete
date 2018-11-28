@@ -17,7 +17,7 @@ import SafariServices
 
 class MeetViewController: UITableViewController, UISearchBarDelegate {
     var schoolName = UserDefaults.standard.string(forKey: "schoolName")
-    let sportMode = UserDefaults.standard.string(forKey: "sportMode")
+    var sportMode = UserDefaults.standard.string(forKey: "sportMode")
     var schoolID = UserDefaults.standard.string(forKey: "schoolID")
     var shouldShowSearchResults = false
     var searchController: UISearchController!
@@ -31,8 +31,15 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     let yearPickerContainer = UIView()
     let races = PublishSubject<[JSON]>()
     let dateFormatter = DateFormatter()
+    var shouldUpdateData = false
+    var manualRefresh = PublishSubject<String>()
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        if self.shouldUpdateData {
+            manualRefresh.onNext("2018")
+            self.navigationItem.title = self.schoolName
+            self.shouldUpdateData = false
+        }
         self.meetPickerContainer.isExclusiveTouch = false
         self.meetPickerContainer.isHidden = true
         self.yearPickerContainer.isHidden = true
@@ -90,7 +97,6 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
 
         
         self.meetPicker.rx.modelSelected(MeetEvent.self).map { $0[0] }.subscribe(onNext: { meet in
-            print(meet.URL)
             let indivMeet = IndividualMeetController()
             indivMeet.meet = meet
             self.navigationController?.pushViewController(indivMeet, animated: true)
@@ -121,9 +127,11 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
             self.yearPickerContainer.isExclusiveTouch = false
         }).map { $0[0] }
         
-        yearSelected.bind(to: leftButton.rx.title)
-        yearSelected.flatMap { year in
-            return getCalendar(year: year, sport: self.sportMode!, schoolID: self.schoolID!)
+        yearSelected.bind(to: leftButton.rx.title).disposed(by: disposeBag)
+        Observable.merge(yearSelected, manualRefresh).flatMap { year -> Observable<[JSON]> in
+            let sport = self.sportMode!
+            let schoolID = self.schoolID!
+            return getCalendar(year: year, sport: sport, schoolID: schoolID)
             }.bind(to:
             self.tableView.rx.items) { (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell

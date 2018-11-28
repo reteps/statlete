@@ -16,10 +16,12 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         self.delegate = self
 
         // https://www.appcoda.com/swift-delegate/
+        
+        // tabs
         let options = UINavigationController(rootViewController: OptionsController())
         let individual = IndividualStatsController()
         let meets = UINavigationController(rootViewController: MeetViewController())
-        // let rankings = TeamRankingsController()
+
         self.viewControllers = [options, individual, meets]
         let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users]//*, .medal
         for index in 0..<self.viewControllers!.count {
@@ -34,10 +36,7 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://medium.com/@unicornmobile/uitabbarcontroller-programmatically-316b89b5b21b
         // https://stackoverflow.com/questions/30849030/swift-how-to-execute-an-action-when-uitabbaritem-is-pressed
         let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
-        let spectatorMode = false
-        if setupComplete && spectatorMode {
-            self.selectedIndex = 1
-        } else if setupComplete {
+        if setupComplete {
             self.selectedIndex = 1
         } else {
             self.selectedIndex = 0

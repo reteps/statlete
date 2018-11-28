@@ -17,9 +17,9 @@ import FontAwesome_swift
 class IndividualStatsController: UIViewController {
     // Defaults
     var athleteName = UserDefaults.standard.string(forKey: "athleteName")
-    let sportMode = UserDefaults.standard.string(forKey: "sportMode")
+    var sportMode = UserDefaults.standard.string(forKey: "sportMode")
     var athleteID = UserDefaults.standard.integer(forKey: "athleteID")
-    
+    var shouldUpdateData = true // This will be set by other functions
     // UI Elements
     let chart = LineChartView()
     var scrollView = UIScrollView()
@@ -93,30 +93,14 @@ class IndividualStatsController: UIViewController {
         super.viewDidAppear(animated)
         // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
         // https://blog.pusher.com/handling-internet-connection-reachability-swift/
-        reloadData()
-        createPage()
-        // refresh
-        // Clears old checkboxes
-        /*for view in self.checkboxView.subviews {
-            view.removeFromSuperview()
+        if self.shouldUpdateData {
+            reloadData()
+            createPage()
+            self.shouldUpdateData = false
+        } else {
+            print("data not updating")
         }
-        // TODO: event picker
-        self.events = athlete.events
-        let event = self.events.first
-        self.lines = createLineChartData(event: event?.value)
-        let orderedYears = (event == nil) ? [String]() : event!.value.keys.sorted()
-        createChart(lines: lines, orderedYears: orderedYears)
-        if event != nil {
-            // self.selectedEvent.text = event?.key
-            self.infoLabel.text = self.athleteName!
-            let records = recordString(event: event!.value)
-            createCheckboxesAndConstrain(records: records)
-        }
-        self.picker.delegate = nil
-        self.picker.dataSource = nil*/
-
-                // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
-        // Constrains settingsView to contentView
+                        // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
 
 
     }
@@ -138,9 +122,6 @@ class IndividualStatsController: UIViewController {
         initPickerBar()
         initPicker()
         initRefreshControl()
-
-        reloadData()
-        createPage()
     }
     func initRefreshControl() {
         let refreshControl = UIRefreshControl()
@@ -159,9 +140,7 @@ class IndividualStatsController: UIViewController {
         let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
         
         self.events = athlete.events
-        if self.selectedEventName == "" {
-            self.selectedEventName = self.events.first?.key ?? ""
-        }
+        self.selectedEventName = self.events.first?.key ?? ""
         Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
             return item
         }.disposed(by: disposeBag)
@@ -170,7 +149,6 @@ class IndividualStatsController: UIViewController {
     }
     func createPage() { // event has changed
         let event = self.events[self.selectedEventName]
-        print(event)
         self.lines = self.createLineChartData(event: event)
         let orderedYears = (event == nil) ? [String]() : event!.keys.sorted()
         self.createChart(lines: self.lines, orderedYears: orderedYears)
@@ -179,12 +157,10 @@ class IndividualStatsController: UIViewController {
         }
         self.selectedEvent.text = self.selectedEventName
         if event != nil {
-            let fullString = self.recordString(event: event!)
-            print(fullString)
-            self.createCheckboxesAndConstrain(records: fullString)
+            self.createCheckboxesAndConstrain(records: self.recordDict(event: event!))
         }
     }
-    func recordString(event: [String: [AthleteTime]]) -> [String: String] {
+    func recordDict(event: [String: [AthleteTime]]) -> [String: String] {
         self.timeFormatter.dateFormat = "mm:ss.SS"
         var times = [String: String]()
         for (year, data) in event {
@@ -194,7 +170,6 @@ class IndividualStatsController: UIViewController {
             }
             let fastest = data.max { $0.time > $1.time }
             let formattedTime = self.timeFormatter.string(from: fastest!.time)
-            print(formattedTime)
             times[year] = formattedTime
         }
         return times
@@ -336,7 +311,6 @@ class IndividualStatsController: UIViewController {
         var checks = [M13Checkbox]()
         // Constrains checkboxes + label to settingsView
         let orderedYears = records.keys.sorted()
-        print(orderedYears)
         for (i, year) in orderedYears.enumerated() {
             let checkbox = CustomizedCheckBox().checkbox
             let label = UILabel()
