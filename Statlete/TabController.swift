@@ -35,11 +35,11 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://stackoverflow.com/questions/34039475/programmatically-set-the-uitabbaritem-icon-for-every-linked-viewcontroller/43591493
         // https://medium.com/@unicornmobile/uitabbarcontroller-programmatically-316b89b5b21b
         // https://stackoverflow.com/questions/30849030/swift-how-to-execute-an-action-when-uitabbaritem-is-pressed
+        self.selectedIndex = 0
+
         let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
             self.selectedIndex = 1
-        } else {
-            self.selectedIndex = 0
         }
     }
     

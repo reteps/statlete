@@ -155,7 +155,7 @@ class IndividualStatsController: UIViewController {
         for view in self.checkboxView.subviews {
             view.removeFromSuperview()
         }
-        self.selectedEvent.text = self.selectedEventName
+        self.selectedEvent.text = self.selectedEventName + " ➤"
         if event != nil {
             self.createCheckboxesAndConstrain(records: self.recordDict(event: event!))
         }
@@ -217,13 +217,6 @@ class IndividualStatsController: UIViewController {
         self.selectedEvent.isUserInteractionEnabled = true
         self.selectedEvent.inputView = self.picker
         self.selectedEvent.inputAccessoryView = self.pickerBar
-        let imageView = UIImageView()
-        imageView.snp.makeConstraints { make in
-            make.width.height.equalTo(20)
-        }
-        imageView.image = UIImage.fontAwesomeIcon(name: .angleRight, style: .solid, textColor: .black, size: CGSize(width: 20, height: 20))
-        self.selectedEvent.rightView = imageView
-        self.selectedEvent.rightViewMode = .always
         self.selectedEvent.textAlignment = .center
         self.selectedEvent.snp.makeConstraints { (make) in
             make.height.equalTo(50)

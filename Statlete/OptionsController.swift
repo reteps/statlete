@@ -21,39 +21,42 @@ class OptionsController: UIViewController {
     var athleteName = ""
     var sportMode = ""
     var athleteID = 0
-    var setupComplete = PublishRelay<Bool>()
+    var sentToSetup = false
     let disposeBag = DisposeBag()
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if self.sentToSetup {
+            initScreen()
+            self.sentToSetup.toggle()
+        }
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = .white
         self.navigationItem.title = "Options"
         let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
-                print("setup Complete")
-                self.tabBarController?.tabBar.isHidden = false
-                self.navigationController?.isNavigationBarHidden = false
-                setDefaultValues()
-                initSearchTeamButton()
-                initSearchAthleteButton()
-                initSettingsBarButton()
-                self.teamButton.setTitle(self.schoolName, for: .normal)
-                self.athleteButton.setTitle(self.athleteName, for: .normal)
-            } else {
-                print("setup is not complete")
-                let settings = SettingsController()
-                self.tabBarController?.tabBar.isHidden = true
-                settings.setupComplete = false
-                self.navigationController?.isNavigationBarHidden = true
-                self.navigationController?.pushViewController(settings, animated: true)
-            }
+                initScreen()
+        } else {
+                self.sentToSetup = true
+                self.navigationController?.pushViewController(SettingsController(), animated: true)
+                print("yeah do this")
+        }
         
 
     }
+    func initScreen() {
+        setDefaultValues()
+        initSearchTeamButton()
+        initSearchAthleteButton()
+        initSettingsBarButton()
+        self.teamButton.setTitle(self.schoolName + " ➤", for: .normal)
+        self.athleteButton.setTitle(self.athleteName + " ➤", for: .normal)
+    }
     //https://stackoverflow.com/questions/11254697/difference-between-viewdidload-and-viewdidappear
     //https://stackoverflow.com/questions/5630649/what-is-the-difference-between-viewwillappear-and-viewdidappear
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-    }
+
     func setDefaultValues() {
         self.sportMode = UserDefaults.standard.string(forKey: "sportMode")!
         self.schoolID = UserDefaults.standard.string(forKey: "schoolID")!
@@ -68,14 +71,13 @@ class OptionsController: UIViewController {
         settingsButton.rx.tap.subscribe(onNext: {
             let settings = SettingsController()
             settings.setupComplete = true
-            settings.sportMode = self.sportMode
             self.navigationController?.pushViewController(settings, animated: true)
         }).disposed(by: self.disposeBag)
         self.navigationItem.leftBarButtonItem = settingsButton
     }
     func initSearchAthleteButton() {
         athleteButton.backgroundColor = lightBlue
-        athleteButton.setTitle(self.athleteName, for: .normal)
+        athleteButton.setTitle(self.athleteName + " ➤", for: .normal)
         athleteButton.layer.cornerRadius = 10
         // credit to @danielt1263 on slack
         print(self.schoolID, self.sportMode)
@@ -94,7 +96,7 @@ class OptionsController: UIViewController {
                 indivStats.shouldUpdateData = true
                 indivStats.athleteName = self.athleteName
                 indivStats.athleteID = self.athleteID
-                self.athleteButton.setTitle(self.athleteName, for: .normal)
+                self.athleteButton.setTitle(self.athleteName + " ➤", for: .normal)
             }).disposed(by: disposeBag)
         self.view.addSubview(athleteButton)
         athleteButton.snp.makeConstraints { (make) in
@@ -107,7 +109,7 @@ class OptionsController: UIViewController {
     func initSearchTeamButton() {
         teamButton.backgroundColor = lightBlue
         teamButton.clipsToBounds = true
-        teamButton.setTitle(self.schoolName, for: .normal)
+        teamButton.setTitle(self.schoolName + " ➤", for: .normal)
         teamButton.layer.cornerRadius = 10
         teamButton.rx.tap.flatMapFirst { _ -> Observable<[String: String]> in
             return presentTeamController(nav: self.navigationController!)
@@ -124,7 +126,7 @@ class OptionsController: UIViewController {
             meetView.schoolID = self.schoolID
             meetView.shouldUpdateData = true
 
-            self.teamButton.setTitle(self.schoolName, for: .normal)
+            self.teamButton.setTitle(self.schoolName + " ➤", for: .normal)
             self.athleteButton.setTitle("Choose Athlete", for: .normal)
         })
         .disposed(by: disposeBag)

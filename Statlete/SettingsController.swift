@@ -45,7 +45,6 @@ class SettingsController: UIViewController {
     let disposeBag = DisposeBag()
     var setupComplete = false
     let additionalInfo = UILabel()
-    var completedSettings = PublishSubject<[[String:String]:JSON]>()
     let lightBlue = UIColor(red: 21/255, green: 126/255, blue: 251/255, alpha: 1.0)
 
     override func viewDidLoad() {
@@ -59,8 +58,11 @@ class SettingsController: UIViewController {
             retrieveDefaults()
             self.navigationItem.title = "Settings"
             initSearchAthleteButton()
-            self.teamButton.setTitle(self.schoolName + " >", for: .normal)
-            self.athleteButton.setTitle(self.athleteName + " >", for: .normal)
+            self.teamButton.setTitle(self.schoolName  + " ➤", for: .normal)
+            self.athleteButton.setTitle(self.athleteName + " ➤", for: .normal)
+        } else {
+            self.tabBarController?.tabBar.isHidden = true
+            self.navigationController?.isNavigationBarHidden = true
         }
 
     }
@@ -78,7 +80,7 @@ class SettingsController: UIViewController {
         additionalInfo.layer.cornerRadius = 10;
         additionalInfo.clipsToBounds = true;
         
-        additionalInfo.text = "   Settings are only saved when a new athlete\n   is selected.\n   Created by Peter Stenger"
+        additionalInfo.text = "   Settings are only saved when\n   a new athlete is selected.\n   Created by Peter Stenger"
     }
     func retrieveDefaults() {
         self.schoolName = UserDefaults.standard.string(forKey: "schoolName")!
@@ -112,7 +114,7 @@ class SettingsController: UIViewController {
             make.height.equalTo(50)
             make.width.equalTo(300)
         }
-        segmentedControl.rx.value.changed.subscribe(onNext: { [unowned self] value in
+        segmentedControl.rx.value.changed.startWith(0).subscribe(onNext: { [unowned self] value in
             self.sportMode = ["CrossCountry", "TrackAndField"][self.segmentedControl.selectedSegmentIndex]
         }).disposed(by: disposeBag)
     }
@@ -131,7 +133,7 @@ class SettingsController: UIViewController {
             .subscribe(onNext: { [unowned self] team in
                 self.schoolID = team["id"]!
                 self.schoolName = team["result"]!
-                self.teamButton.setTitle(self.schoolName, for: .normal)
+                self.teamButton.setTitle(self.schoolName + " ➤", for: .normal)
                 if !self.setupComplete {
                     self.initSearchAthleteButton()
                 }
@@ -163,13 +165,15 @@ class SettingsController: UIViewController {
                 
                 self.athleteID = athlete["ID"].intValue
                 self.athleteName = athlete["Name"].stringValue
-                self.pushChangesToOtherTabs()
 
-                self.athleteButton.setTitle(self.athleteName, for: .normal)
+                self.athleteButton.setTitle(self.athleteName + " ➤", for: .normal)
+                self.pushChangesToOtherTabs()
+                self.saveSettings()
                 if !self.setupComplete {
                     self.setupComplete = true
+                    self.tabBarController?.tabBar.isHidden = false
+                    self.navigationController?.isNavigationBarHidden = false
                 }
-                self.saveSettings()
             }).disposed(by: disposeBag)
         self.view.addSubview(athleteButton)
         athleteButton.snp.makeConstraints { (make) in

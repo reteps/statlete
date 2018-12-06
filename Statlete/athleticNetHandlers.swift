@@ -235,10 +235,10 @@ func meetInfoFor(sport: String) -> (JSON) -> Observable<[MeetEvent]> {
 // gets params and initialData from url
 func dataRequest(url: String) -> Observable<[JSON]> {
     return Observable.create { observer in
-        let url = URL(string: url)!
         
-        Alamofire.request(url)
+        Alamofire.request(URL(string: url)!)
             .responseString { response in
+                print(url)
                 let htmlString = response.result.value!
                 let rawTokenData = htmlString.matchingStrings(regex: "constant\\(\"params\", (.+)\\)")[0][1]
                 let rawTeamData = htmlString.matchingStrings(regex: "constant\\(\"initialData\", (.+)\\)")[0][1]
