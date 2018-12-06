@@ -167,8 +167,8 @@ class SettingsController: UIViewController {
                 self.athleteName = athlete["Name"].stringValue
 
                 self.athleteButton.setTitle(self.athleteName + " ➤", for: .normal)
-                self.pushChangesToOtherTabs()
                 self.saveSettings()
+                self.pushChangesToOtherTabs()
                 if !self.setupComplete {
                     self.setupComplete = true
                     self.tabBarController?.tabBar.isHidden = false

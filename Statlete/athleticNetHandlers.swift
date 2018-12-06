@@ -198,8 +198,7 @@ struct MeetEvent {
 }
 
 
-func meetInfoFor(sport: String) -> (JSON) -> Observable<[MeetEvent]> {
-    return { meet in
+func meetInfoFor(sport: String, meet: JSON) -> Observable<[MeetEvent]> {
         let url = "https://www.athletic.net/\(sport)/meet/\(meet["MeetID"].stringValue)/results"
 
 
@@ -230,7 +229,6 @@ func meetInfoFor(sport: String) -> (JSON) -> Observable<[MeetEvent]> {
                 return MeetEvent(Name: event["Event"].stringValue, URL: url, Gender: gender, Sport: sport)
             }
         }
-    }
 }
 // gets params and initialData from url
 func dataRequest(url: String) -> Observable<[JSON]> {

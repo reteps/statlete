@@ -76,7 +76,10 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
             // filters for results
             return $0["MeetHasResults"].intValue == 1
         }
-        meetSelected.flatMap(meetInfoFor(sport: self.sportMode!))
+        meetSelected.flatMap { [unowned self] meet -> Observable<[MeetEvent]> in
+            let sportMode = self.sportMode!
+            return meetInfoFor(sport: sportMode, meet: meet)
+        }
         .do(onNext: { _ in
             self.meetPickerContainer.isHidden = false
             self.meetPickerContainer.isExclusiveTouch = true
@@ -102,7 +105,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
             self.navigationController?.pushViewController(indivMeet, animated: true)
         }).disposed(by: disposeBag)
         let button = UIBarButtonItem(title: "Team", style: .done, target: self, action: nil)
-        button.rx.tap.subscribe(onNext: {
+        button.rx.tap.subscribe(onNext: { [unowned self] _ in
             let url = "https://www.athletic.net/\(self.sportMode!)/School.aspx?SchoolID=\(self.schoolID!)"
             let svc = SFSafariViewController(url: URL(string: url)!)
             self.present(svc, animated: true, completion: nil)
@@ -111,16 +114,18 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         let leftButton = UIBarButtonItem()
         self.navigationItem.leftBarButtonItem = leftButton
 
-        leftButton.rx.tap.flatMap { [weak self] _ in
-            return getCalendarYears(sport: self!.sportMode!, schoolID: self!.schoolID!)
-            }.do(onNext: { _ in
+        leftButton.rx.tap.flatMap { [unowned self] _ -> Observable<[String]> in
+            let mySportMode = self.sportMode!
+            let mySchoolID = self.schoolID!
+            return getCalendarYears(sport: mySportMode, schoolID: mySchoolID)
+        }.do(onNext: { _ in
                 self.yearPickerContainer.isHidden = false
                 self.yearPickerContainer.isExclusiveTouch = true
             })
             .bind(to: self.yearPicker.rx.itemTitles) { index, item in
                 
                 return item
-            }.disposed(by: disposeBag)
+        }.disposed(by: disposeBag)
 
         let yearSelected = self.yearPicker.rx.modelSelected(String.self).startWith(["2018"]).do(onNext: { _ in
             self.yearPickerContainer.isHidden = true
@@ -128,7 +133,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
         }).map { $0[0] }
         
         yearSelected.bind(to: leftButton.rx.title).disposed(by: disposeBag)
-        Observable.merge(yearSelected, manualRefresh).flatMap { year -> Observable<[JSON]> in
+        Observable.merge(yearSelected, manualRefresh).flatMap { [unowned self] year -> Observable<[JSON]> in
             let sport = self.sportMode!
             let schoolID = self.schoolID!
             return getCalendar(year: year, sport: sport, schoolID: schoolID)

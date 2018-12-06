@@ -338,7 +338,7 @@ class IndividualStatsController: UIViewController {
         }
         // Constrains last checkbox to settingsView frame
         checks[checks.count - 1].snp.makeConstraints { (make) in
-            make.bottom.equalTo(self.checkboxView)
+            make.bottom.equalTo(self.checkboxView).offset(-50)
         }
         // Constrains checkboxes to each other
         for i in 0..<checks.count - 1 {
