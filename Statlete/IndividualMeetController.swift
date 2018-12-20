@@ -14,49 +14,49 @@ import RxDataSources
 
 // https://stackoverflow.com/questions/49538546/how-to-obtain-a-uialertcontroller-observable-reactivecocoa-or-rxswift
 extension UIAlertController {
-    
-        static func present(
-            in viewController: UIViewController,
-            title: String,
-            message: String?,
-            style: UIAlertController.Style,
-            options: [String])
-            -> Single<Int>
-        {
-            return Single<Int>.create { single in
-                let alertController = UIAlertController(title: title, message: message, preferredStyle: style)
-                
-                let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-                let actions = options.enumerated().map { offset, element in
-                    UIAlertAction(title: element, style: .default) { _ in
-                        return single(.success(offset))
-                    }
-                }
-                for action in actions + [cancelAction] {
-                    alertController.addAction(action)
-                }
-                
-                viewController.present(alertController, animated: true, completion: nil)
-                return Disposables.create {
-                    alertController.dismiss(animated: true, completion: nil)
+
+    static func present(
+        in viewController: UIViewController,
+        title: String,
+        message: String?,
+        style: UIAlertController.Style,
+        options: [String])
+        -> Single<Int>
+    {
+        return Single<Int>.create { single in
+            let alertController = UIAlertController(title: title, message: message, preferredStyle: style)
+
+            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+            let actions = options.enumerated().map { offset, element in
+                UIAlertAction(title: element, style: .default) { _ in
+                    return single(.success(offset))
                 }
             }
-            
+            for action in actions + [cancelAction] {
+                alertController.addAction(action)
+            }
+
+            viewController.present(alertController, animated: true, completion: nil)
+            return Disposables.create {
+                alertController.dismiss(animated: true, completion: nil)
+            }
         }
-    
+
+    }
+
 }
 
 extension Round: SectionModelType {
     typealias Item = RaceResult
-    
+
     init(original: Round, items: [Item]) {
         self = original
         self.items = items
     }
 }
-    
+
 class IndividualMeetController: UIViewController {
-    
+
     var meet: MeetEvent? = nil
     var disposeBag = DisposeBag()
     var filterView = UIView()
@@ -64,10 +64,7 @@ class IndividualMeetController: UIViewController {
     var filterActionSheet = UIAlertController()
     let filterButton = UIButton()
     let searchBar = UISearchBar()
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.view.addSubview(self.tableView)
-        self.view.addSubview(self.filterView)
+    func initFilterView() {
         self.filterView.snp.makeConstraints { make in
             make.width.left.right.equalTo(self.view)
             make.top.equalTo(self.topLayoutGuide.snp.bottom)
@@ -75,18 +72,27 @@ class IndividualMeetController: UIViewController {
         }
         self.filterView.addSubview(self.filterButton)
         self.filterView.addSubview(self.searchBar)
+        self.filterView.backgroundColor = .white
+
+
+    }
+    func initSearchBar() {
         self.searchBar.snp.makeConstraints { make in
             make.top.bottom.right.equalToSuperview()
             make.left.equalTo(self.filterButton.snp.right)
         }
+    }
+    func initFilterButton() {
         self.filterButton.snp.makeConstraints { make in
             make.top.bottom.left.equalToSuperview()
             make.width.equalTo(100)
         }
 
         self.filterButton.setTitle("Sort", for: .normal)
-        self.filterView.backgroundColor = .white
         self.filterButton.setTitleColor(.black, for: .normal)
+
+    }
+    func initTableView() {
         self.tableView.snp.makeConstraints { make in
             make.top.equalTo(self.filterView).offset(40)
             make.left.right.bottom.equalTo(self.view)
@@ -96,14 +102,32 @@ class IndividualMeetController: UIViewController {
         //https://www.atomicbird.com/blog/uistackview-table-cells
         self.tableView.estimatedRowHeight = 44
         self.tableView.rowHeight = UITableView.automaticDimension
+        self.tableView.register(ResultCell.self, forCellReuseIdentifier: "ResultCell")
+
+    }
+    func initInfoButton() {
         let button = UIBarButtonItem(title: "Race Info", style: .done, target: self, action: nil)
         button.rx.tap.subscribe(onNext: {
             let svc = SFSafariViewController(url: URL(string: self.meet!.URL)!)
             self.present(svc, animated: true, completion: nil)
         }).disposed(by: disposeBag)
-        configureRx()
         self.navigationItem.rightBarButtonItem = button
-        self.tableView.register(ResultCell.self, forCellReuseIdentifier: "ResultCell")
+
+    }
+    func initUI() {
+        self.view.addSubview(self.filterView)
+        self.view.addSubview(self.tableView)
+        
+        initFilterView()
+        initSearchBar()
+        initFilterButton()
+        initTableView()
+        initInfoButton()
+    }
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        initUI()
+        configureRx()
     }
     // https://stackoverflow.com/questions/49538546/how-to-obtain-a-uialertcontroller-observable-reactivecocoa-or-rxswift
     override func viewDidAppear(_ animated: Bool) {
@@ -112,12 +136,11 @@ class IndividualMeetController: UIViewController {
 
     }
     // https://github.com/RxSwiftCommunity/RxDataSources
-
-    func configureRx() {
-        let dataSource = RxTableViewSectionedReloadDataSource<Round>(
+    func createDataSource() -> RxTableViewSectionedReloadDataSource<Round> {
+        return RxTableViewSectionedReloadDataSource<Round>(
             configureCell: { dataSource, tableView, indexPath, item in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "ResultCell", for: indexPath) as! ResultCell
-                let grade = (item.Grade == nil) ? "" :  " (\(item.Grade!))"
+                let grade = (item.Grade == nil) ? "" : " (\(item.Grade!))"
 
                 cell.nameLabel.text = item.AthleteName + grade
                 cell.placeLabel.text = (item.Place == nil || item.Place == 0) ? "-" : String(item.Place!)
@@ -126,24 +149,27 @@ class IndividualMeetController: UIViewController {
                 if (item.ResultCode == nil) {
                     cell.infoButton.isHidden = true
                 }
-                
+
                 cell.infoButton.rx.tap.subscribe(onNext: { _ in
                     let url = "https://athletic.net/result/\(item.ResultCode!)"
                     let svc = SFSafariViewController(url: URL(string: url)!)
                     self.present(svc, animated: true, completion: nil)
                 }).disposed(by: cell.disposeBag)
                 return cell
-        }, titleForHeaderInSection: { dataSource, index in
-            return dataSource.sectionModels[index].Name
-        })
+            }, titleForHeaderInSection: { dataSource, index in
+                return dataSource.sectionModels[index].Name
+            })
+    }
+    func configureRx() {
+        let dataSource = createDataSource()
         let raceRounds = raceInfoFor(url: self.meet!.URL, sport: self.meet!.Sport).map { race in
             return race.Rounds
         }
-        let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)",  "Name (Z → A)", "Team (A → Z)", "Team (Z → A)" ]
-
+        let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
         let sortValue = self.filterButton.rx.tap.flatMap {
             return UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, options: options)
         }.startWith(0)
+        // sortValue.map { options[$0] }.bind(to: self.filterButton.rx.title(for: .normal))
         let searchBar = self.searchBar.rx.text.orEmpty
         Observable.combineLatest(sortValue, raceRounds, searchBar) { (index, rounds, search) in
             var newRounds = rounds
@@ -157,7 +183,7 @@ class IndividualMeetController: UIViewController {
                     newRound.items = round.items.sorted { $0.SortValue > $1.SortValue }
 
                 case 2:
-                    newRound.items = round.items.sorted { $0.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") < $1.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ")  }
+                    newRound.items = round.items.sorted { $0.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") < $1.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
                 case 3:
                     newRound.items = round.items.sorted { $0.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") > $1.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
                 case 4:
@@ -178,7 +204,7 @@ class IndividualMeetController: UIViewController {
                     return newRound
                 }
                 if !search.isEmpty {
-                    newRound.items = newRound.items.filter {  return $0.AthleteName.range(of: search, options: .caseInsensitive) != nil || ($0.Team ?? "").range(of: search, options: .caseInsensitive) != nil
+                    newRound.items = newRound.items.filter { return $0.AthleteName.range(of: search, options: .caseInsensitive) != nil || ($0.Team ?? "").range(of: search, options: .caseInsensitive) != nil
                     }
                 }
                 return newRound
@@ -186,9 +212,9 @@ class IndividualMeetController: UIViewController {
             return newRounds
 
         }.bind(to: tableView.rx.items(dataSource: dataSource))
-        .disposed(by: disposeBag)
+            .disposed(by: disposeBag)
 
-        
+
     }
 }
 
@@ -204,7 +230,7 @@ class ResultCell: UITableViewCell {
     // https://stackoverflow.com/questions/25413239/custom-uitableviewcell-programmatically-using-swift
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        
+
         self.contentView.addSubview(placeLabel)
         self.contentView.addSubview(nameLabel)
         self.contentView.addSubview(timeLabel)
@@ -245,9 +271,9 @@ class ResultCell: UITableViewCell {
         }
         nameLabel.textColor = .black
         timeLabel.textColor = .black
-        
+
     }
-    
+
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

@@ -42,7 +42,42 @@ class IndividualStatsController: UIViewController {
     let disposeBag = DisposeBag()
     var timeFormatter = DateFormatter()
     var selectedEventName = ""
-
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
+        // https://blog.pusher.com/handling-internet-connection-reachability-swift/
+        if shouldUpdateData {
+            reloadData()
+            createPage()
+            shouldUpdateData.toggle()
+        } else {
+            print("[INFO]: data not updating")
+        }
+        // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        initUI()
+    }
+    func initUI() {
+        self.view.backgroundColor = .white
+        
+        initScrollViewAndContent()
+        initChart()
+        initSettingsView()
+        initPickerView()
+        
+        initCheckBoxView()
+        initPickerView()
+        
+        initInfoView()
+        initInfoLabel()
+        initPickerBar()
+        initPicker()
+        initRefreshControl()
+    }
     // Takes an event and returns an array of lines based on the data
     func createLineChartData(event: [String: [AthleteTime]]?) -> [LineChartDataSet] {
         var lines = [LineChartDataSet]()
@@ -89,40 +124,7 @@ class IndividualStatsController: UIViewController {
         self.chart.notifyDataSetChanged()
     }
     
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
-        // https://blog.pusher.com/handling-internet-connection-reachability-swift/
-        if self.shouldUpdateData {
-            reloadData()
-            createPage()
-            self.shouldUpdateData = false
-        } else {
-            print("data not updating")
-        }
-                        // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
-
-
-    }
-
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        self.view.backgroundColor = .white
-        
-        initScrollViewAndContent()
-        initChart()
-        initSettingsView()
-        initPickerView()
-
-        initCheckBoxView()
-        initPickerView()
-
-        initInfoView()
-        initInfoLabel()
-        initPickerBar()
-        initPicker()
-        initRefreshControl()
-    }
+  
     func initRefreshControl() {
         let refreshControl = UIRefreshControl()
         let title = NSLocalizedString("Refreshing Data", comment: "Pull to refresh")

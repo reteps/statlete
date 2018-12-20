@@ -26,7 +26,7 @@ class OptionsController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if self.sentToSetup {
-            initScreen()
+            initUI()
             self.sentToSetup.toggle()
         }
     }
@@ -37,7 +37,8 @@ class OptionsController: UIViewController {
         self.navigationItem.title = "Options"
         let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
-                initScreen()
+            setDefaultValues()
+            initUI()
         } else {
                 self.sentToSetup = true
                 self.navigationController?.pushViewController(SettingsController(), animated: true)
@@ -46,8 +47,7 @@ class OptionsController: UIViewController {
         
 
     }
-    func initScreen() {
-        setDefaultValues()
+    func initUI() {
         initSearchTeamButton()
         initSearchAthleteButton()
         initSettingsBarButton()

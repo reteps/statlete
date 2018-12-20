@@ -35,10 +35,10 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     var manualRefresh = PublishSubject<String>()
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if self.shouldUpdateData {
+        if shouldUpdateData {
             manualRefresh.onNext("2018")
             self.navigationItem.title = self.schoolName
-            self.shouldUpdateData = false
+            shouldUpdateData.toggle()
         }
         self.meetPickerContainer.isExclusiveTouch = false
         self.meetPickerContainer.isHidden = true
@@ -47,24 +47,32 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = .white
+        initUI()
+        configureRxSwift()
+
+    }
+    func initTable() {
         self.tableView.delegate = nil
         self.tableView.dataSource = nil
         
         self.tableView.estimatedRowHeight = 40
         self.tableView.rowHeight = UITableView.automaticDimension
+        self.tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
 
+    }
+    func initNavigationItem() {
         self.navigationItem.title = self.schoolName
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem()
+
+    }
+    func initUI() {
+        self.view.backgroundColor = .white
         initMeetPickerView()
         initMeetPicker()
         initYearPickerView()
         initYearPicker()
-        self.tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
-
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem()
-        
-        configureRxSwift()
-
+        initTable()
+        initNavigationItem()
     }
     // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
     func configureRxSwift() {

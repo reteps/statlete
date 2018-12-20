@@ -17,9 +17,12 @@ class TeamSearchController: UITableViewController, UISearchBarDelegate {
     let selectedTeam = PublishSubject<[String:String]>()
     override func viewDidLoad() {
         super.viewDidLoad()
+        initUI()
+        configureObservables()
+    }
+    func initUI() {
         initTableView()
         initSearchController()
-        configureObservables()
     }
     func initSearchController() {
         searchController = UISearchController(searchResultsController: nil)

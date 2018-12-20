@@ -23,10 +23,13 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        initSearchController()
+        initUI()
         configureRxSwift()
     }
     // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
+    func initUI() {
+        initSearchController()
+    }
     func initSearchController() {
         searchController = UISearchController(searchResultsController: nil)
         searchController.dimsBackgroundDuringPresentation = false
