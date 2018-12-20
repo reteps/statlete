@@ -21,9 +21,9 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         let options = UINavigationController(rootViewController: OptionsController())
         let individual = IndividualStatsController()
         let meets = UINavigationController(rootViewController: MeetViewController())
-
-        self.viewControllers = [options, individual, meets]
-        let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users]//*, .medal
+        let settings = UpdatedSettings()
+        self.viewControllers = [options, individual, meets, settings]
+        let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users, .cogs]//*, .medal
         for index in 0..<self.viewControllers!.count {
             
             let icon = UIImage.fontAwesomeIcon(name: viewControllerIcons[index], style: .solid, textColor: UIColor.black, size: CGSize(width: 40, height: 40))
