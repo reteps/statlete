@@ -8,6 +8,7 @@
 
 import UIKit
 import RxSwift
+import RxCocoa
 import RxDataSources
 import SnapKit
 // Section 3
@@ -21,41 +22,69 @@ import SnapKit
 
 class UpdatedSettings: UIViewController {
     let tableView = UITableView()
+    let disposeBag = DisposeBag()
     override func viewDidLoad() {
         super.viewDidLoad()
         initUI()
         let dataSource = createDataSource()
+        let sections: [MultipleSectionModel] = [
+            .pickableSection(title: "Section 1",
+        items: [.pickableSectionItem(title: "Default Values", view: AthleteSearchController())]),
+            .toggleSection(title: "Section 2",
+                               items: [.toggleSectionItem(title: "Cross Country", enabled: true)]),
+            .informationSection(title: "Information",
+                                items: [.informationSectionItem(title: "App Version -> 1.0")])
+        ]
+        Observable.just(sections)
+            .bind(to: tableView.rx.items(dataSource: dataSource))
+            .disposed(by: disposeBag)
+        self.tableView.rx.modelSelected(SectionItem.self).filter { item in
+            if case SectionItem.pickableSectionItem = item {
+                return true
+            }
+            return false
+
+        }.map { model -> UIViewController in
+            if case SectionItem.pickableSectionItem = model {
+                return model.view
+            }
+            return UIViewController()
+            // self.present(model, animated: true)
+        }
+        
     }
     func initUI() {
-        self.view.addSubview(tableView)
+        self.view.addSubview(self.tableView)
         self.view.backgroundColor = .white
-
+        
         initTableView()
     }
     func initTableView() {
+        tableView.register(PickableTableViewCell.self, forCellReuseIdentifier: "PickableCell")
+        tableView.register(ToggleTableViewCell.self, forCellReuseIdentifier: "ToggleCell")
+
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
     }
     func createDataSource() -> RxTableViewSectionedReloadDataSource<MultipleSectionModel> {
         return RxTableViewSectionedReloadDataSource<MultipleSectionModel>(
-            configureCell: { (dataSource, table, idxPath, _) in
-                switch dataSource[idxPath] {
-                case let .InformationSectionItem(title):
-                    let cell: InformationTableViewCell = table.dequeueReusableCell(forIndexPath: idxPath)
-                    cell.titleLabel.text = title
+            configureCell: { (dataSource, table, indexPath, _) in
+                switch dataSource[indexPath] {
+                case let .informationSectionItem(title):
+                    let cell: UITableViewCell = table.dequeueReusableCell(withIdentifier: "DefaultCell") ?? UITableViewCell(style:.default, reuseIdentifier: "DefaultCell")
+                    cell.textLabel?.text = title
+                    return cell
+                case let .pickableSectionItem(title, view):
+                    let cell: PickableTableViewCell = table.dequeueReusableCell(withIdentifier: "PickableCell",for: indexPath) as! PickableTableViewCell
+                    cell.textLabel?.text = title
+                    cell.viewToPresent = view
 
                     return cell
-                case let .PickableSectionItem(title, picker):
-                    let cell: PickableTableViewCell = table.dequeueReusableCell(forIndexPath: idxPath)
-                    cell.titleLabel.text = title
-                    cell.picker = picker
-
-                    return cell
-                case let .ToggleSectionItem(title, enabled):
-                    let cell: ToggleTableViewCell = table.dequeueReusableCell(forIndexPath: idxPath)
-                    cell.switchControl.isOn = enabled
-                    cell.titleLabel.text = title
+                case let .toggleSectionItem(title, enabled):
+                    let cell: ToggleTableViewCell = table.dequeueReusableCell(withIdentifier: "ToggleCell",for: indexPath) as! ToggleTableViewCell
+                    cell.toggle.isEnabled = enabled
+                    cell.textLabel?.text = title
 
                     return cell
                 }
@@ -73,15 +102,15 @@ class UpdatedSettings: UIViewController {
 // https://github.com/RxSwiftCommunity/RxDataSources
 // https://github.com/RxSwiftCommunity/RxDataSources/blob/master/Examples/Example/Example4_DifferentSectionAndItemTypes.swift
 enum MultipleSectionModel {
-    case InformationSection(title: String, items: [SectionItem])
-    case ToggleSection(title: String, items: [SectionItem])
-    case PickableSection(title: String, items: [SectionItem])
+    case informationSection(title: String, items: [SectionItem])
+    case toggleSection(title: String, items: [SectionItem])
+    case pickableSection(title: String, items: [SectionItem])
 }
 
 enum SectionItem {
-    case InformationSectionItem(title: String)
-    case ToggleSectionItem(title: String, enabled: Bool)
-    case PickableSectionItem(title: String, picker: UIViewController)
+    case informationSectionItem(title: String)
+    case toggleSectionItem(title: String, enabled: Bool)
+    case pickableSectionItem(title: String, view: UIViewController)
 }
 
 
@@ -92,23 +121,23 @@ extension MultipleSectionModel: SectionModelType {
 
     var items: [SectionItem] {
         switch self {
-        case .PickableSection(title: _, items: let items):
+        case .pickableSection(title: _, items: let items):
             return items.map { $0 }
-        case .InformationSection(title: _, items: let items):
+        case .informationSection(title: _, items: let items):
             return items.map { $0 }
-        case .ToggleSection(title: _, items: let items):
+        case .toggleSection(title: _, items: let items):
             return items.map { $0 }
         }
     }
 
     init(original: MultipleSectionModel, items: [Item]) {
         switch original {
-        case let .PickableSection(title: title, items: _):
-            self = .PickableSection(title: title, items: items)
-        case let .InformationSection(title, _):
-            self = .InformationSection(title: title, items: items)
-        case let .ToggleSection(title, _):
-            self = .ToggleSection(title: title, items: items)
+        case let .pickableSection(title: title, items: _):
+            self = .pickableSection(title: title, items: items)
+        case let .informationSection(title, _):
+            self = .informationSection(title: title, items: items)
+        case let .toggleSection(title, _):
+            self = .toggleSection(title: title, items: items)
         }
     }
 }
@@ -116,13 +145,54 @@ extension MultipleSectionModel: SectionModelType {
 extension MultipleSectionModel {
     var title: String {
         switch self {
-        case .PickableSection(title: let title, items: _):
+        case .pickableSection(title: let title, items: _):
             return title
-        case .InformationSection(title: let title, items: _):
+        case .informationSection(title: let title, items: _):
             return title
-        case .ToggleSection(title: let title, items: _):
+        case .toggleSection(title: let title, items: _):
             return title
         }
+    }
+}
+
+
+
+class ToggleTableViewCell: UITableViewCell {
+    var disposeBag = DisposeBag()
+    var toggle = UISwitch()
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.contentView.addSubview(toggle)
+        toggle.snp.makeConstraints { make in
+            make.height.equalTo(50)
+            make.width.equalTo(50)
+            make.top.bottom.left.equalToSuperview()
+        }
+    }
+    required init?(coder aDecoder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+    }
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.disposeBag = DisposeBag()
+    }
+}
+
+class PickableTableViewCell: UITableViewCell {
+    var disposeBag = DisposeBag()
+    var viewToPresent = UIViewController()
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        self.contentView.snp.makeConstraints { make in
+            make.height.equalTo(50)
+        }
+    }
+    required init?(coder aDecoder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.disposeBag = DisposeBag()
     }
 }
 
