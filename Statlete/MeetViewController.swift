@@ -15,13 +15,12 @@ import SnapKit
 import FontAwesome_swift
 import SafariServices
 
-class MeetViewController: UITableViewController, UISearchBarDelegate {
+class MeetViewController: UIViewController {
     var schoolName = UserDefaults.standard.string(forKey: "schoolName")
     var sportMode = UserDefaults.standard.string(forKey: "sportMode")
     var schoolID = UserDefaults.standard.string(forKey: "schoolID")
     var shouldShowSearchResults = false
-    var searchController: UISearchController!
-    var searchControllerHeight = 0
+    var searchBar = UISearchBar()//Controller!
     let disposeBag = DisposeBag()
     let meetPicker = UIPickerView()
     let meetPickerBar = UIToolbar()
@@ -33,6 +32,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     let dateFormatter = DateFormatter()
     var shouldUpdateData = false
     var manualRefresh = PublishSubject<String>()
+    var tableView = UITableView()
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if shouldUpdateData {
@@ -54,7 +54,9 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     func initTable() {
         self.tableView.delegate = nil
         self.tableView.dataSource = nil
-        
+        self.tableView.snp.makeConstraints { make in
+            make.edges.equalToSuperview()
+        }
         self.tableView.estimatedRowHeight = 40
         self.tableView.rowHeight = UITableView.automaticDimension
         self.tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
@@ -67,6 +69,7 @@ class MeetViewController: UITableViewController, UISearchBarDelegate {
     }
     func initUI() {
         self.view.backgroundColor = .white
+        self.view.addSubview(tableView)
         initMeetPickerView()
         initMeetPicker()
         initYearPickerView()

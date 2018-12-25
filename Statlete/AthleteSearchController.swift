@@ -29,14 +29,20 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
     // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
     func initUI() {
         initSearchController()
+        initTableView()
+        // initNavButtons()
     }
     func initSearchController() {
         searchController = UISearchController(searchResultsController: nil)
         searchController.dimsBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "Search for athlete here..."
+        searchController.searchBar.placeholder = "Search for an athlete here..."
         searchController.searchBar.delegate = self
         searchController.searchBar.sizeToFit()
         searchController.definesPresentationContext = true
+        searchController.searchBar.showsScopeBar = true
+        searchController.searchBar.scopeButtonTitles = ["Cross Country", "Track"]
+    }
+    func initTableView() {
         self.tableView.tableHeaderView = searchController.searchBar
         self.tableView.delegate = nil
         self.tableView.dataSource = nil
@@ -48,10 +54,8 @@ class AthleteSearchController: UITableViewController, UISearchBarDelegate {
         let url = "https://www.athletic.net/\(self.sportMode)/School.aspx?SchoolID=\(self.schoolID)"
         let allAthletes = dataRequest(url: url).map { $0[1]["athletes"].arrayValue }
         let searchFilter = self.searchController.searchBar.rx.text.orEmpty.asObservable()
-        let cancelFilter = self.searchController.searchBar.rx.textDidEndEditing.map( { "" } )
-        let combinedFilter = Observable.of(searchFilter, cancelFilter).merge()
         // https://en.wikipedia.org/wiki/Ternary_operation
-        Observable.combineLatest(allAthletes, combinedFilter) { athletes, text in
+        Observable.combineLatest(allAthletes, searchFilter) { athletes, text in
             text.isEmpty ? athletes : athletes.filter { $0["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil }
             }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self)) { (row, element, cell) in
             cell.textLabel?.text = element["Name"].stringValue

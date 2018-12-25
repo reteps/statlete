@@ -12,39 +12,6 @@ import RxSwift
 import SafariServices
 import RxDataSources
 
-// https://stackoverflow.com/questions/49538546/how-to-obtain-a-uialertcontroller-observable-reactivecocoa-or-rxswift
-extension UIAlertController {
-
-    static func present(
-        in viewController: UIViewController,
-        title: String,
-        message: String?,
-        style: UIAlertController.Style,
-        options: [String])
-        -> Single<Int>
-    {
-        return Single<Int>.create { single in
-            let alertController = UIAlertController(title: title, message: message, preferredStyle: style)
-
-            let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
-            let actions = options.enumerated().map { offset, element in
-                UIAlertAction(title: element, style: .default) { _ in
-                    return single(.success(offset))
-                }
-            }
-            for action in actions + [cancelAction] {
-                alertController.addAction(action)
-            }
-
-            viewController.present(alertController, animated: true, completion: nil)
-            return Disposables.create {
-                alertController.dismiss(animated: true, completion: nil)
-            }
-        }
-
-    }
-
-}
 
 extension Round: SectionModelType {
     typealias Item = RaceResult

@@ -18,10 +18,10 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://www.appcoda.com/swift-delegate/
         
         // tabs
-        let options = UINavigationController(rootViewController: OptionsController())
         let individual = IndividualStatsController()
+        let options = UINavigationController(rootViewController: WelcomeViewController())
         let meets = UINavigationController(rootViewController: MeetViewController())
-        let settings = UpdatedSettings()
+        let settings = UINavigationController(rootViewController: UpdatedSettings())
         self.viewControllers = [options, individual, meets, settings]
         let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users, .cogs]//*, .medal
         for index in 0..<self.viewControllers!.count {

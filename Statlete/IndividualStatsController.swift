@@ -35,10 +35,10 @@ class IndividualStatsController: UIViewController {
     // Variables
     var lines = [LineChartDataSet]()
     var events = [String: [String: [AthleteTime]]]()
-    let colors = [UIColor(hexString: "7ad3c0")!,
-    UIColor(hexString: "61a3ce")!,
-    UIColor(hexString: "b283c6")!,
-    UIColor(hexString: "c45850")!]
+    let colors = [UIColor(rgb: 0x7ad3c0),
+    UIColor(rgb: 0x61a3ce),
+    UIColor(rgb: 0xb283c6),
+    UIColor(rgb: 0xc45850)]
     let disposeBag = DisposeBag()
     var timeFormatter = DateFormatter()
     var selectedEventName = ""
@@ -296,9 +296,9 @@ class IndividualStatsController: UIViewController {
             checkbox = M13Checkbox()
             checkbox.setCheckState(.checked, animated: false)
             checkbox.stateChangeAnimation = .bounce(.fill)
-            checkbox.secondaryTintColor =  UIColor(hexString: "47cae8")
+            checkbox.secondaryTintColor =  UIColor(rgb: 0x47cae8)
             checkbox.secondaryCheckmarkTintColor = .white //checkmark
-            checkbox.tintColor = UIColor(hexString: "53cce7")
+            checkbox.tintColor = UIColor(rgb: 0x53cce7)
             checkbox.boxType = .square
         }
     }

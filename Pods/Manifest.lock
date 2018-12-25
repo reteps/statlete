@@ -10,11 +10,19 @@ PODS:
   - FontAwesome.swift (1.4.4)
   - Kanna (4.0.2)
   - M13Checkbox (3.2.2)
+  - Realm (3.13.0):
+    - Realm/Headers (= 3.13.0)
+  - Realm/Headers (3.13.0)
+  - RealmSwift (3.13.0):
+    - Realm (= 3.13.0)
   - RxCocoa (4.3.0):
     - RxSwift (~> 4.0)
   - RxDataSources (3.1.0):
     - Differentiator (~> 3.0)
     - RxCocoa (~> 4.0)
+    - RxSwift (~> 4.0)
+  - RxRealm (0.7.6):
+    - RealmSwift (~> 3.0)
     - RxSwift (~> 4.0)
   - RxSwift (4.3.0)
   - SnapKit (4.0.1)
@@ -27,8 +35,10 @@ DEPENDENCIES:
   - FontAwesome.swift (~> 1.4.1)
   - Kanna (~> 4.0.0)
   - M13Checkbox (from `https://github.com/Marxon13/M13Checkbox.git`, branch `swift_4_2`)
+  - RealmSwift
   - RxCocoa (~> 4.0)
   - RxDataSources (~> 3.0)
+  - RxRealm
   - RxSwift (~> 4.0)
   - SnapKit (~> 4.0.0)
   - SwiftyJSON (~> 4.0)
@@ -40,8 +50,11 @@ SPEC REPOS:
     - Differentiator
     - FontAwesome.swift
     - Kanna
+    - Realm
+    - RealmSwift
     - RxCocoa
     - RxDataSources
+    - RxRealm
     - RxSwift
     - SnapKit
     - SwiftyJSON
@@ -69,12 +82,15 @@ SPEC CHECKSUMS:
   FontAwesome.swift: 17b93524b9f61136a8566344517b8556ed584e87
   Kanna: c60b61d72554bf04ed1ee074f9b379855cab4892
   M13Checkbox: 82182615a76646475b451ebe448a998f77f8cc6e
+  Realm: 5edd2ee65406aef591a4f9895de5a3440e51b3d8
+  RealmSwift: be5ebc7930e37cd3376b41cec7f21984528aaa16
   RxCocoa: 71b9cce833fbcb89a8eec11816dd225830c2bd3c
   RxDataSources: a843bad90c29817f5923ec8163f4af2de084ceb3
+  RxRealm: 5379eddd74f8d617ca7681d1f8d144af25b432b0
   RxSwift: a9717a34df3179fe63563f76e046ad345078dd3a
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
   SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
 
-PODFILE CHECKSUM: d822052f0a84ba600e74bdc44849d6b206451d96
+PODFILE CHECKSUM: a80e6ac19d7e1b7b05849c83ef71deec68a71c64
 
 COCOAPODS: 1.5.3
