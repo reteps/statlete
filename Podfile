@@ -16,5 +16,6 @@ target 'Statlete' do
     pod 'RxCocoa', '~>4.0'
     pod "RxRealm"
     pod 'RxDataSources', '~> 3.0'
+    pod 'Static'
 
 end

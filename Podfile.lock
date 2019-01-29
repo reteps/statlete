@@ -26,6 +26,7 @@ PODS:
     - RxSwift (~> 4.0)
   - RxSwift (4.3.0)
   - SnapKit (4.0.1)
+  - Static (3.0.2)
   - SwiftyJSON (4.1.0)
 
 DEPENDENCIES:
@@ -41,6 +42,7 @@ DEPENDENCIES:
   - RxRealm
   - RxSwift (~> 4.0)
   - SnapKit (~> 4.0.0)
+  - Static
   - SwiftyJSON (~> 4.0)
 
 SPEC REPOS:
@@ -57,6 +59,7 @@ SPEC REPOS:
     - RxRealm
     - RxSwift
     - SnapKit
+    - Static
     - SwiftyJSON
 
 EXTERNAL SOURCES:
@@ -89,8 +92,9 @@ SPEC CHECKSUMS:
   RxRealm: 5379eddd74f8d617ca7681d1f8d144af25b432b0
   RxSwift: a9717a34df3179fe63563f76e046ad345078dd3a
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
+  Static: 1542d33a345105ae57e8fffd2d5200080d99f131
   SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
 
-PODFILE CHECKSUM: a80e6ac19d7e1b7b05849c83ef71deec68a71c64
+PODFILE CHECKSUM: 4a27440a68dd615ce75b737261bc649fd95481f8
 
 COCOAPODS: 1.5.3

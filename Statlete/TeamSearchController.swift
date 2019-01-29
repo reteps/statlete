@@ -17,6 +17,7 @@ class TeamSearchController: UIViewController {
     let tableView = UITableView()
     var searchBar = UISearchBar()
     let selectedTeam = PublishSubject<[String:String]>()
+    let filterView = UIView()
     override func viewDidLoad() {
         super.viewDidLoad()
         initUI()
@@ -26,17 +27,13 @@ class TeamSearchController: UIViewController {
         self.view.addSubview(tableView)
         initSearchController()
         initTableView()
-        
     }
+
     func initSearchController() {
-        // searchController.dimsBackgroundDuringPresentation = false
-        searchBar.placeholder = "Search for a team here..."
-        
+        searchBar.placeholder = "Search for a team"
         searchBar.delegate = nil
         searchBar.sizeToFit()
-        searchBar.showsScopeBar = true
-        searchBar.scopeButtonTitles = ["Cross Country", "Track"]
-        // searchController.definesPresentationContext = true
+        self.navigationItem.titleView = searchBar
     }
 
     func initTableView() {
@@ -45,18 +42,11 @@ class TeamSearchController: UIViewController {
         tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        tableView.tableHeaderView = searchBar
-
         tableView.estimatedRowHeight = 40
         tableView.rowHeight = UITableView.automaticDimension
     }
-    override func viewWillDisappear(_ animated: Bool) {
-        self.selectedTeam.onCompleted()
-    }
     
     func configureObservables() {
-        // https://medium.com/@navdeepsingh_2336/creating-an-ios-app-with-mvvm-and-rxswift-in-minutes-b8800633d2e8
-        // https://github.com/ReactiveX/RxSwift/issues/1714
 
         searchBar.rx.text.orEmpty.throttle(0.1, scheduler: MainScheduler.instance)
             .flatMapLatest { text in
@@ -71,15 +61,9 @@ class TeamSearchController: UIViewController {
                 return cell
             }.disposed(by: disposeBag)
         
-        tableView.rx.modelSelected([String:String].self).debug("selectedTeam").do(onNext: { _ in
-            // self.searchController.isActive = false
-
-        }).take(1).bind(to: self.selectedTeam).disposed(by: disposeBag)
-        // self.navigationController?.popViewController(animated: true)
-        // https://medium.com/@dhruv.n.singh/passing-data-between-viewcontrollers-using-rxswift-be763fe10ba7
+        tableView.rx.modelSelected([String:String].self)
+        .bind(to: self.selectedTeam).disposed(by: disposeBag)
     }
-
-    // https://www.thedroidsonroids.com/blog/rxswift-by-examples-1-the-basics/
 
 
 }

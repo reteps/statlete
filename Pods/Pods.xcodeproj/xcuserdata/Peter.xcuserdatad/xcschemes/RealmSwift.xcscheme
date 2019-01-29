@@ -14,10 +14,10 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "5752DD257FE266E67107B3EEA49B03C9"
-               BlueprintName = "M13Checkbox"
+               BlueprintIdentifier = "FEDABC6D4C64B366E7B57DFA5C1AA045"
+               BlueprintName = "RealmSwift"
                ReferencedContainer = "container:Pods.xcodeproj"
-               BuildableName = "M13Checkbox.framework">
+               BuildableName = "RealmSwift.framework">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

@@ -14,10 +14,10 @@
             buildForArchiving = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "5752DD257FE266E67107B3EEA49B03C9"
-               BlueprintName = "M13Checkbox"
+               BlueprintIdentifier = "D12DAF94981AA99D699D5A129D8516E7"
+               BlueprintName = "Static"
                ReferencedContainer = "container:Pods.xcodeproj"
-               BuildableName = "M13Checkbox.framework">
+               BuildableName = "Static.framework">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>

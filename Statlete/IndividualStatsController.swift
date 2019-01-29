@@ -31,7 +31,7 @@ class IndividualStatsController: UIViewController {
     let pickerBar = UIToolbar()
     let selectedEvent = UITextField()
     let infoLabel = UILabel()
-    
+    let eventTapButton = UIBarButtonItem()
     // Variables
     var lines = [LineChartDataSet]()
     var events = [String: [String: [AthleteTime]]]()
@@ -72,11 +72,17 @@ class IndividualStatsController: UIViewController {
         initCheckBoxView()
         initPickerView()
         
+        initNavBar()
         initInfoView()
         initInfoLabel()
         initPickerBar()
         initPicker()
         initRefreshControl()
+    }
+    func initNavBar() {
+        self.navigationItem.leftBarButtonItem = nil
+        eventTapButton.title = "Event"
+        self.navigationItem.rightBarButtonItem = eventTapButton
     }
     // Takes an event and returns an array of lines based on the data
     func createLineChartData(event: [String: [AthleteTime]]?) -> [LineChartDataSet] {
@@ -110,21 +116,6 @@ class IndividualStatsController: UIViewController {
         return lines
     }
 
-    // https://medium.com/app-coder-io/33-ios-open-source-libraries-that-will-dominate-2017-4762cf3ce449
-    // Clears or Adds a line based on the checkbox value
-    @objc func checkboxTapped(_ sender: M13Checkbox) {
-        let lineIndex = sender.checkedValue! as! Int
-        if sender.checkState == .checked {
-            self.chart.data?.dataSets[lineIndex] = self.lines[lineIndex]
-        } else {
-            self.chart.data?.dataSets[lineIndex] = LineChartDataSet()
-        }
-        self.chart.data?.dataSets[lineIndex].notifyDataSetChanged()
-        self.chart.data?.notifyDataChanged()
-        self.chart.notifyDataSetChanged()
-    }
-    
-  
     func initRefreshControl() {
         let refreshControl = UIRefreshControl()
         let title = NSLocalizedString("Refreshing Data", comment: "Pull to refresh")
@@ -315,7 +306,17 @@ class IndividualStatsController: UIViewController {
             self.checkboxView.addSubview(label)
             self.checkboxView.addSubview(recordLabel) // also clear this
             checkbox.checkedValue = i
-            checkbox.addTarget(self, action: #selector(checkboxTapped(_:)), for: UIControlEvents.valueChanged)
+            checkbox.rx.controlEvent(UIControlEvents.valueChanged).subscribe(onNext: { [unowned self] _ in
+                let lineIndex = checkbox.checkedValue! as! Int
+                if checkbox.checkState == .checked {
+                    self.chart.data?.dataSets[lineIndex] = self.lines[lineIndex]
+                } else {
+                    self.chart.data?.dataSets[lineIndex] = LineChartDataSet()
+                }
+                self.chart.data?.dataSets[lineIndex].notifyDataSetChanged()
+                self.chart.data?.notifyDataChanged()
+                self.chart.notifyDataSetChanged()
+            })
             label.snp.makeConstraints { (make) in
                 make.left.equalTo(checkbox.snp.right).offset(10)
                 make.top.bottom.equalTo(checkbox)
@@ -331,7 +332,6 @@ class IndividualStatsController: UIViewController {
             label.textColor = .black
             checks.append(checkbox)
         }
-        // TODO UIStack View
         // Constrains first checkbox to settingsView frame
         checks[0].snp.makeConstraints { (make) in
             make.top.equalTo(self.checkboxView)
@@ -357,6 +357,7 @@ class IndividualStatsController: UIViewController {
         }
     }
 }
+
 class MyDateFormatter: IAxisValueFormatter {
     
     let timeFormatter: DateFormatter

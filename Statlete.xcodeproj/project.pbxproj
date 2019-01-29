@@ -25,6 +25,7 @@
 		D075D74A21571FCC00787AB0 /* TeamSearchController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74921571FCC00787AB0 /* TeamSearchController.swift */; };
 		D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */; };
 		D09E68B521750D8F005662E3 /* BalloonMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09E68B421750D8F005662E3 /* BalloonMarker.swift */; };
+		D0BD086821FFC06B00167C47 /* AthleteFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD086721FFC06B00167C47 /* AthleteFilter.swift */; };
 		D0D55E9421ADFEA70058B700 /* extraAthleticHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D55E9321ADFEA70058B700 /* extraAthleticHandlers.swift */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 		D075D74921571FCC00787AB0 /* TeamSearchController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamSearchController.swift; sourceTree = "<group>"; };
 		D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = athleticNetHandlers.swift; sourceTree = "<group>"; };
 		D09E68B421750D8F005662E3 /* BalloonMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalloonMarker.swift; sourceTree = "<group>"; };
+		D0BD086721FFC06B00167C47 /* AthleteFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteFilter.swift; sourceTree = "<group>"; };
 		D0D55E9321ADFEA70058B700 /* extraAthleticHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extraAthleticHandlers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -104,6 +106,7 @@
 				D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */,
 				D075D7432153D49D00787AB0 /* SettingsController.swift */,
 				D075D74921571FCC00787AB0 /* TeamSearchController.swift */,
+				D0BD086721FFC06B00167C47 /* AthleteFilter.swift */,
 				D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */,
 				D0D55E9321ADFEA70058B700 /* extraAthleticHandlers.swift */,
 				D075D74721571FA900787AB0 /* AthleteSearchController.swift */,
@@ -241,6 +244,7 @@
 				"${BUILT_PRODUCTS_DIR}/RxRealm/RxRealm.framework",
 				"${BUILT_PRODUCTS_DIR}/RxSwift/RxSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/SnapKit/SnapKit.framework",
+				"${BUILT_PRODUCTS_DIR}/Static/Static.framework",
 				"${BUILT_PRODUCTS_DIR}/SwiftyJSON/SwiftyJSON.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
@@ -261,6 +265,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxRealm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SnapKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Static.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftyJSON.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -285,6 +290,7 @@
 				D003589B2157F48A008D4B64 /* TabController.swift in Sources */,
 				D075D74A21571FCC00787AB0 /* TeamSearchController.swift in Sources */,
 				D075D74821571FAA00787AB0 /* AthleteSearchController.swift in Sources */,
+				D0BD086821FFC06B00167C47 /* AthleteFilter.swift in Sources */,
 				2F49A3AD21D116440019BE36 /* Extensions.swift in Sources */,
 				D075D7442153D49D00787AB0 /* SettingsController.swift in Sources */,
 				D0D55E9421ADFEA70058B700 /* extraAthleticHandlers.swift in Sources */,

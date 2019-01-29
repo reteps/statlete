@@ -10,7 +10,7 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Statlete/athleticNetHandlers.swift"
-            timestampString = "566229985.575105"
+            timestampString = "570419796.361457"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "184"
@@ -26,13 +26,13 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "Statlete/IndividualMeetController.swift"
-            timestampString = "567033129.501537"
+            timestampString = "568243800.5719171"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "64"
             endingLineNumber = "64"
-            landmarkName = "IndividualMeetController"
-            landmarkType = "3">
+            landmarkName = "initTableView()"
+            landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
