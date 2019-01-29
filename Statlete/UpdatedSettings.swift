@@ -47,6 +47,7 @@ class UpdatedSettings: UIViewController {
             Section(header: "Settings", rows: [
                 Row(text: "Change Athlete", detailText: settings.athleteName, selection: {
                     let athleteSearch = AthleteSearchController()
+                    athleteSearch.team = Team(name: settings.teamName, code: settings.teamID, location: "")
                     self.present(athleteSearch, animated:true)
                 }, accessory: .disclosureIndicator),
                 Row(text: "Change Team", detailText: settings.teamName, selection: {
@@ -65,7 +66,6 @@ class UpdatedSettings: UIViewController {
                 ])
         ]
         dataSource.tableView = tableView
-
     }
 }
 

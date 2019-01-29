@@ -62,7 +62,6 @@ class AthleteFilter: UIViewController {
     }
 
     func initTable() {
-        let year: String = (settings.year == nil) ? getYear() : settings.year!
         let teamPicker = TeamSearchController()
         teamPicker.selectedTeam.subscribe(onNext: { team in
             self.settings.id = team.code
@@ -78,7 +77,7 @@ class AthleteFilter: UIViewController {
         dataSource.sections = [
             Section(rows: [
                 // TODO fix this
-                Row(text: "Change Year", detailText: year, selection: {
+                Row(text: "Change Year", detailText: settings.year ?? "Current", selection: {
                     self.present(yp, animated: true)
                 }, accessory: .disclosureIndicator),
                 Row(text: "Change Team", detailText: settings.name, selection: {

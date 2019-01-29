@@ -31,7 +31,7 @@ class AthleteSearchController: UIViewController {
     let searchBar = UISearchBar()
     var shouldShowSearchResults = false
     var team: Team = Team()
-    var sport = ""
+    var sport = "CrossCountry" //Default
     let selectedAthlete = PublishSubject<JSON>()
     let disposeBag = DisposeBag()
     let tableHeaderView = UIView()
@@ -87,23 +87,29 @@ class AthleteSearchController: UIViewController {
             self.present(af, animated: true, completion: nil)
             
         }).disposed(by: disposeBag)
-        let url = "https://www.athletic.net/\(self.sport)/School.aspx?SchoolID=\(team.code)"
-        var allAthletes = dataRequest(url: url).map {
-            $0[1]["athletes"].arrayValue
-        }
-        // TODO fix this
-        af.savedSettings.subscribe(onNext: { settings in
-            let url = "https://www.athletic.net/\(settings.sport)/School.aspx?SchoolID=\(settings.id)?year=\(settings.year)"
-            print("URL:",url)
-            allAthletes.next(dataRequest(url: url).map {
-                $0[1]["athletes"].arrayValue
-            })
-        })
+        
+        let urlUpdates = PublishSubject<String>()
 
+        af.savedSettings.map { s in
+            var url = "https://www.athletic.net/\(s.sport)/School.aspx?SchoolID=\(s.id)"
+            if s.year != nil {
+                url += "?year=\(s.year!)"
+            }
+            return url
+            }.bind(to: urlUpdates).disposed(by: disposeBag)
+        
         let searchFilter = searchBar.rx.text.orEmpty.asObservable()
-
-        Observable.combineLatest(allAthletes, searchFilter) { athletes, text in
-            text.isEmpty ? athletes : athletes.filter {
+        let allAthletes = urlUpdates.flatMap { url -> Observable<[JSON]> in
+            return dataRequest(url: url).map {
+                $0[1]["athletes"].arrayValue
+            }
+        }
+        
+        let url = "https://www.athletic.net/\(self.sport)/School.aspx?SchoolID=\(team.code)"
+        urlUpdates.onNext(url)
+        
+        Observable.combineLatest(allAthletes, searchFilter) { athletes, text -> [JSON] in
+            (text.isEmpty) ? athletes : athletes.filter {
                 $0["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil
             }
         }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))

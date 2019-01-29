@@ -74,12 +74,14 @@ class WelcomeViewController: UIViewController {
         }).disposed(by: disposeBag)
         
         athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
-            print(athlete)
             try! realm.write() {
-                
+                settings.athleteID = athlete["Name"].stringValue
+                settings.athleteName = athlete["ID"].stringValue
+                settings.lastUpdated = Date()
             }
-            // TODO save data
             let setupComplete = UserDefaults.standard.set(true, forKey:"setupComplete")
+            self.tabBarController?.selectedIndex = 0
+            self.tabBarController?.tabBar.isHidden = false
         }).disposed(by: disposeBag)
     }
 }
