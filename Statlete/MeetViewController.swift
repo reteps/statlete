@@ -17,8 +17,8 @@ import SafariServices
 
 class MeetViewController: UIViewController {
     var schoolName = UserDefaults.standard.string(forKey: "schoolName")
-    var sportMode = UserDefaults.standard.string(forKey: "sportMode")
-    var schoolID = UserDefaults.standard.string(forKey: "schoolID")
+    var sport = UserDefaults.standard.string(forKey: "sport")
+    var teamID = UserDefaults.standard.string(forKey: "teamID")
     var shouldShowSearchResults = false
     var searchBar = UISearchBar()//Controller!
     let disposeBag = DisposeBag()
@@ -44,7 +44,7 @@ class MeetViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if shouldUpdateData {
-            manualRefresh.onNext("2018")
+            manualRefresh.onNext(String(getYear()))
             self.navigationItem.title = self.schoolName
             shouldUpdateData.toggle()
         }
@@ -97,8 +97,8 @@ class MeetViewController: UIViewController {
             return $0["MeetHasResults"].intValue == 1
         }
         meetSelected.flatMap { [unowned self] meet -> Observable<[MeetEvent]> in
-            let sportMode = self.sportMode!
-            return meetInfoFor(sport: sportMode, meet: meet)
+            let sport = self.sport!
+            return meetInfoFor(sport: sport, meet: meet)
         }
         .do(onNext: { _ in
             self.meetPickerContainer.isHidden = false
@@ -111,7 +111,7 @@ class MeetViewController: UIViewController {
         
         let infoTapped = self.meetPickerBar.items![2].rx.tap
         let meetURL = meetSelected.map { [unowned self] meet -> String in
-            return "https://www.athletic.net/\(self.sportMode!)/meet/\(meet["MeetID"].stringValue)/results"
+            return "https://www.athletic.net/\(self.sport!)/meet/\(meet["MeetID"].stringValue)/results"
         }
         infoTapped.withLatestFrom(meetURL).subscribe(onNext: { url in
             let svc = SFSafariViewController(url: URL(string: url)!)
@@ -127,7 +127,7 @@ class MeetViewController: UIViewController {
         
         let button = UIBarButtonItem(title: "Info", style: .done, target: self, action: nil)
         button.rx.tap.subscribe(onNext: { [unowned self] _ in
-            let url = "https://www.athletic.net/\(self.sportMode!)/School.aspx?SchoolID=\(self.schoolID!)"
+            let url = "https://www.athletic.net/\(self.sport!)/School.aspx?SchoolID=\(self.teamID!)"
             let svc = SFSafariViewController(url: URL(string: url)!)
             self.present(svc, animated: true, completion: nil)
         }).disposed(by: disposeBag)
@@ -136,29 +136,21 @@ class MeetViewController: UIViewController {
         let leftButton = UIBarButtonItem()
         self.navigationItem.leftBarButtonItem = leftButton
 
-        leftButton.rx.tap.flatMap { [unowned self] _ -> Observable<[String]> in
-            let mySportMode = self.sportMode!
-            let mySchoolID = self.schoolID!
-            return getCalendarYears(sport: mySportMode, schoolID: mySchoolID)
-        }.do(onNext: { _ in
-                self.yearPickerContainer.isHidden = false
-                self.yearPickerContainer.isExclusiveTouch = true
-            })
-            .bind(to: self.yearPicker.rx.itemTitles) { index, item in
-                
-                return item
-        }.disposed(by: disposeBag)
-
-        let yearSelected = self.yearPicker.rx.modelSelected(String.self).startWith(["2018"]).do(onNext: { _ in
-            self.yearPickerContainer.isHidden = true
-            self.yearPickerContainer.isExclusiveTouch = false
-        }).map { $0[0] }
+        let yearPicker = YearPicker()
         
+        let yearSelected = leftButton.rx.tap.flatMap { _  -> PublishSubject<String> in
+            yearPicker.sport = self.sport!
+            yearPicker.id = self.teamID!
+            self.present(yearPicker, animated: true)
+            return yearPicker.yearSelected
+        }
         yearSelected.bind(to: leftButton.rx.title).disposed(by: disposeBag)
+        
+        
         Observable.merge(yearSelected, manualRefresh).flatMap { [unowned self] year -> Observable<[JSON]> in
-            let sport = self.sportMode!
-            let schoolID = self.schoolID!
-            return getCalendar(year: year, sport: sport, schoolID: schoolID)
+            let sport = self.sport!
+            let teamID = self.teamID!
+            return getCalendar(year: year, sport: sport, teamID: teamID)
             }.bind(to:
             self.tableView.rx.items) { (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell

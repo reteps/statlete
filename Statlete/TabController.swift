@@ -18,12 +18,12 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://www.appcoda.com/swift-delegate/
         
         // tabs
+        let initialSetup = UINavigationController(rootViewController: WelcomeViewController())
         let individual = UINavigationController(rootViewController: IndividualStatsController())
-        let options = UINavigationController(rootViewController: WelcomeViewController())
         let meets = UINavigationController(rootViewController: MeetViewController())
         let settings = UINavigationController(rootViewController: UpdatedSettings())
-        self.viewControllers = [options, individual, meets, settings]
-        let viewControllerIcons: [FontAwesome] = [.slidersH, .user, .users, .cogs]//*, .medal
+        self.viewControllers = [individual, meets, settings]
+        let viewControllerIcons: [FontAwesome] = [.user, .users, .cogs]//*, .medal
         for index in 0..<self.viewControllers!.count {
             
             let icon = UIImage.fontAwesomeIcon(name: viewControllerIcons[index], style: .solid, textColor: UIColor.black, size: CGSize(width: 40, height: 40))
@@ -35,11 +35,13 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://stackoverflow.com/questions/34039475/programmatically-set-the-uitabbaritem-icon-for-every-linked-viewcontroller/43591493
         // https://medium.com/@unicornmobile/uitabbarcontroller-programmatically-316b89b5b21b
         // https://stackoverflow.com/questions/30849030/swift-how-to-execute-an-action-when-uitabbaritem-is-pressed
-        self.selectedIndex = 0
-
         let setupComplete = UserDefaults.standard.bool(forKey: "setupComplete")
         if setupComplete {
-            self.selectedIndex = 1
+            self.selectedIndex = 0
+        } else {
+            self.tabBar.isHidden = true
+            self.viewControllers = [individual, meets, settings, initialSetup]
+            self.selectedIndex = 3
         }
     }
     

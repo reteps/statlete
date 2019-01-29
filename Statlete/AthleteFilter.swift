@@ -11,15 +11,20 @@ import RxCocoa
 import RxSwift
 import Static
 
+
 class AthleteFilter: UIViewController {
     let filterView = UIView()
     let optionsTable = UITableView(frame: CGRect.zero, style: .grouped)
     let giantInvisibleButton = UIButton()
+    var settings = SearchSettings()
     let disposeBag = DisposeBag()
     let filterNavBar = UINavigationBar()
     let filterNavItem = UINavigationItem()
     let dataSource = DataSource()
-
+    let savedSettings = PublishSubject<SearchSettings>()
+    
+    let yearPicker = UIPickerView()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -55,14 +60,33 @@ class AthleteFilter: UIViewController {
             make.height.equalTo(300)
         }
     }
-    func initTable() {
 
+    func initTable() {
+        let year: String = (settings.year == nil) ? getYear() : settings.year!
+        let teamPicker = TeamSearchController()
+        teamPicker.selectedTeam.subscribe(onNext: { team in
+            self.settings.id = team.code
+            self.settings.name = team.name
+        }).disposed(by: self.disposeBag)
+        let yp = YearPicker()
+        yp.modalPresentationStyle = .overCurrentContext
+        yp.sport = self.settings.sport
+        yp.id = self.settings.id
+        yp.yearSelected.subscribe(onNext: { year in
+            self.settings.year = year
+        }).disposed(by: self.disposeBag)
         dataSource.sections = [
             Section(rows: [
-                Row(text: "Change Year", detailText: "2018", accessory: .disclosureIndicator),
-                Row(text: "Change Team", detailText: "Huron", accessory: .disclosureIndicator),
-                Row(text: "Cross Country", accessory: .switchToggle(value: true, { (bool) in
-                    print("this changed", bool)
+                // TODO fix this
+                Row(text: "Change Year", detailText: year, selection: {
+                    self.present(yp, animated: true)
+                }, accessory: .disclosureIndicator),
+                Row(text: "Change Team", detailText: settings.name, selection: {
+                    self.navigationController?.pushViewController(teamPicker, animated: true)
+                }, accessory: .disclosureIndicator),
+                Row(text: "Cross Country", accessory: .switchToggle(value: settings.sport == Sport.XC.raw,
+                { (bool) in
+                    self.settings.sport = bool ? Sport.XC.raw : Sport.TF.raw
                 }))
             ])
         ]
@@ -77,11 +101,12 @@ class AthleteFilter: UIViewController {
         filterNavBar.snp.makeConstraints { make in
             make.top.left.right.equalToSuperview()
         }
-        let clearButton = UIBarButtonItem()
         let doneButton = UIBarButtonItem()
-        clearButton.title = "Clear"
         doneButton.title = "Save"
-        filterNavItem.leftBarButtonItem = clearButton
+        doneButton.rx.tap.subscribe(onNext: { _ in
+            self.savedSettings.onNext(self.settings)
+            self.dismiss(animated: true, completion: nil)
+        }).disposed(by: disposeBag)
         filterNavItem.rightBarButtonItem = doneButton
         filterNavBar.items = [filterNavItem]
     }

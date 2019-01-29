@@ -13,12 +13,11 @@ import M13Checkbox
 import RxSwift
 import RxCocoa
 import FontAwesome_swift
+import RealmSwift
 
 class IndividualStatsController: UIViewController {
     // Defaults
-    var athleteName = UserDefaults.standard.string(forKey: "athleteName")
-    var sportMode = UserDefaults.standard.string(forKey: "sportMode")
-    var athleteID = UserDefaults.standard.integer(forKey: "athleteID")
+
     var shouldUpdateData = true // This will be set by other functions
     // UI Elements
     let chart = LineChartView()
@@ -143,14 +142,16 @@ class IndividualStatsController: UIViewController {
         scrollView.refreshControl = refreshControl
     }
     func reloadData() { // athlete has changed
-        let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
+        let realms = try! Realm()
+        let settings = realms.objects(Settings.self).first!
+        let athlete = individualAthlete(athleteID: settings.athleteID, athleteName: settings.athleteName, type: settings.sport)!
         
         self.events = athlete.events
         self.selectedEventName = self.events.first?.key ?? ""
         /*Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
             return item
         }.disposed(by: disposeBag)*/
-        titleButton.setTitle(self.athleteName!, for: .normal)
+        titleButton.setTitle(settings.athleteName, for: .normal)
         titleButton.sizeToFit()
 
 

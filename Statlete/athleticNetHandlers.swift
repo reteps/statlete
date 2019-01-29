@@ -14,7 +14,7 @@ import RxCocoa
 import RxSwift
 // http://adamborek.com/creating-observable-create-just-deferred/
 // https://github.com/NavdeepSinghh/RxSwift_MVVM_Finished/blob/master/Networking/ViewController.swift
-// Returns team information like a list of athletes from a schoolID
+// Returns team information like a list of athletes from a teamID
 
 struct TeamAthlete {
     var Name: String
@@ -24,20 +24,20 @@ struct TeamAthlete {
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
 // https://stackoverflow.com/questions/52656378/bind-alamofire-request-to-table-view-using-rxswift/52656720?noredirect=1#comment92244571_52656720
 // searches athletic.net
-func searchRequest(search: String, searchType: String) -> Observable<[[String:String]]> {
+func searchRequest(search: String, searchType: String) -> Observable<[Team]> {
     let payload: [String: Any] = [
         "q": search,
         "fq": searchType,
         "start": 0
     ]
     if search.count < 3 {
-        return Observable.just([[String:String]]())
+        return Observable.just([Team]())
     }
     let url = URL(string: "https://www.athletic.net/Search.aspx/runSearch")!
     return Observable.create { observer in
         Alamofire.request(url, method: .post, parameters: payload, encoding: JSONEncoding.default).responseJSON { response in
             let json = response.data
-            var results = [[String:String]]()
+            var results = [Team]()
 
                 var parsedJson = JSON(json!)
 
@@ -45,8 +45,8 @@ func searchRequest(search: String, searchType: String) -> Observable<[[String:St
                 for row in doc.css("td:nth-child(2)") {
                     let link = row.at_css("a.result-title-tf")!
                     let location = row.at_css("a[target=_blank]")!
-                    let schoolID = link["href"]!.components(separatedBy: "=")[1]
-                    results.append(["location": location.text!, "result": link.text!, "id": schoolID])
+                    let teamID = link["href"]!.components(separatedBy: "=")[1]
+                    results.append(Team(name: link.text!, code: teamID, location: location.text!))
                 }
             observer.onNext(results)
             observer.onCompleted()
@@ -54,9 +54,14 @@ func searchRequest(search: String, searchType: String) -> Observable<[[String:St
         return Disposables.create()
     }
 }
+func getYear() -> String {
+    let year = Calendar.current.component(.year, from: Date())
+    return String(year)
+}
+
 struct Athlete {
     var name: String
-    var athleteID: Int
+    var athleteID: String
     var events: [String: [String: [AthleteTime]]]
     // [eventName: [season: [time]]]
 
@@ -94,7 +99,7 @@ func formatEventTime(s: String) -> Date {
 }
 // Returns an Athlete from an athleteID
 
-func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Athlete? {
+func individualAthlete(athleteID: String, athleteName: String, type: String) -> Athlete? {
     let url = URL(string: "https://www.athletic.net/\(type)/Athlete.aspx?AID=\(athleteID)#!/L0")
     if let doc = try? HTML(url: url!, encoding: .utf8) {
         var athlete = Athlete(name: athleteName, athleteID: athleteID, events: [:])
@@ -143,12 +148,6 @@ func individualAthlete(athleteID: Int, athleteName: String, type: String) -> Ath
     return nil
 }
 
-// https://www.athletic.net/TrackAndField/Report/FullSeasonTeam.aspx?SchoolID=13318&S=2018
-// https://www.athletic.net/CrossCountry/Results/Season.aspx?SchoolID=13318&S=2018
-
-
-
-
 struct Meet {
     var name: String
     var date: Date
@@ -156,8 +155,8 @@ struct Meet {
     var times: [AthleteTime]
 }
 
-func getCalendarYears(sport: String, schoolID: String) -> Observable<[String]> {
-    let url = "https://www.athletic.net/\(sport)/School.aspx?SchoolID=\(schoolID)"
+func getCalendarYears(sport: String, teamID: String) -> Observable<[String]> {
+    let url = "https://www.athletic.net/\(sport)/School.aspx?SchoolID=\(teamID)"
     return dataRequest(url: url).map { data in
         let newSeasons = data[1]["seasons"].dictionaryValue.map { (key, value) in
             return value["ID"].stringValue
@@ -165,18 +164,18 @@ func getCalendarYears(sport: String, schoolID: String) -> Observable<[String]> {
         return newSeasons.sorted().reversed()
     }
 }
-func getCalendar(year: String, sport: String, schoolID: String) -> Observable<[JSON]> {
+func getCalendar(year: String, sport: String, teamID: String) -> Observable<[JSON]> {
     var urlSport = "tf"
-    if sport == "CrossCountry" {
+    if sport == Sport.XC.raw {
         urlSport = "xc"
     }
-    let url = "https://www.athletic.net/api/v1/\(urlSport)Team/GetCalendar?teamID=\(schoolID)&seasonID=\(year)&editPermission=false"
+    let url = "https://www.athletic.net/api/v1/\(urlSport)Team/GetCalendar?teamID=\(teamID)&seasonID=\(year)&editPermission=false"
     
     return Observable.create { observer in
-    let schoolUrl = "https://www.athletic.net/\(sport)/School.aspx?SchoolID=\(schoolID)"
+    let schoolUrl = "https://www.athletic.net/\(sport)/School.aspx?SchoolID=\(teamID)"
     dataRequest(url: schoolUrl).map { $0[0]["publicToken"].stringValue }.subscribe(onNext: { token in
         let headers: HTTPHeaders = [
-            "authid": schoolID,
+            "authid": teamID,
             "authtoken": token
         ]
         Alamofire.request(url, headers: headers).responseJSON { response in
@@ -202,7 +201,7 @@ func meetInfoFor(sport: String, meet: JSON) -> Observable<[MeetEvent]> {
         let url = "https://www.athletic.net/\(sport)/meet/\(meet["MeetID"].stringValue)/results"
 
 
-        if (sport == "CrossCountry") {
+        if (sport == Sport.XC.raw) {
 
             return dataRequest(url: url)
                 .map {
@@ -274,7 +273,7 @@ func raceInfoFor(url: String, sport: String) -> Observable<Race> {
     return dataRequest(url: url).map { data in
         let results = data[1]["results"].arrayValue
         var rounds = [String: String]()
-        if (sport == "TrackAndField") {
+        if sport == Sport.TF.raw {
             let roundLookupTable = data[1]["rounds"]
             // https://github.com/SwiftyJSON/SwiftyJSON
              for (_, json) in roundLookupTable {
@@ -287,7 +286,7 @@ func raceInfoFor(url: String, sport: String) -> Observable<Race> {
             let athleteName = (result["AthleteName"].string != nil) ? result["AthleteName"].stringValue : result["FirstName"].stringValue + " " + result["LastName"].stringValue
             var sortValue = result["SortValue"].doubleValue
             var place = result["Place"].int
-            if sport == "TrackAndField" {
+            if sport == Sport.TF.raw {
                 sortValue = result["SortInt"].doubleValue
                 place = Int(result["Place"].string ?? "")
             }
@@ -313,3 +312,13 @@ func raceInfoFor(url: String, sport: String) -> Observable<Race> {
     }
 }
 
+enum Sport: String {
+    case XC
+    case TF
+    var raw : String {
+        switch self {
+        case .XC: return "CrossCountry"
+        case .TF: return "TrackAndField"
+        }
+    }
+}

@@ -11,6 +11,7 @@ import SnapKit
 import RxCocoa
 import RxSwift
 import SwiftyJSON
+import RealmSwift
 
 class WelcomeViewController: UIViewController {
     let welcomeLabel = UILabel()
@@ -50,6 +51,13 @@ class WelcomeViewController: UIViewController {
         }
     }
     func initReactions() {
+        let realm = try! Realm()
+        let settings = Settings()
+        settings.label = "default"
+        try! realm.write() {
+            realm.add(settings)
+            settings.sport = Sport.XC.raw
+        }
         let teamSearch = TeamSearchController()
         let athleteSearch = AthleteSearchController()
         nextButton.rx.tap.debug("sentToTeam").subscribe(onNext: { [unowned self] in
@@ -57,12 +65,21 @@ class WelcomeViewController: UIViewController {
         }).disposed(by: disposeBag)
         
         teamSearch.selectedTeam.debug("sentToAthlete").subscribe(onNext: { [unowned self] team in
-            athleteSearch.schoolID = team["id"] ?? ""
+            athleteSearch.team = team
+            try! realm.write() {
+                settings.teamID = team.code
+                settings.teamName = team.name
+            }
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         }).disposed(by: disposeBag)
         
         athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
             print(athlete)
+            try! realm.write() {
+                
+            }
+            // TODO save data
+            let setupComplete = UserDefaults.standard.set(true, forKey:"setupComplete")
         }).disposed(by: disposeBag)
     }
 }

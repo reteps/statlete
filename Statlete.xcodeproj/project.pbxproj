@@ -14,6 +14,8 @@
 		600EAE123AB3C4E8B593701B /* Pods_Statlete.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6544A8E92BDB626B3C75D41B /* Pods_Statlete.framework */; };
 		D003589B2157F48A008D4B64 /* TabController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D003589A2157F48A008D4B64 /* TabController.swift */; };
 		D04CAB53219DCCAE00BD7470 /* IndividualMeetController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */; };
+		D04D0A872200E659009CF3DB /* RealmDataModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D0A862200E659009CF3DB /* RealmDataModels.swift */; };
+		D04D0A892200F46D009CF3DB /* YearPicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D04D0A882200F46C009CF3DB /* YearPicker.swift */; };
 		D0591FB7219A5D0800FDA8B7 /* MeetViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */; };
 		D06F8439215C54CB00CFDF3E /* IndividualStatsController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */; };
 		D074CD0521518949004AA7BB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = D074CD0421518949004AA7BB /* AppDelegate.swift */; };
@@ -40,6 +42,8 @@
 		96C2B824457F7AFAFA1D7C22 /* Pods-Statlete.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Statlete.release.xcconfig"; path = "Pods/Target Support Files/Pods-Statlete/Pods-Statlete.release.xcconfig"; sourceTree = "<group>"; };
 		D003589A2157F48A008D4B64 /* TabController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabController.swift; sourceTree = "<group>"; };
 		D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualMeetController.swift; sourceTree = "<group>"; };
+		D04D0A862200E659009CF3DB /* RealmDataModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealmDataModels.swift; sourceTree = "<group>"; };
+		D04D0A882200F46C009CF3DB /* YearPicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YearPicker.swift; sourceTree = "<group>"; };
 		D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeetViewController.swift; sourceTree = "<group>"; };
 		D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndividualStatsController.swift; sourceTree = "<group>"; };
 		D074CD0121518949004AA7BB /* Statlete.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Statlete.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,9 +107,11 @@
 				D074CD0421518949004AA7BB /* AppDelegate.swift */,
 				2EE6084821CC228300CC6BB2 /* TODO.swift */,
 				D003589A2157F48A008D4B64 /* TabController.swift */,
+				D04D0A862200E659009CF3DB /* RealmDataModels.swift */,
 				D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */,
 				D0BD08692200C64900167C47 /* EventSelection.swift */,
 				D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */,
+				D04D0A882200F46C009CF3DB /* YearPicker.swift */,
 				D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */,
 				D075D7432153D49D00787AB0 /* SettingsController.swift */,
 				D075D74921571FCC00787AB0 /* TeamSearchController.swift */,
@@ -242,6 +248,7 @@
 				"${BUILT_PRODUCTS_DIR}/M13Checkbox/M13Checkbox.framework",
 				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
+				"${BUILT_PRODUCTS_DIR}/RxAtomic/RxAtomic.framework",
 				"${BUILT_PRODUCTS_DIR}/RxCocoa/RxCocoa.framework",
 				"${BUILT_PRODUCTS_DIR}/RxDataSources/RxDataSources.framework",
 				"${BUILT_PRODUCTS_DIR}/RxRealm/RxRealm.framework",
@@ -263,6 +270,7 @@
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/M13Checkbox.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxAtomic.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxCocoa.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxDataSources.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxRealm.framework",
@@ -300,6 +308,8 @@
 				D0D55E9421ADFEA70058B700 /* extraAthleticHandlers.swift in Sources */,
 				D074CD0521518949004AA7BB /* AppDelegate.swift in Sources */,
 				2F49A3AB21D1127B0019BE36 /* WelcomeViewController.swift in Sources */,
+				D04D0A892200F46D009CF3DB /* YearPicker.swift in Sources */,
+				D04D0A872200E659009CF3DB /* RealmDataModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

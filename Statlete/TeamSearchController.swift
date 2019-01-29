@@ -11,12 +11,23 @@ import RxSwift
 import RxCocoa
 import SnapKit
 
+public struct Team {
+    var name: String
+    var code: String
+    var location: String
+    init(name: String = "", code: String = "", location: String="") {
+        self.code = code
+        self.name = name
+        self.location=location
+    }
+}
+
 class TeamSearchController: UIViewController {
 
     let disposeBag = DisposeBag()
     let tableView = UITableView()
     var searchBar = UISearchBar()
-    let selectedTeam = PublishSubject<[String:String]>()
+    let selectedTeam = PublishSubject<Team>()
     let filterView = UIView()
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -52,16 +63,16 @@ class TeamSearchController: UIViewController {
             .flatMapLatest { text in
                     return searchRequest(search: text, searchType: "t:t")
             }
-            .bind(to: self.tableView.rx.items) { myTableView, row, element in
+            .bind(to: self.tableView.rx.items) { myTableView, row, team in
                 // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
                 let cell = myTableView.dequeueReusableCell(withIdentifier: "cell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
                 
-                cell.textLabel?.text = element["result"]!
-                cell.detailTextLabel?.text = element["location"]!
+                cell.textLabel?.text = team.name
+                cell.detailTextLabel?.text = team.location
                 return cell
             }.disposed(by: disposeBag)
         
-        tableView.rx.modelSelected([String:String].self)
+        tableView.rx.modelSelected(Team.self)
         .bind(to: self.selectedTeam).disposed(by: disposeBag)
     }
 

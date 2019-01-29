@@ -1,21 +1,22 @@
 PODS:
-  - Alamofire (4.7.3)
+  - Alamofire (4.8.1)
   - ChameleonFramework/Default (2.1.0)
   - ChameleonFramework/Swift (2.1.0):
     - ChameleonFramework/Default
-  - Charts (3.2.0):
-    - Charts/Core (= 3.2.0)
-  - Charts/Core (3.2.0)
+  - Charts (3.2.1):
+    - Charts/Core (= 3.2.1)
+  - Charts/Core (3.2.1)
   - Differentiator (3.1.0)
-  - FontAwesome.swift (1.4.4)
-  - Kanna (4.0.2)
+  - FontAwesome.swift (1.4.8)
+  - Kanna (4.0.3)
   - M13Checkbox (3.2.2)
-  - Realm (3.13.0):
-    - Realm/Headers (= 3.13.0)
-  - Realm/Headers (3.13.0)
-  - RealmSwift (3.13.0):
-    - Realm (= 3.13.0)
-  - RxCocoa (4.3.0):
+  - Realm (3.13.1):
+    - Realm/Headers (= 3.13.1)
+  - Realm/Headers (3.13.1)
+  - RealmSwift (3.13.1):
+    - Realm (= 3.13.1)
+  - RxAtomic (4.4.0)
+  - RxCocoa (4.4.0):
     - RxSwift (~> 4.0)
   - RxDataSources (3.1.0):
     - Differentiator (~> 3.0)
@@ -24,10 +25,11 @@ PODS:
   - RxRealm (0.7.6):
     - RealmSwift (~> 3.0)
     - RxSwift (~> 4.0)
-  - RxSwift (4.3.0)
+  - RxSwift (4.4.0):
+    - RxAtomic (~> 4.4)
   - SnapKit (4.0.1)
   - Static (3.0.2)
-  - SwiftyJSON (4.1.0)
+  - SwiftyJSON (4.2.0)
 
 DEPENDENCIES:
   - Alamofire (~> 4.7)
@@ -54,6 +56,7 @@ SPEC REPOS:
     - Kanna
     - Realm
     - RealmSwift
+    - RxAtomic
     - RxCocoa
     - RxDataSources
     - RxRealm
@@ -78,23 +81,24 @@ CHECKOUT OPTIONS:
     :git: https://github.com/Marxon13/M13Checkbox.git
 
 SPEC CHECKSUMS:
-  Alamofire: c7287b6e5d7da964a70935e5db17046b7fde6568
+  Alamofire: 16ce2c353fb72865124ddae8a57c5942388f4f11
   ChameleonFramework: d21a3cc247abfe5e37609a283a8238b03575cf64
-  Charts: 680c8328bd5e90cb14f67e00d2176f3113d19141
+  Charts: f122fb70b19847fa5817d018b77d6c5a2296ab25
   Differentiator: be49ca3408f0ecfc761e4c7763d20c62be01b9ad
-  FontAwesome.swift: 17b93524b9f61136a8566344517b8556ed584e87
-  Kanna: c60b61d72554bf04ed1ee074f9b379855cab4892
+  FontAwesome.swift: fb8637bffb9a588c7e8c753c084565b27b20a39d
+  Kanna: 0ebbdd0e7e3308f0aafbd569e79c8cadc5eb877c
   M13Checkbox: 82182615a76646475b451ebe448a998f77f8cc6e
-  Realm: 5edd2ee65406aef591a4f9895de5a3440e51b3d8
-  RealmSwift: be5ebc7930e37cd3376b41cec7f21984528aaa16
-  RxCocoa: 71b9cce833fbcb89a8eec11816dd225830c2bd3c
+  Realm: 50071da38fe079e0735e47c9f2eae738c68c5996
+  RealmSwift: 8a1e6a02b7a08cd17a31e3115143fb69fe5f3fb9
+  RxAtomic: eacf60db868c96bfd63320e28619fe29c179656f
+  RxCocoa: df63ebf7b9a70d6b4eeea407ed5dd4efc8979749
   RxDataSources: a843bad90c29817f5923ec8163f4af2de084ceb3
   RxRealm: 5379eddd74f8d617ca7681d1f8d144af25b432b0
-  RxSwift: a9717a34df3179fe63563f76e046ad345078dd3a
+  RxSwift: 5976ecd04fc2fefd648827c23de5e11157faa973
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
   Static: 1542d33a345105ae57e8fffd2d5200080d99f131
-  SwiftyJSON: c29297daf073d2aa016295d5809cdd68045c39b3
+  SwiftyJSON: c4bcba26dd9ec7a027fc8eade48e2c911f229e96
 
-PODFILE CHECKSUM: 4a27440a68dd615ce75b737261bc649fd95481f8
+PODFILE CHECKSUM: 3a9dc215df31b240b3eba4888576fa2d9bb4a2f9
 
 COCOAPODS: 1.5.3

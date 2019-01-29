@@ -11,7 +11,7 @@ import Kanna
 // Returns the records for each event in the specified sport for a team
 
 func teamRecords(type: String, teamID: String, year: String = "", gender: String = "M") -> [String: [TeamTimeResult]] {
-    if type == "CrossCountry" {
+    if type == Sport.XC.raw {
         let urlString = "https://www.athletic.net/CrossCountry/Team.aspx?SchoolID=\(teamID)&S=\(year)"
         return _CrossCountryRecordParser(url: urlString, gender: gender)
     }
@@ -97,7 +97,7 @@ func _TrackAndFieldRecordParser(url: String, gender: String) -> [String: [TeamTi
 }
 
 func teamTimes(type: String, teamID: String, year: String = "", gender: String = "M") -> [String: [Date: Meet]] {
-    if type == "CrossCountry" {
+    if type == Sport.XC.raw {
         let urlString = "https://www.athletic.net/CrossCountry/Results/Season.aspx?SchoolID=\(teamID)&S=\(year)"
         return _CrossCountryTimesParser(url: urlString, gender: gender)
     }

@@ -15,15 +15,6 @@ import RealmSwift
 import Realm
 import Static
 
-class Settings: Object {
-    @objc dynamic var label = ""
-    @objc dynamic var teamID = 0
-    @objc dynamic var teamName = ""
-    @objc dynamic var athleteName = ""
-    @objc dynamic var athleteID = 0
-    @objc dynamic var crossCountry = true
-    @objc dynamic var updated: Date = Date()
-}
 
 class UpdatedSettings: UIViewController {
     let tableView = UITableView(frame: CGRect.zero, style: .grouped)
@@ -62,9 +53,9 @@ class UpdatedSettings: UIViewController {
                     let teamSearch = TeamSearchController()
                     self.present(teamSearch, animated:true)
                 }, accessory: .disclosureIndicator),
-                Row(text: "Cross Country", accessory: .switchToggle(value: settings.crossCountry, { (bool) in
+                Row(text: "Cross Country", accessory: .switchToggle(value: settings.sport == Sport.XC.raw, { (bool) in
                     try! realm.write {
-                        settings.crossCountry = bool
+                        settings.sport = bool ? Sport.XC.raw : Sport.TF.raw
                     }
                 }))
                 ]),

@@ -12,13 +12,26 @@ import RxSwift
 import RxCocoa
 import SnapKit
 
+public struct SearchSettings {
+    var sport: String
+    var year: String?
+    var id: String
+    var name: String
+    init(sport: String = "", year: String? = nil, id: String = "", name: String = "") {
+        self.sport = sport
+        self.year = year
+        self.id = id
+        self.name = name
+    }
+}
+
 class AthleteSearchController: UIViewController {
 
     let tableView = UITableView()
     let searchBar = UISearchBar()
     var shouldShowSearchResults = false
-    var schoolID = ""
-    var sportMode = ""
+    var team: Team = Team()
+    var sport = ""
     let selectedAthlete = PublishSubject<JSON>()
     let disposeBag = DisposeBag()
     let tableHeaderView = UIView()
@@ -64,24 +77,37 @@ class AthleteSearchController: UIViewController {
     }
     
     func configureRxSwift() {
-        let vc = AthleteFilter()
-        vc.modalPresentationStyle = .overCurrentContext
+        let af = AthleteFilter()
+        af.modalPresentationStyle = .overCurrentContext
         
         filterButton.rx.tap.subscribe(onNext: { [unowned self] tap in
-            self.present(vc, animated: true, completion: nil)
+            let settings = SearchSettings(sport: self.sport, year: nil, id: self.team.code, name: self.team.name)
+            af.settings = settings
+
+            self.present(af, animated: true, completion: nil)
+            
         }).disposed(by: disposeBag)
-        
-        let url = "https://www.athletic.net/\(self.sportMode)/School.aspx?SchoolID=\(self.schoolID)"
-        let allAthletes = dataRequest(url: url).map {
+        let url = "https://www.athletic.net/\(self.sport)/School.aspx?SchoolID=\(team.code)"
+        var allAthletes = dataRequest(url: url).map {
             $0[1]["athletes"].arrayValue
         }
+        // TODO fix this
+        af.savedSettings.subscribe(onNext: { settings in
+            let url = "https://www.athletic.net/\(settings.sport)/School.aspx?SchoolID=\(settings.id)?year=\(settings.year)"
+            print("URL:",url)
+            allAthletes.next(dataRequest(url: url).map {
+                $0[1]["athletes"].arrayValue
+            })
+        })
+
         let searchFilter = searchBar.rx.text.orEmpty.asObservable()
 
         Observable.combineLatest(allAthletes, searchFilter) { athletes, text in
             text.isEmpty ? athletes : athletes.filter {
                 $0["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil
             }
-        }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self)) { (row, element, cell) in
+        }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
+        { (row, element, cell) in
             cell.textLabel?.text = element["Name"].stringValue
         }.disposed(by: disposeBag)
 
