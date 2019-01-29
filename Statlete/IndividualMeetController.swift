@@ -11,7 +11,7 @@ import RxCocoa
 import RxSwift
 import SafariServices
 import RxDataSources
-
+import FontAwesome_swift
 
 extension Round: SectionModelType {
     typealias Item = RaceResult
@@ -26,42 +26,30 @@ class IndividualMeetController: UIViewController {
 
     var meet: MeetEvent? = nil
     var disposeBag = DisposeBag()
-    var filterView = UIView()
     let tableView = UITableView()
     var filterActionSheet = UIAlertController()
-    let filterButton = UIButton()
     let searchBar = UISearchBar()
-    func initFilterView() {
-        self.filterView.snp.makeConstraints { make in
-            make.width.left.right.equalTo(self.view)
-            make.top.equalTo(self.topLayoutGuide.snp.bottom)
+    let sortButton = UIBarButtonItem()
+    var titleButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.tintColor = .black
+        b.setImage(UIImage.fontAwesomeIcon(name: .chevronDown, style: .solid, textColor: .black, size: CGSize(width: 20, height: 20)), for: .normal)
+        b.semanticContentAttribute = .forceRightToLeft
+        return b
+    }()
+    func initSearchBar() {
+        self.view.addSubview(searchBar)
+        self.searchBar.snp.makeConstraints { make in
+            make.width.equalToSuperview()
+            make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top )
             make.height.equalTo(40)
         }
-        self.filterView.addSubview(self.filterButton)
-        self.filterView.addSubview(self.searchBar)
-        self.filterView.backgroundColor = .white
-
-
-    }
-    func initSearchBar() {
-        self.searchBar.snp.makeConstraints { make in
-            make.top.bottom.right.equalToSuperview()
-            make.left.equalTo(self.filterButton.snp.right)
-        }
-    }
-    func initFilterButton() {
-        self.filterButton.snp.makeConstraints { make in
-            make.top.bottom.left.equalToSuperview()
-            make.width.equalTo(100)
-        }
-
-        self.filterButton.setTitle("Sort", for: .normal)
-        self.filterButton.setTitleColor(.black, for: .normal)
 
     }
     func initTableView() {
+        self.tableView.allowsSelection = false
         self.tableView.snp.makeConstraints { make in
-            make.top.equalTo(self.filterView).offset(40)
+            make.top.equalTo(self.searchBar.snp.bottom)
             make.left.right.bottom.equalTo(self.view)
         }
         self.tableView.delegate = nil
@@ -72,24 +60,18 @@ class IndividualMeetController: UIViewController {
         self.tableView.register(ResultCell.self, forCellReuseIdentifier: "ResultCell")
 
     }
-    func initInfoButton() {
-        let button = UIBarButtonItem(title: "Race Info", style: .done, target: self, action: nil)
-        button.rx.tap.subscribe(onNext: {
-            let svc = SFSafariViewController(url: URL(string: self.meet!.URL)!)
-            self.present(svc, animated: true, completion: nil)
-        }).disposed(by: disposeBag)
-        self.navigationItem.rightBarButtonItem = button
+    func initSortButton() {
+        sortButton.title = "Sort"
+        self.navigationItem.rightBarButtonItem = sortButton
 
     }
     func initUI() {
-        self.view.addSubview(self.filterView)
         self.view.addSubview(self.tableView)
-        
-        initFilterView()
+        self.view.backgroundColor = .white
         initSearchBar()
-        initFilterButton()
         initTableView()
-        initInfoButton()
+        initSortButton()
+        initTitleButton()
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -99,8 +81,15 @@ class IndividualMeetController: UIViewController {
     // https://stackoverflow.com/questions/49538546/how-to-obtain-a-uialertcontroller-observable-reactivecocoa-or-rxswift
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        self.navigationItem.title = meet!.Name + " (\(meet!.Gender))"
 
+    }
+
+    func initTitleButton() {
+        titleButton.setTitle(meet!.Name + " (\(meet!.Gender))", for: .normal)
+        titleButton.rx.tap.subscribe(onNext: { _ in
+            print("tapped")
+        })
+        self.navigationItem.titleView = titleButton
     }
     // https://github.com/RxSwiftCommunity/RxDataSources
     func createDataSource() -> RxTableViewSectionedReloadDataSource<Round> {
@@ -133,7 +122,7 @@ class IndividualMeetController: UIViewController {
             return race.Rounds
         }
         let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
-        let sortValue = self.filterButton.rx.tap.flatMap {
+        let sortValue = self.sortButton.rx.tap.flatMap {
             return UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, options: options)
         }.startWith(0)
         // sortValue.map { options[$0] }.bind(to: self.filterButton.rx.title(for: .normal))

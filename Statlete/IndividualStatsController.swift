@@ -26,12 +26,21 @@ class IndividualStatsController: UIViewController {
     var contentView = UIView()
     var settingsView = UIView()
     var checkboxView = UIView()
-    var infoView = UIView()
-    let picker = UIPickerView()
-    let pickerBar = UIToolbar()
-    let selectedEvent = UITextField()
-    let infoLabel = UILabel()
+    let infoView = UIView()
+    /*
+    ScrollView
+    -> ContentView
+        -> Settings        |   Info
+            -> Checkbox       -> Label
+    */
     let eventTapButton = UIBarButtonItem()
+    var titleButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.tintColor = .black
+        b.setImage(UIImage.fontAwesomeIcon(name: .chevronDown, style: .solid, textColor: .black, size: CGSize(width: 20, height: 20)), for: .normal)
+        b.semanticContentAttribute = .forceRightToLeft
+        return b
+    }()
     // Variables
     var lines = [LineChartDataSet]()
     var events = [String: [String: [AthleteTime]]]()
@@ -66,24 +75,30 @@ class IndividualStatsController: UIViewController {
         
         initScrollViewAndContent()
         initChart()
+        
         initSettingsView()
-        initPickerView()
-        
         initCheckBoxView()
-        initPickerView()
         
-        initNavBar()
         initInfoView()
-        initInfoLabel()
-        initPickerBar()
-        initPicker()
-        initRefreshControl()
+        initNavBar()
+        // initRefreshControl()
     }
     func initNavBar() {
-        self.navigationItem.leftBarButtonItem = nil
+        titleButton.rx.tap.subscribe(onNext: { _ in
+            print("tapped")
+        })
+        titleButton.sizeToFit()
+        self.navigationItem.titleView = titleButton
+
         eventTapButton.title = "Event"
-        self.navigationItem.rightBarButtonItem = eventTapButton
+        let eventSelection = EventSelection()
+        self.navigationItem.leftBarButtonItem = eventTapButton
+        eventTapButton.rx.tap.subscribe(onNext: { _ in
+            self.navigationController?.present(eventSelection, animated: true)
+        })
     }
+    
+
     // Takes an event and returns an array of lines based on the data
     func createLineChartData(event: [String: [AthleteTime]]?) -> [LineChartDataSet] {
         var lines = [LineChartDataSet]()
@@ -128,16 +143,16 @@ class IndividualStatsController: UIViewController {
         scrollView.refreshControl = refreshControl
     }
     func reloadData() { // athlete has changed
-        self.picker.delegate = nil
-        self.picker.dataSource = nil
         let athlete = individualAthlete(athleteID: self.athleteID, athleteName: self.athleteName!, type: self.sportMode!)!
         
         self.events = athlete.events
         self.selectedEventName = self.events.first?.key ?? ""
-        Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
+        /*Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
             return item
-        }.disposed(by: disposeBag)
-        self.infoLabel.text = self.athleteName!
+        }.disposed(by: disposeBag)*/
+        titleButton.setTitle(self.athleteName!, for: .normal)
+        titleButton.sizeToFit()
+
 
     }
     func createPage() { // event has changed
@@ -148,7 +163,6 @@ class IndividualStatsController: UIViewController {
         for view in self.checkboxView.subviews {
             view.removeFromSuperview()
         }
-        self.selectedEvent.text = self.selectedEventName + " ➤"
         if event != nil {
             self.createCheckboxesAndConstrain(records: self.recordDict(event: event!))
         }
@@ -170,8 +184,7 @@ class IndividualStatsController: UIViewController {
     func initCheckBoxView() {
         self.settingsView.addSubview(self.checkboxView)
         self.checkboxView.snp.makeConstraints { (make) in
-            make.top.equalTo(self.selectedEvent.snp.bottom)
-            make.bottom.leading.trailing.equalTo(self.settingsView)
+            make.edges.equalToSuperview()
         }
     }
     func initSettingsView() {
@@ -184,7 +197,7 @@ class IndividualStatsController: UIViewController {
         }
     }
     func initInfoView() {
-        self.contentView.addSubview(self.infoView)
+        self.contentView.addSubview(infoView)
         self.infoView.snp.makeConstraints { (make) in
             make.top.equalTo(self.chart.snp.bottom).offset(20)
             make.left.equalTo(self.contentView.snp.centerX).offset(20)
@@ -193,51 +206,7 @@ class IndividualStatsController: UIViewController {
         }
         
     }
-    func initInfoLabel() {
-        self.infoView.addSubview(infoLabel)
-        // https://stackoverflow.com/questions/2312899/how-to-add-line-break-for-uilabel
-        infoLabel.snp.makeConstraints { (make) in
-            make.top.bottom.equalTo(self.selectedEvent)
-            make.leading.trailing.equalToSuperview()
-        }
-        infoLabel.textColor = .black
-        
-    }
-    func initPickerView() {
-        self.settingsView.addSubview(self.selectedEvent)
-        self.selectedEvent.text = "Change Event"
-        self.selectedEvent.textColor = .black
-        self.selectedEvent.isUserInteractionEnabled = true
-        self.selectedEvent.inputView = self.picker
-        self.selectedEvent.inputAccessoryView = self.pickerBar
-        self.selectedEvent.textAlignment = .center
-        self.selectedEvent.snp.makeConstraints { (make) in
-            make.height.equalTo(50)
-            make.top.right.left.width.equalTo(self.settingsView)
-        }
-    }
-    func initPicker() {
-        self.picker.backgroundColor = .white
-        self.picker.rx.modelSelected(String.self).map { $0[0] }.subscribe(onNext: {  item in
-            self.selectedEvent.resignFirstResponder()
-            self.selectedEventName = item
 
-            self.createPage()
-
-            
-        }).disposed(by: disposeBag)
-
-    }
-    func initPickerBar() {
-        let doneButton = UIBarButtonItem(title: "Cancel", style: .plain, target: nil, action: nil)
-        doneButton.rx.tap.subscribe(onNext: { [unowned self] _ in
-            self.selectedEvent.resignFirstResponder()
-        }).disposed(by: disposeBag)
-        self.pickerBar.setItems([doneButton], animated: false)
-        self.pickerBar.sizeToFit()
-        self.pickerBar.isUserInteractionEnabled = true
-
-    }
     func initScrollViewAndContent() {
         // https://stackoverflow.com/questions/2944294/how-do-i-auto-size-a-uiscrollview-to-fit-the-content
         // https://stackoverflow.com/questions/10518790/how-to-set-content-size-of-uiscrollview-dynamically
@@ -371,5 +340,12 @@ class MyDateFormatter: IAxisValueFormatter {
     public func stringForValue(_ timestamp: Double, axis: AxisBase?) -> String {
         let date = Date(timeIntervalSince1970: timestamp)
         return timeFormatter.string(from: date)
+    }
+}
+
+extension IndividualStatsController: UIToolbarDelegate {
+    func position(for: UIBarPositioning) -> UIBarPosition {
+        print("hello")
+        return .topAttached
     }
 }

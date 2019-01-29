@@ -59,7 +59,11 @@ class AthleteFilter: UIViewController {
 
         dataSource.sections = [
             Section(rows: [
-                Row(text: "Change Year", detailText: "2018", accessory: .disclosureIndicator)
+                Row(text: "Change Year", detailText: "2018", accessory: .disclosureIndicator),
+                Row(text: "Change Team", detailText: "Huron", accessory: .disclosureIndicator),
+                Row(text: "Cross Country", accessory: .switchToggle(value: true, { (bool) in
+                    print("this changed", bool)
+                }))
             ])
         ]
         dataSource.tableView = optionsTable

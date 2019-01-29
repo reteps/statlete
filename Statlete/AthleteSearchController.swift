@@ -48,8 +48,6 @@ class AthleteSearchController: UIViewController {
         searchBar.placeholder = "Search for an athlete"
         searchBar.delegate = nil
         searchBar.sizeToFit()
-        searchBar.showsScopeBar = true
-        searchBar.scopeButtonTitles = ["A","B"]
     }
 
     func initTableView() {

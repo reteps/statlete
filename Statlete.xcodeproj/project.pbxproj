@@ -26,6 +26,7 @@
 		D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */; };
 		D09E68B521750D8F005662E3 /* BalloonMarker.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09E68B421750D8F005662E3 /* BalloonMarker.swift */; };
 		D0BD086821FFC06B00167C47 /* AthleteFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD086721FFC06B00167C47 /* AthleteFilter.swift */; };
+		D0BD086A2200C64900167C47 /* EventSelection.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0BD08692200C64900167C47 /* EventSelection.swift */; };
 		D0D55E9421ADFEA70058B700 /* extraAthleticHandlers.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0D55E9321ADFEA70058B700 /* extraAthleticHandlers.swift */; };
 /* End PBXBuildFile section */
 
@@ -53,6 +54,7 @@
 		D075D74B215720DF00787AB0 /* athleticNetHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = athleticNetHandlers.swift; sourceTree = "<group>"; };
 		D09E68B421750D8F005662E3 /* BalloonMarker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BalloonMarker.swift; sourceTree = "<group>"; };
 		D0BD086721FFC06B00167C47 /* AthleteFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AthleteFilter.swift; sourceTree = "<group>"; };
+		D0BD08692200C64900167C47 /* EventSelection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventSelection.swift; sourceTree = "<group>"; };
 		D0D55E9321ADFEA70058B700 /* extraAthleticHandlers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = extraAthleticHandlers.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -102,6 +104,7 @@
 				2EE6084821CC228300CC6BB2 /* TODO.swift */,
 				D003589A2157F48A008D4B64 /* TabController.swift */,
 				D06F8438215C54CB00CFDF3E /* IndividualStatsController.swift */,
+				D0BD08692200C64900167C47 /* EventSelection.swift */,
 				D0591FB6219A5D0800FDA8B7 /* MeetViewController.swift */,
 				D04CAB52219DCCAE00BD7470 /* IndividualMeetController.swift */,
 				D075D7432153D49D00787AB0 /* SettingsController.swift */,
@@ -283,6 +286,7 @@
 				2EE6084B21CC236000CC6BB2 /* UpdatedSettings.swift in Sources */,
 				D06F8439215C54CB00CFDF3E /* IndividualStatsController.swift in Sources */,
 				D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */,
+				D0BD086A2200C64900167C47 /* EventSelection.swift in Sources */,
 				D04CAB53219DCCAE00BD7470 /* IndividualMeetController.swift in Sources */,
 				2EE6084921CC228300CC6BB2 /* TODO.swift in Sources */,
 				D09E68B521750D8F005662E3 /* BalloonMarker.swift in Sources */,

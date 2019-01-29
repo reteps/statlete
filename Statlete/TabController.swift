@@ -18,7 +18,7 @@ class TabController: UITabBarController, UITabBarControllerDelegate {
         // https://www.appcoda.com/swift-delegate/
         
         // tabs
-        let individual = IndividualStatsController()
+        let individual = UINavigationController(rootViewController: IndividualStatsController())
         let options = UINavigationController(rootViewController: WelcomeViewController())
         let meets = UINavigationController(rootViewController: MeetViewController())
         let settings = UINavigationController(rootViewController: UpdatedSettings())

@@ -33,6 +33,14 @@ class MeetViewController: UIViewController {
     var shouldUpdateData = false
     var manualRefresh = PublishSubject<String>()
     var tableView = UITableView()
+    var titleButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.tintColor = .black
+        b.setImage(UIImage.fontAwesomeIcon(name: .chevronDown, style: .solid, textColor: .black, size: CGSize(width: 20, height: 20)), for: .normal)
+        b.semanticContentAttribute = .forceRightToLeft
+        return b
+    }()
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         if shouldUpdateData {
@@ -40,6 +48,7 @@ class MeetViewController: UIViewController {
             self.navigationItem.title = self.schoolName
             shouldUpdateData.toggle()
         }
+        titleButton.setTitle(self.schoolName, for: .normal)
         self.meetPickerContainer.isExclusiveTouch = false
         self.meetPickerContainer.isHidden = true
         self.yearPickerContainer.isHidden = true
@@ -63,7 +72,7 @@ class MeetViewController: UIViewController {
 
     }
     func initNavigationItem() {
-        self.navigationItem.title = self.schoolName
+        self.navigationItem.titleView = titleButton
         self.navigationItem.leftBarButtonItem = UIBarButtonItem()
 
     }
@@ -115,12 +124,14 @@ class MeetViewController: UIViewController {
             indivMeet.meet = meet
             self.navigationController?.pushViewController(indivMeet, animated: true)
         }).disposed(by: disposeBag)
-        let button = UIBarButtonItem(title: "Team", style: .done, target: self, action: nil)
+        
+        let button = UIBarButtonItem(title: "Info", style: .done, target: self, action: nil)
         button.rx.tap.subscribe(onNext: { [unowned self] _ in
             let url = "https://www.athletic.net/\(self.sportMode!)/School.aspx?SchoolID=\(self.schoolID!)"
             let svc = SFSafariViewController(url: URL(string: url)!)
             self.present(svc, animated: true, completion: nil)
         }).disposed(by: disposeBag)
+        
         self.navigationItem.rightBarButtonItem = button
         let leftButton = UIBarButtonItem()
         self.navigationItem.leftBarButtonItem = leftButton
