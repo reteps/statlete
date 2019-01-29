@@ -93,7 +93,7 @@ class IndividualStatsController: UIViewController {
         let eventSelection = EventSelection()
         self.navigationItem.leftBarButtonItem = eventTapButton
         eventTapButton.rx.tap.subscribe(onNext: { _ in
-            self.navigationController?.present(eventSelection, animated: true)
+            self.navigationController?.pushViewController(eventSelection, animated: true)
         })
     }
     
@@ -144,6 +144,7 @@ class IndividualStatsController: UIViewController {
     func reloadData() { // athlete has changed
         let realms = try! Realm()
         let settings = realms.objects(Settings.self).first!
+        print(settings)
         let athlete = individualAthlete(athleteID: settings.athleteID, athleteName: settings.athleteName, type: settings.sport)!
         
         self.events = athlete.events

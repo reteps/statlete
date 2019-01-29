@@ -112,7 +112,7 @@ class AthleteSearchController: UIViewController {
             (text.isEmpty) ? athletes : athletes.filter {
                 $0["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil
             }
-        }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
+        }.debug("popTable").bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
         { (row, element, cell) in
             cell.textLabel?.text = element["Name"].stringValue
         }.disposed(by: disposeBag)
