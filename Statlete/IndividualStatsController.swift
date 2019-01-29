@@ -342,10 +342,3 @@ class MyDateFormatter: IAxisValueFormatter {
         return timeFormatter.string(from: date)
     }
 }
-
-extension IndividualStatsController: UIToolbarDelegate {
-    func position(for: UIBarPositioning) -> UIBarPosition {
-        print("hello")
-        return .topAttached
-    }
-}
