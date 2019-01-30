@@ -19,7 +19,7 @@ import SwiftyJSON
 // Extend String to match regex
 
 
-func presentAthleteController(nav: UINavigationController, team: Team, sport: String) -> Observable<JSON> {
+func presentAthleteController(nav: UINavigationController, team: Team, sport: String) -> Observable<AthleteResult> {
     let viewController = AthleteSearchController()
     viewController.team = team
     viewController.sport = sport

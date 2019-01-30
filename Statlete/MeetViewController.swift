@@ -95,13 +95,12 @@ class MeetViewController: UIViewController {
         // Bind table to getCalendar
         let settings = realm.objects(Settings.self).first!
 
-        let meetSelected = self.tableView.rx.modelSelected(JSON.self).filter {
-            // filters for results
-            return $0["MeetHasResults"].intValue == 1
+        let meetSelected = self.tableView.rx.modelSelected(CalendarMeet.self).filter {
+            return $0.hasResults
         }
         meetSelected.flatMap { [unowned self] meet -> Observable<[MeetEvent]> in
-            let sport = settings.sport
-            return meetInfoFor(sport: sport, meet: meet)
+            let sport = Sport(rawValue: settings.sport)!
+            return meetInfoFor(meet: meet)
         }
         .do(onNext: { _ in
             self.meetPickerContainer.isHidden = false
@@ -109,12 +108,12 @@ class MeetViewController: UIViewController {
         })
         .bind(to: self.meetPicker.rx.itemTitles) { index, item in
                 
-            return item.Name + " (\(item.Gender))"
+            return item.name + " (\(item.gender))"
         }.disposed(by: disposeBag)
         
         let infoTapped = self.meetPickerBar.items![2].rx.tap
         let meetURL = meetSelected.map { meet -> String in
-            return "https://www.athletic.net/\(settings.sport)/meet/\(meet["MeetID"].stringValue)/results"
+            return "https://www.athletic.net/\(settings.sport)/meet/\(meet.id)/results"
         }
         infoTapped.withLatestFrom(meetURL).subscribe(onNext: { url in
             let svc = SFSafariViewController(url: URL(string: url)!)
@@ -146,26 +145,25 @@ class MeetViewController: UIViewController {
         yearSelected.bind(to: yearPickerButton.rx.title).disposed(by: disposeBag)
         
         
-        Observable.merge(yearSelected, manualRefresh).flatMap { [unowned self] year -> Observable<[JSON]> in
+        Observable.merge(yearSelected, manualRefresh).flatMap { [unowned self] year -> Observable<[CalendarMeet]> in
             let sport = settings.sport
             let teamID = settings.teamID
             print(year, sport, teamID)
-            return getCalendar(year: year, sport: sport, teamID: teamID)
+            return getCalendar(year: year, sport: Sport(rawValue: sport)!, teamID: teamID)
             }.bind(to:
             self.tableView.rx.items) { (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell
-                cell.meetName.text = element["Name"].stringValue
-                if element["MeetHasResults"].intValue == 0 {
-                    cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarTimes, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
-                } else {
+                cell.meetName.text = element.name
+                if element.hasResults {
                     cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarCheck, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
+                } else {
+                    cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarTimes, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
                 }
-                let rawDate = element["Date"].stringValue
                 self.dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-                let date = self.dateFormatter.date(from: rawDate)
+                let date = self.dateFormatter.date(from: element.date)
                 self.dateFormatter.dateFormat = "MMM dd, Y"
                 cell.meetDate.text = self.dateFormatter.string(from: date!)
-                cell.meetLocation.text = element["Location"].stringValue
+                cell.meetLocation.text = element.location
                 return cell
             }.disposed(by: disposeBag)
     

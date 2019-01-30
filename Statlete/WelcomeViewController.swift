@@ -75,8 +75,8 @@ class WelcomeViewController: UIViewController {
         
         athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
             try! realm.write() {
-                settings.athleteName = athlete["Name"].stringValue
-                settings.athleteID = athlete["ID"].stringValue
+                settings.athleteName = athlete.name
+                settings.athleteID = athlete.id
                 settings.lastUpdated = Date()
             }
             let setupComplete = UserDefaults.standard.set(true, forKey:"setupComplete")

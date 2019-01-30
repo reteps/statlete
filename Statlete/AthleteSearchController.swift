@@ -32,7 +32,7 @@ class AthleteSearchController: UIViewController {
     var shouldShowSearchResults = false
     var team: Team = Team()
     var sport = Sport.XC.raw
-    let selectedAthlete = PublishSubject<JSON>()
+    let selectedAthlete = PublishSubject<AthleteResult>()
     let disposeBag = DisposeBag()
     let tableHeaderView = UIView()
     let filterButton = UIBarButtonItem()
@@ -88,36 +88,31 @@ class AthleteSearchController: UIViewController {
             
         }).disposed(by: disposeBag)
         
-        let urlUpdates = PublishSubject<String>()
-
-        af.savedSettings.map { s in
+        let urlUpdates = af.savedSettings.map { s in
             var url = "https://www.athletic.net/\(s.sport)/School.aspx?SchoolID=\(s.id)"
             if s.year != nil {
                 url += "?year=\(s.year!)"
             }
             return url
-            }.bind(to: urlUpdates).disposed(by: disposeBag)
+        }.startWith("https://www.athletic.net/\(self.sport)/School.aspx?SchoolID=\(team.code)")
         
-        let searchFilter = searchBar.rx.text.orEmpty.asObservable()
-        let allAthletes = urlUpdates.flatMap { url -> Observable<[JSON]> in
-            return dataRequest(url: url).map {
-                $0[1]["athletes"].arrayValue
-            }
+        let searchFilter = searchBar.rx.text.orEmpty
+        let allAthletes = urlUpdates.flatMap { dataRequest(url: $0) }
+        .map { $0[1]["athletes"].arrayValue }
+        .map {
+            $0.map { AthleteResult(json: $0) }
         }
         
-        let url = "https://www.athletic.net/\(self.sport)/School.aspx?SchoolID=\(team.code)"
-        urlUpdates.onNext(url)
-        
-        Observable.combineLatest(allAthletes, searchFilter) { athletes, text -> [JSON] in
+        Observable.combineLatest(allAthletes, searchFilter) { athletes, text -> [AthleteResult] in
             (text.isEmpty) ? athletes : athletes.filter {
-                $0["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil
+                $0.name.range(of: text, options: .caseInsensitive) != nil
             }
         }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
         { (row, element, cell) in
-            cell.textLabel?.text = element["Name"].stringValue
+            cell.textLabel?.text = element.name
         }.disposed(by: disposeBag)
 
-        self.tableView.rx.modelSelected(JSON.self)
+        self.tableView.rx.modelSelected(AthleteResult.self)
             .debug("selectedAthlete")
             .bind(to: self.selectedAthlete)
             .disposed(by: disposeBag)

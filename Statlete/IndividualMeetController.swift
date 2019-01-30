@@ -87,7 +87,7 @@ class IndividualMeetController: UIViewController {
     }
 
     func initTitleButton() {
-        titleButton.setTitle(meet!.Name + " (\(meet!.Gender))", for: .normal)
+        titleButton.setTitle(meet!.name + " (\(meet!.gender))", for: .normal)
         titleButton.rx.tap.subscribe(onNext: { _ in
             print("tapped")
         })
@@ -98,18 +98,17 @@ class IndividualMeetController: UIViewController {
         return RxTableViewSectionedReloadDataSource<Round>(
             configureCell: { dataSource, tableView, indexPath, item in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "ResultCell", for: indexPath) as! ResultCell
-                let grade = (item.Grade == nil) ? "" : " (\(item.Grade!))"
-
-                cell.nameLabel.text = item.AthleteName + grade
-                cell.placeLabel.text = (item.Place == nil || item.Place == 0) ? "-" : String(item.Place!)
-                cell.timeLabel.text = item.Result
-                cell.teamLabel.text = item.Team ?? "N/A"
-                if (item.ResultCode == nil) {
+                let grade = item.grade ?? ""
+                cell.nameLabel.text = item.athleteName + grade
+                cell.placeLabel.text = (item.place == nil || item.place == 0) ? "-" : String(item.place!)
+                cell.timeLabel.text = item.time
+                cell.teamLabel.text = item.team ?? "N/A"
+                if (item.resultCode == nil) {
                     cell.infoButton.isHidden = true
                 }
 
                 cell.infoButton.rx.tap.subscribe(onNext: { _ in
-                    let url = "https://athletic.net/result/\(item.ResultCode!)"
+                    let url = "https://athletic.net/result/\(item.resultCode!)"
                     let svc = SFSafariViewController(url: URL(string: url)!)
                     self.present(svc, animated: true, completion: nil)
                 }).disposed(by: cell.disposeBag)
@@ -120,7 +119,7 @@ class IndividualMeetController: UIViewController {
     }
     func configureRx() {
         let dataSource = createDataSource()
-        let raceRounds = raceInfoFor(url: self.meet!.URL, sport: self.meet!.Sport).map { race in
+        let raceRounds = raceInfoFor(url: self.meet!.url, sport: self.meet!.sport).map { race in
             return race.Rounds
         }
         let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
@@ -135,34 +134,34 @@ class IndividualMeetController: UIViewController {
                 var newRound = round
                 switch index {
                 case 0:
-                    newRound.items = round.items.sorted { $0.SortValue < $1.SortValue }
+                    newRound.items = round.items.sorted { $0.sortValue < $1.sortValue }
 
                 case 1:
-                    newRound.items = round.items.sorted { $0.SortValue > $1.SortValue }
+                    newRound.items = round.items.sorted { $0.sortValue > $1.sortValue }
 
                 case 2:
-                    newRound.items = round.items.sorted { $0.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") < $1.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
+                    newRound.items = round.items.sorted { $0.athleteName.components(separatedBy: " ").reversed().joined(separator: " ") < $1.athleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
                 case 3:
-                    newRound.items = round.items.sorted { $0.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") > $1.AthleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
+                    newRound.items = round.items.sorted { $0.athleteName.components(separatedBy: " ").reversed().joined(separator: " ") > $1.athleteName.components(separatedBy: " ").reversed().joined(separator: " ") }
                 case 4:
                     newRound.items = round.items.sorted {
-                        if $0.Team == $1.Team {
-                            return $0.SortValue < $1.SortValue
+                        if $0.team == $1.team {
+                            return $0.sortValue < $1.sortValue
                         }
-                        return $0.Team ?? "" < $1.Team ?? ""
+                        return $0.team ?? "" < $1.team ?? ""
                     }
                 case 5:
                     newRound.items = round.items.sorted {
-                        if $0.Team == $1.Team {
-                            return $0.SortValue < $1.SortValue
+                        if $0.team == $1.team {
+                            return $0.sortValue < $1.sortValue
                         }
-                        return $0.Team ?? "" > $1.Team ?? ""
+                        return $0.team ?? "" > $1.team ?? ""
                     }
                 default:
                     return newRound
                 }
                 if !search.isEmpty {
-                    newRound.items = newRound.items.filter { return $0.AthleteName.range(of: search, options: .caseInsensitive) != nil || ($0.Team ?? "").range(of: search, options: .caseInsensitive) != nil
+                    newRound.items = newRound.items.filter { return $0.athleteName.range(of: search, options: .caseInsensitive) != nil || ($0.team ?? "").range(of: search, options: .caseInsensitive) != nil
                     }
                 }
                 return newRound
