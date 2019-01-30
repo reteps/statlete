@@ -64,6 +64,11 @@ struct Athlete {
     var athleteID: String
     var events: [String: [String: [AthleteTime]]]
     // [eventName: [season: [time]]]
+    init(name: String = "", athleteID: String = "", events: [String: [String: [AthleteTime]]]? = nil) {
+        self.name = name
+        self.athleteID = athleteID
+        self.events = events ?? [String: [String: [AthleteTime]]]()
+    }
 
 }
 
@@ -313,12 +318,28 @@ func raceInfoFor(url: String, sport: String) -> Observable<Race> {
 }
 
 enum Sport: String {
-    case XC
-    case TF
+    case XC = "CrossCountry"
+    case TF = "TrackAndField"
+    case None = ""
     var raw : String {
         switch self {
         case .XC: return "CrossCountry"
         case .TF: return "TrackAndField"
+        case .None: return ""
+        }
+    }
+    var opposite: Sport {
+        switch self {
+        case .TF: return .XC
+        case .XC: return .TF
+        case .None: return .None
+        }
+    }
+    var display: String {
+        switch self {
+        case .XC: return "Cross Country"
+        case .TF: return "Track and Field"
+        case .None: return ""
         }
     }
 }

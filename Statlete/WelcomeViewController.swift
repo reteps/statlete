@@ -82,6 +82,7 @@ class WelcomeViewController: UIViewController {
             let setupComplete = UserDefaults.standard.set(true, forKey:"setupComplete")
             self.tabBarController?.selectedIndex = 0
             self.tabBarController?.tabBar.isHidden = false
+            self.tabBarController?.viewControllers?.remove(at: 3)
         }).disposed(by: disposeBag)
     }
 }

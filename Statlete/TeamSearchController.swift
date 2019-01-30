@@ -14,8 +14,8 @@ import SnapKit
 public struct Team {
     var name: String
     var code: String
-    var location: String
-    init(name: String = "", code: String = "", location: String="") {
+    var location: String?
+    init(name: String = "", code: String = "", location: String?=nil) {
         self.code = code
         self.name = name
         self.location=location

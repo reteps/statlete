@@ -37,6 +37,7 @@ class IndividualMeetController: UIViewController {
         b.semanticContentAttribute = .forceRightToLeft
         return b
     }()
+    
     func initSearchBar() {
         self.view.addSubview(searchBar)
         self.searchBar.snp.makeConstraints { make in
@@ -46,6 +47,7 @@ class IndividualMeetController: UIViewController {
         }
 
     }
+    
     func initTableView() {
         self.tableView.allowsSelection = false
         self.tableView.snp.makeConstraints { make in

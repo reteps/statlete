@@ -16,8 +16,10 @@ class EventSelection: UIViewController {
     let tableView = UITableView()
     var data = [String:[String]]()
     let disposeBag = DisposeBag()
+    let eventSelected = PublishSubject<[Sport:String]>()
     override func viewDidLoad() {
         super.viewDidLoad()
+        self.navigationItem.title = "Select Event"
         self.view.addSubview(tableView)
         let newData = data.map { return SectionModel(model: $0, items: $1) }
         tableView.register(UITableViewCell.self , forCellReuseIdentifier: "cell")
@@ -26,6 +28,14 @@ class EventSelection: UIViewController {
         }
         let dataSource = createDataSource()
         Observable.just(newData).bind(to: tableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
+        
+        self.tableView.rx.itemSelected.map { path in
+            return [Sport(rawValue: dataSource[path[0]].model)!:dataSource[path]]
+        }.bind(to: eventSelected).disposed(by: disposeBag)
+        
+        eventSelected.subscribe(onNext: { _ in
+            self.navigationController?.popViewController(animated: true)
+        }).disposed(by: disposeBag)
         
         
     }
@@ -36,7 +46,7 @@ class EventSelection: UIViewController {
                 cell.textLabel?.text = item
                 return cell
         }, titleForHeaderInSection: { dataSource, index in
-            return dataSource[index].model
+            return Sport(rawValue:dataSource[index].model)!.display
         })
         return model
     }

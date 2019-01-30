@@ -31,7 +31,7 @@ class AthleteSearchController: UIViewController {
     let searchBar = UISearchBar()
     var shouldShowSearchResults = false
     var team: Team = Team()
-    var sport = "CrossCountry" //Default
+    var sport = Sport.XC.raw
     let selectedAthlete = PublishSubject<JSON>()
     let disposeBag = DisposeBag()
     let tableHeaderView = UIView()
@@ -112,7 +112,7 @@ class AthleteSearchController: UIViewController {
             (text.isEmpty) ? athletes : athletes.filter {
                 $0["Name"].stringValue.range(of: text, options: .caseInsensitive) != nil
             }
-        }.debug("popTable").bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
+        }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
         { (row, element, cell) in
             cell.textLabel?.text = element["Name"].stringValue
         }.disposed(by: disposeBag)

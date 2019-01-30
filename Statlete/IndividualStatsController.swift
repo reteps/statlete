@@ -14,24 +14,30 @@ import RxSwift
 import RxCocoa
 import FontAwesome_swift
 import RealmSwift
+import SwiftyJSON
 
+struct currentState {
+    var sport: Sport
+    var event: String
+    var id: String
+    var name: String
+    var team: Team
+    init(sport:Sport=Sport.None,event:String="",id:String="",name:String="",team:Team=Team()) {
+        self.sport = sport
+        self.event = event
+        self.id = id
+        self.name = name
+        self.team = team
+    }
+}
 class IndividualStatsController: UIViewController {
-    // Defaults
 
-    var shouldUpdateData = true // This will be set by other functions
-    // UI Elements
     let chart = LineChartView()
     var scrollView = UIScrollView()
     var contentView = UIView()
     var settingsView = UIView()
     var checkboxView = UIView()
     let infoView = UIView()
-    /*
-    ScrollView
-    -> ContentView
-        -> Settings        |   Info
-            -> Checkbox       -> Label
-    */
     let eventTapButton = UIBarButtonItem()
     var titleButton: UIButton = {
         let b = UIButton(type: .system)
@@ -40,29 +46,19 @@ class IndividualStatsController: UIViewController {
         b.semanticContentAttribute = .forceRightToLeft
         return b
     }()
-    // Variables
+    var athlete = Athlete()
+    // Needed for Event Switching
+    var otherSportName = Sport.None
+    var otherSportEvents = [String]()
+    var state = currentState()
     var lines = [LineChartDataSet]()
-    var events = [String: [String: [AthleteTime]]]()
-    let colors = [UIColor(rgb: 0x7ad3c0),
-    UIColor(rgb: 0x61a3ce),
-    UIColor(rgb: 0xb283c6),
-    UIColor(rgb: 0xc45850)]
     let disposeBag = DisposeBag()
     var timeFormatter = DateFormatter()
-    var selectedEventName = ""
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // https://medium.com/@OsianSmith/creating-a-line-chart-in-swift-3-and-ios-10-2f647c95392e
-        // https://blog.pusher.com/handling-internet-connection-reachability-swift/
-        if shouldUpdateData {
-            reloadData()
-            createPage()
-            shouldUpdateData.toggle()
-        } else {
-            print("[INFO]: data not updating")
-        }
-        // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/UIPickerViewExample/SimplePickerViewExampleViewController.swift
+        reloadData(resetState: true)
+        createPage()
     }
     
     override func viewDidLoad() {
@@ -80,96 +76,137 @@ class IndividualStatsController: UIViewController {
         
         initInfoView()
         initNavBar()
+
+
         // initRefreshControl()
     }
     func initNavBar() {
-        titleButton.rx.tap.subscribe(onNext: { _ in
-            print("tapped")
-        })
+        let athletePicker = AthleteSearchController()
+        titleButton.rx.tap.flatMap { _ -> PublishSubject<JSON> in
+            athletePicker.team = self.state.team
+            self.navigationController?.pushViewController(athletePicker, animated: true)
+            return athletePicker.selectedAthlete
+        }.subscribe(onNext: { athlete in
+            print("YASSS",athlete)
+            self.state.id = athlete["ID"].stringValue
+            self.state.name = athlete["Name"].stringValue
+
+            athletePicker.navigationController?.popViewController(animated: true)
+            self.reloadData()
+            self.createPage()
+
+        }).disposed(by: disposeBag)
         titleButton.sizeToFit()
         self.navigationItem.titleView = titleButton
 
         eventTapButton.title = "Event"
         let eventSelection = EventSelection()
         self.navigationItem.leftBarButtonItem = eventTapButton
-        eventTapButton.rx.tap.subscribe(onNext: { _ in
+
+
+        eventTapButton.rx.tap.flatMap { _ -> PublishSubject<[Sport:String]> in
+
+            
+            eventSelection.data = [self.state.sport.raw:Array(self.athlete.events.keys),
+                                  self.otherSportName.raw:self.otherSportEvents]
+            
             self.navigationController?.pushViewController(eventSelection, animated: true)
-        })
+            return eventSelection.eventSelected
+            }.subscribe(onNext: { event in
+                self.state.sport = event.keys.first!
+                self.state.event = event.values.first!
+                self.reloadData()
+                self.createPage()
+            })
     }
     
-
     // Takes an event and returns an array of lines based on the data
-    func createLineChartData(event: [String: [AthleteTime]]?) -> [LineChartDataSet] {
+    func createLineChartData(event: [String: [AthleteTime]]) -> [LineChartDataSet] {
         var lines = [LineChartDataSet]()
-        if event == nil {
-            return lines
-        }
-        let orderedYears = (event == nil) ? [String]() : event!.keys.sorted()
-        // let orderedYears = eventKeys.sort(by: { Int($0) < Int($1) }).sorted()
-        for i in 0..<orderedYears.count {
-            // https://stackoverflow.com/questions/41720445/ios-charts-3-0-align-x-labels-dates-with-plots/41959257#41959257
-            let year = orderedYears[i]
-            let season = event![year]!
+        let colors = [
+            UIColor(rgb: 0x7ad3c0),
+            UIColor(rgb: 0x61a3ce),
+            UIColor(rgb: 0xb283c6),
+            UIColor(rgb: 0xc45850)]
+        let orderedYears = event.keys.sorted()
+        for (index, year) in orderedYears.enumerated() {
+            let season = event[year]!
             var lineChartEntries = [ChartDataEntry]()
             for race in season {
-                // https://stackoverflow.com/questions/52337853/date-from-calendar-datecomponents-returning-nil-in-swift/52337942
+                // Format Date (Strips Year)
                 var components = Calendar.current.dateComponents([.day, .month, .year], from: race.date)
                 components.year = 2000
-                let newDate = Calendar.current.date(from: components)
-                let point = ChartDataEntry(x: newDate!.timeIntervalSince1970, y: race.time.timeIntervalSince1970)
+                let newDate = Calendar.current.date(from: components)!
+                let point = ChartDataEntry(x: newDate.timeIntervalSince1970, y: race.time.timeIntervalSince1970)
                 lineChartEntries.append(point)
             }
-            let line = LineChartDataSet(values: lineChartEntries, label: String(year))
-            // https://stackoverflow.com/questions/29779128/how-to-make-a-random-color-with-swift
+            let line = LineChartDataSet(values: lineChartEntries, label: year)
             line.drawValuesEnabled = false
             line.lineWidth = 2
-            line.circleColors = [self.colors[i]]
-            line.colors = [self.colors[i]]
+            line.circleColors = [colors[index]]
+            line.colors = [colors[index]]
             lines.append(line)
         }
         return lines
     }
-
+    
     func initRefreshControl() {
         let refreshControl = UIRefreshControl()
-        let title = NSLocalizedString("Refreshing Data", comment: "Pull to refresh")
+        let title = NSLocalizedString("Refreshing Data...", comment: "Pull to refresh")
         refreshControl.attributedTitle = NSAttributedString(string: title)
         refreshControl.rx.controlEvent(.valueChanged).subscribe ( onNext: { _ in
-            print("refresh")
+            self.reloadData()
             self.createPage()
             refreshControl.endRefreshing()
-        })
+        }).disposed(by: disposeBag)
         scrollView.refreshControl = refreshControl
     }
-    func reloadData() { // athlete has changed
+    // Grabs new information
+    func reloadData(resetState: Bool = true) {
+        // 3 cases:
+        // From Settings -> reset all
+        // Change Event -> state is updated
+        // Change Athlete -> change everything
         let realms = try! Realm()
         let settings = realms.objects(Settings.self).first!
-        print(settings)
-        let athlete = individualAthlete(athleteID: settings.athleteID, athleteName: settings.athleteName, type: settings.sport)!
         
-        self.events = athlete.events
-        self.selectedEventName = self.events.first?.key ?? ""
-        /*Observable.just(Array(self.events.keys)).bind(to: self.picker.rx.itemTitles) { _, item in
-            return item
-        }.disposed(by: disposeBag)*/
+        self.athlete = individualAthlete(athleteID: state.id, athleteName: state.name, type: state.sport.raw)!
+        if resetState {
+            self.state.event = self.athlete.events.first?.key ?? ""
+            self.state.sport = Sport(rawValue: settings.sport)!
+            self.state.id = settings.athleteID
+            self.state.name = settings.athleteName
+            self.state.team = Team(name: settings.teamName, code: settings.teamID)
+        }
+        
+        let otherSport = self.state.sport.opposite
+        let otherSportEvents = individualAthlete(athleteID: self.state.id, athleteName: self.state.name, type: otherSport.raw)!
+        self.otherSportName = otherSport
+        self.otherSportEvents = Array(otherSportEvents.events.keys)
+        // Set new title
         titleButton.setTitle(settings.athleteName, for: .normal)
         titleButton.sizeToFit()
 
 
     }
-    func createPage() { // event has changed
-        let event = self.events[self.selectedEventName]
-        self.lines = self.createLineChartData(event: event)
-        let orderedYears = (event == nil) ? [String]() : event!.keys.sorted()
-        self.createChart(lines: self.lines, orderedYears: orderedYears)
-        for view in self.checkboxView.subviews {
-            view.removeFromSuperview()
-        }
+    // Creates a page using the selected eventName
+    func createPage() {
+        let event = self.athlete.events[self.state.event]
         if event != nil {
-            self.createCheckboxesAndConstrain(records: self.recordDict(event: event!))
+            self.lines = self.createLineChartData(event: event!)
+            // Need self for checkboxes
+            let orderedYears = event!.keys.sorted()
+            drawChart(lines: lines, orderedYears: orderedYears)
+            
+            for view in self.checkboxView.subviews {
+                view.removeFromSuperview()
+            }
+            self.createCheckboxesAndConstrain(records: findRecords(event: event!))
         }
+
     }
-    func recordDict(event: [String: [AthleteTime]]) -> [String: String] {
+    // Returns the records for an event
+    func findRecords(event: [String: [AthleteTime]]) -> [String: String] {
         self.timeFormatter.dateFormat = "mm:ss.SS"
         var times = [String: String]()
         for (year, data) in event {
@@ -208,22 +245,32 @@ class IndividualStatsController: UIViewController {
         }
         
     }
+    func initChart() {
+        self.contentView.addSubview(self.chart)
+        self.chart.snp.makeConstraints { (make) in
+            make.top.left.equalTo(self.contentView)
+            make.height.equalTo(self.scrollView)
+            make.right.equalTo(self.contentView)
+        }
+        self.chart.xAxis.valueFormatter = MyDateFormatter("MMM dd")
+        self.chart.xAxis.labelPosition = .bottom
+        self.chart.rightAxis.enabled = false
+        self.chart.drawBordersEnabled = true
+        self.chart.minOffset = 20
+    }
 
     func initScrollViewAndContent() {
-        // https://stackoverflow.com/questions/2944294/how-do-i-auto-size-a-uiscrollview-to-fit-the-content
-        // https://stackoverflow.com/questions/10518790/how-to-set-content-size-of-uiscrollview-dynamically
         self.view.addSubview(self.scrollView)
         self.scrollView.snp.makeConstraints { (make) in
-            // https://stackoverflow.com/questions/52865569/uiscrollview-item-not-moving-from-the-background/52876135#52876135
             make.edges.equalTo(self.view.safeAreaLayoutGuide)
         }
         self.scrollView.addSubview(self.contentView)
         self.contentView.snp.makeConstraints { (make) in
-            make.edges.equalTo(self.scrollView)
-            make.width.equalTo(self.scrollView)
+            make.edges.width.equalTo(self.scrollView)
         }
     }
-    func createChart(lines: [LineChartDataSet], orderedYears: [String]) {
+    // Draws the specified lines on the chart
+    func drawChart(lines: [LineChartDataSet], orderedYears: [String]) {
         let data = LineChartData()
         for line in lines {
             data.addDataSet(line)
@@ -234,36 +281,9 @@ class IndividualStatsController: UIViewController {
         marker.minimumSize = CGSize(width: 50.0, height: 20.0)
         marker.chartView = self.chart
         self.chart.marker = marker
-        // https://github.com/danielgindi/Charts/issues/943
+    }
 
-    }
-    func initChart() {
-        self.contentView.addSubview(self.chart)
-        self.chart.snp.makeConstraints { (make) in
-            make.top.left.equalTo(self.contentView)
-            make.height.equalTo(self.scrollView)
-            make.right.equalTo(self.contentView)//.offset(-20)
-        }
-        self.chart.xAxis.valueFormatter = MyDateFormatter("MMM dd")
-        self.chart.xAxis.labelPosition = .bottom
-        self.chart.rightAxis.enabled = false
-        self.chart.drawBordersEnabled = true
-        self.chart.minOffset = 20
-        // https://github.com/PhilJay/MPAndroidChart/wiki
-        // https://stackoverflow.com/questions/38212750/create-a-markerview-when-user-clicks-on-chart
-    }
-    class CustomizedCheckBox {
-        let checkbox: M13Checkbox
-        init() {
-            checkbox = M13Checkbox()
-            checkbox.setCheckState(.checked, animated: false)
-            checkbox.stateChangeAnimation = .bounce(.fill)
-            checkbox.secondaryTintColor =  UIColor(rgb: 0x47cae8)
-            checkbox.secondaryCheckmarkTintColor = .white //checkmark
-            checkbox.tintColor = UIColor(rgb: 0x53cce7)
-            checkbox.boxType = .square
-        }
-    }
+    // This Function Sucks!!!
     func createCheckboxesAndConstrain(records: [String: String]) {
         var checks = [M13Checkbox]()
         // Constrains checkboxes + label to settingsView
@@ -328,14 +348,24 @@ class IndividualStatsController: UIViewController {
         }
     }
 }
+class CustomizedCheckBox {
+    let checkbox: M13Checkbox
+    init() {
+        checkbox = M13Checkbox()
+        checkbox.setCheckState(.checked, animated: false)
+        checkbox.stateChangeAnimation = .bounce(.fill)
+        checkbox.secondaryTintColor =  UIColor(rgb: 0x47cae8)
+        checkbox.secondaryCheckmarkTintColor = .white //checkmark
+        checkbox.tintColor = UIColor(rgb: 0x53cce7)
+        checkbox.boxType = .square
+    }
+}
 
 class MyDateFormatter: IAxisValueFormatter {
     
-    let timeFormatter: DateFormatter
+    let timeFormatter = DateFormatter()
     
     init(_ format: String) {
-        // https://stackoverflow.com/questions/40648284/converting-a-unix-timestamp-into-date-as-string-swift
-        timeFormatter = DateFormatter()
         timeFormatter.dateFormat = format
     }
     
