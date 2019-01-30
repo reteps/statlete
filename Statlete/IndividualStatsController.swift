@@ -57,16 +57,13 @@ class IndividualStatsController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        reloadData(newAthlete: false)
-        createPage()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("[info] view loading")
-        initState()
-        reloadData()
         initUI()
+        initState()
+
     }
     func initUI() {
         self.view.backgroundColor = .white
@@ -184,7 +181,7 @@ class IndividualStatsController: UIViewController {
 
         if newAthlete {
             self.athlete = individualAthlete(id: state.id, name: state.name, bothSports:true)!
-            self.state.event = self.athlete.events.first?.value.first?.key ?? ""
+            self.state.event = self.athlete.events[self.state.sport]?.first?.key ?? ""
             titleButton.setTitle(state.name, for: .normal)
             titleButton.sizeToFit()
         }
@@ -197,12 +194,13 @@ class IndividualStatsController: UIViewController {
     // Creates a page using the selected eventName
     func createPage() {
         let event = self.athlete.events[self.state.sport]?[self.state.event]
+        
         if event != nil {
             self.lines = self.createLineChartData(event: event!)
             // Need self for checkboxes
             let orderedYears = event!.keys.sorted()
-            drawChart(lines: lines, orderedYears: orderedYears)
             
+            drawChart(lines: lines, orderedYears: orderedYears)
             for view in self.checkboxView.subviews {
                 view.removeFromSuperview()
             }
@@ -293,7 +291,7 @@ class IndividualStatsController: UIViewController {
         var checks = [M13Checkbox]()
         // Constrains checkboxes + label to settingsView
         let orderedYears = records.keys.sorted()
-        for (i, year) in orderedYears.enumerated() {
+        for (index, year) in orderedYears.enumerated() {
             let checkbox = CustomizedCheckBox().checkbox
             let label = UILabel()
             let recordLabel = UILabel()
@@ -301,7 +299,7 @@ class IndividualStatsController: UIViewController {
             self.checkboxView.addSubview(checkbox)
             self.checkboxView.addSubview(label)
             self.checkboxView.addSubview(recordLabel) // also clear this
-            checkbox.checkedValue = i
+            checkbox.checkedValue = index
             checkbox.rx.controlEvent(UIControlEvents.valueChanged).subscribe(onNext: { [unowned self] _ in
                 let lineIndex = checkbox.checkedValue! as! Int
                 if checkbox.checkState == .checked {
@@ -312,7 +310,7 @@ class IndividualStatsController: UIViewController {
                 self.chart.data?.dataSets[lineIndex].notifyDataSetChanged()
                 self.chart.data?.notifyDataChanged()
                 self.chart.notifyDataSetChanged()
-            })
+            }).disposed(by: disposeBag)
             label.snp.makeConstraints { (make) in
                 make.left.equalTo(checkbox.snp.right).offset(10)
                 make.top.bottom.equalTo(checkbox)

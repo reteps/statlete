@@ -25,13 +25,16 @@ extension Round: SectionModelType {
 class IndividualMeetController: UIViewController {
 
     var meet: CalendarMeet? = nil
-    var events = [MeetEvent]()
-    var event: MeetEvent? = nil
+    var events = [String: MeetEvent]()
     var disposeBag = DisposeBag()
     let tableView = UITableView()
     var filterActionSheet = UIAlertController()
     let searchBar = UISearchBar()
-    let sortButton = UIBarButtonItem()
+    let sortButton: UIBarButtonItem = {
+        var s = UIBarButtonItem()
+        s.title = "Sort"
+        return s
+    }()
     var titleButton: UIButton = {
         let b = UIButton(type: .system)
         b.tintColor = .black
@@ -64,51 +67,31 @@ class IndividualMeetController: UIViewController {
         self.tableView.register(ResultCell.self, forCellReuseIdentifier: "ResultCell")
 
     }
-    func initSortButton() {
-        sortButton.title = "Sort"
-        self.navigationItem.rightBarButtonItem = sortButton
-
-    }
     func initUI() {
         self.view.addSubview(self.tableView)
         self.view.backgroundColor = .white
+        self.navigationItem.rightBarButtonItem = sortButton
+        self.navigationItem.titleView = titleButton
+        
         initSearchBar()
         initTableView()
-        initSortButton()
-        initTitleButton()
+
     }
     override func viewDidLoad() {
         super.viewDidLoad()
         initUI()
         configureRx()
     }
-    // https://stackoverflow.com/questions/49538546/how-to-obtain-a-uialertcontroller-observable-reactivecocoa-or-rxswift
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        // self.events = meetInfoFor(meet: meet!)
 
-    }
-
-    func initTitleButton() {
-        titleButton.setTitle(self.event!.name + " (\(self.event!.gender))", for: .normal)
-        let eventSelection = EventSelection()
-        let meetInfo = meetInfoFor(meet: meet!)
-        titleButton.rx.tap.withLatestFrom(meetInfo) { (_, events) in
-            let names: [String] = events.map {
-                    $0.name
-            }
-            print(names)
-            eventSelection.data = [Sport.None:names]
-            self.navigationController?.pushViewController(eventSelection, animated: true)
-        }
-        self.navigationItem.titleView = titleButton
     }
     // https://github.com/RxSwiftCommunity/RxDataSources
     func createDataSource() -> RxTableViewSectionedReloadDataSource<Round> {
         return RxTableViewSectionedReloadDataSource<Round>(
             configureCell: { dataSource, tableView, indexPath, item in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "ResultCell", for: indexPath) as! ResultCell
-                let grade = item.grade ?? ""
+                let grade = item.grade == nil ? "" : " (\(item.grade!))"
                 cell.nameLabel.text = item.athleteName + grade
                 cell.placeLabel.text = (item.place == nil || item.place == 0) ? "-" : String(item.place!)
                 cell.timeLabel.text = item.time
@@ -124,22 +107,50 @@ class IndividualMeetController: UIViewController {
                 }).disposed(by: cell.disposeBag)
                 return cell
             }, titleForHeaderInSection: { dataSource, index in
-                return dataSource.sectionModels[index].Name
+                return dataSource.sectionModels[index].name
             })
     }
     func configureRx() {
         let dataSource = createDataSource()
-        let raceRounds = raceInfoFor(url: self.event!.url, sport: self.meet!.sport).map { race in
-            return race.Rounds
-        }
+        var meetInfoUpdater = meetInfoFor(meet: meet!).share()
+
+        let startObservable = meetInfoUpdater.map { $0.first!.name +  " (\($0.first!.gender))" }
+
+        let tapObservable = self.titleButton.rx.tap.debug("tapped").withLatestFrom(meetInfoUpdater)
+        .map { $0.map { $0.name + " (\($0.gender))" } }
+        .flatMap { names -> PublishSubject<[Sport:String]> in
+            let eventSelection = EventSelection()
+            eventSelection.data = [Sport.None:names]
+            self.navigationController?.pushViewController(eventSelection, animated: true)
+            return eventSelection.eventSelected
+        }.map { $0.values.first! }
+
+        let currentEventNames = Observable.merge(startObservable, tapObservable)
+        let currentEventRounds = currentEventNames
+        .map { self.events[$0]!.url }
+        .map { raceInfoFor(url: $0, sport: self.meet!.sport) }
+        .flatMap { $0.map { $0.rounds } }
+        
+        currentEventNames.subscribe(onNext: { eventName in
+            self.titleButton.setTitle(eventName, for: .normal)
+            self.titleButton.sizeToFit()
+        }).disposed(by: disposeBag)
+        // Change Title when there is a new event
+        meetInfoUpdater.debug("InitialInfo").subscribe(onNext: { data in
+            // https://stackoverflow.com/questions/38454952/map-array-of-objects-to-dictionary-in-swift
+            self.events = Dictionary(data.map { ($0.name + " (\($0.gender))", $0) }) { first, _ in first }
+
+        }).disposed(by: disposeBag)
+        
+
+        
         let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
         let sortValue = self.sortButton.rx.tap.flatMap {
             return UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, options: options)
         }.startWith(0)
-        // sortValue.map { options[$0] }.bind(to: self.filterButton.rx.title(for: .normal))
         let searchBar = self.searchBar.rx.text.orEmpty
-        
-        Observable.combineLatest(sortValue, raceRounds, searchBar) { (index, rounds, search) in
+
+        Observable.combineLatest(sortValue, currentEventRounds, searchBar) { (index, rounds, search) in
             var newRounds = rounds
             newRounds = rounds.map { round in
                 var newRound = round
