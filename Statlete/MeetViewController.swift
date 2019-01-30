@@ -19,6 +19,9 @@ import RealmSwift
 class MeetViewController: UIViewController {
     var searchBar = UISearchBar()
     let disposeBag = DisposeBag()
+    var team = Team()
+    var sport: Sport = Sport.None
+    
     let yearPickerButton: UIBarButtonItem = {
         let b = UIBarButtonItem()
         b.title = "2018"
@@ -71,48 +74,63 @@ class MeetViewController: UIViewController {
     func initNavigationItem() {
         self.navigationItem.leftBarButtonItem = yearPickerButton
         self.navigationItem.titleView = titleButton
-        // self.navigationItem.rightBarButtonItem = infoButton
+        self.navigationItem.title = "Meets"
 
     }
     func initUI() {
         self.view.backgroundColor = .white
+
         initTable()
         initNavigationItem()
     }
     func configureRxSwift() {
         let settings = realm.objects(Settings.self).first!
+        self.sport = Sport(rawValue: settings.sport)!
+        team.code = settings.teamID
+        team.name = settings.teamName
 /*
 Change year -> get new data
 Change team -> get new data
 */
-        //
-        let individualMeet = IndividualMeetController()
+        
         self.tableView.rx.modelSelected(CalendarMeet.self).filter {
             return $0.hasResults
         }.subscribe(onNext: { meet in
-                individualMeet.meet = meet
-                self.navigationController?.pushViewController(individualMeet, animated: true)
+            let individualMeet = IndividualMeetController()
+            individualMeet.meet = meet
+            self.navigationController?.pushViewController(individualMeet, animated: true)
         }).disposed(by: disposeBag)
 
-        
-
+        // Year Selected
         let yearSelected = yearPickerButton.rx.tap.flatMap { _  -> PublishSubject<String> in
             let yearPicker = YearPicker()
             yearPicker.modalPresentationStyle = .overCurrentContext
-            yearPicker.sport = settings.sport
-            yearPicker.id = settings.teamID
+            yearPicker.sport = self.sport.raw
+            yearPicker.id = self.team.code
             self.present(yearPicker, animated: true)
             return yearPicker.yearSelected
         }.share().startWith("2018")
         
-        // Bind Year Selected to Title
         yearSelected.bind(to: yearPickerButton.rx.title).disposed(by: disposeBag)
-        // Bind Year Selected to refreshing table
-        yearSelected.flatMap { year -> Observable<[CalendarMeet]> in
-            let sport = settings.sport
-            let teamID = settings.teamID
-            return getCalendar(year: year, sport: Sport(rawValue: sport)!, teamID: teamID)
-        }.bind(to: self.tableView.rx.items) { (tableView, row, element) in
+        let teamPicker = TeamSearchController()
+        let teamSelected = titleButton.rx.tap.flatMap { _ -> PublishSubject<Team> in
+            self.navigationController?.pushViewController(teamPicker, animated: true)
+            return teamPicker.selectedTeam
+        }.debug("Team").share()
+        teamSelected.subscribe(onNext: { team in
+            self.titleButton.setTitle(team.name, for: .normal)
+        })
+        let teamChange = teamSelected.flatMap { team -> Observable<[CalendarMeet]> in
+            teamPicker.navigationController?.popViewController(animated: true)
+            self.team.code = team.code
+            return getCalendar(year: "2018", sport: self.sport, teamID: team.code)
+        }
+        
+        let yearChange = yearSelected.flatMap { year -> Observable<[CalendarMeet]> in
+            getCalendar(year: year, sport: self.sport, teamID: self.team.code)
+        }
+        Observable.merge(yearChange, teamChange)
+        .bind(to: self.tableView.rx.items) { (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell
                 cell.meetName.text = element.name
                 let iconType:FontAwesome = element.hasResults ? .calendarCheck : .calendarTimes

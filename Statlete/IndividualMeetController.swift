@@ -123,8 +123,8 @@ class IndividualMeetController: UIViewController {
             eventSelection.data = [Sport.None:names]
             self.navigationController?.pushViewController(eventSelection, animated: true)
             return eventSelection.eventSelected
-        }.map { $0.values.first! }
-
+        }.map { $0.values.first! }.share()
+        
         let currentEventNames = Observable.merge(startObservable, tapObservable)
         let currentEventRounds = currentEventNames
         .map { self.events[$0]!.url }

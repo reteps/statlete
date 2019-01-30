@@ -48,11 +48,25 @@ class UpdatedSettings: UIViewController {
                 Row(text: "Change Athlete", detailText: settings.athleteName, selection: {
                     let athleteSearch = AthleteSearchController()
                     athleteSearch.team = Team(name: settings.teamName, code: settings.teamID, location: "")
-                    self.present(athleteSearch, animated:true)
+                    self.navigationController?.pushViewController(athleteSearch, animated:true)
+                    athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
+                        try! realm.write {
+                            settings.athleteID = athlete.id
+                            settings.athleteName = athlete.name
+                        }
+                        athleteSearch.navigationController?.popViewController(animated: true)
+                    }).disposed(by: self.disposeBag)
                 }, accessory: .disclosureIndicator),
                 Row(text: "Change Team", detailText: settings.teamName, selection: {
                     let teamSearch = TeamSearchController()
-                    self.present(teamSearch, animated:true)
+                    self.navigationController?.pushViewController(teamSearch, animated:true)
+                    teamSearch.selectedTeam.subscribe(onNext: { team in
+                        try! realm.write {
+                            settings.teamID = team.code
+                            settings.teamName = team.name
+                        }
+                        teamSearch.navigationController?.popViewController(animated: true)
+                    }).disposed(by: self.disposeBag)
                 }, accessory: .disclosureIndicator),
                 Row(text: "Cross Country", accessory: .switchToggle(value: settings.sport == Sport.XC.raw, { (bool) in
                     try! realm.write {
@@ -61,7 +75,7 @@ class UpdatedSettings: UIViewController {
                 }))
                 ]),
             Section(header: "Information", rows: [
-                Row(text: "Version", detailText: "1.0"),
+                Row(text: "Version", detailText: "1.0.0"),
                 Row(text: "Created By", detailText: "Peter Stenger")
                 ])
         ]
