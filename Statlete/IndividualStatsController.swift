@@ -57,12 +57,15 @@ class IndividualStatsController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        reloadData(resetState: true)
+        reloadData(newAthlete: false)
         createPage()
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("[info] view loading")
+        initState()
+        reloadData()
         initUI()
     }
     func initUI() {
@@ -82,17 +85,16 @@ class IndividualStatsController: UIViewController {
     }
     func initNavBar() {
         let athletePicker = AthleteSearchController()
-        titleButton.rx.tap.flatMap { _ -> PublishSubject<JSON> in
+        titleButton.rx.tap.flatMap { _ -> PublishSubject<AthleteResult> in
             athletePicker.team = self.state.team
             self.navigationController?.pushViewController(athletePicker, animated: true)
             return athletePicker.selectedAthlete
         }.subscribe(onNext: { athlete in
-            print("YASSS",athlete)
-            self.state.id = athlete["ID"].stringValue
-            self.state.name = athlete["Name"].stringValue
+            self.state.id = athlete.id
+            self.state.name = athlete.name
 
             athletePicker.navigationController?.popViewController(animated: true)
-            self.reloadData()
+            self.reloadData(newAthlete: true)
             self.createPage()
 
         }).disposed(by: disposeBag)
@@ -105,17 +107,19 @@ class IndividualStatsController: UIViewController {
 
 
         eventTapButton.rx.tap.flatMap { _ -> PublishSubject<[Sport:String]> in
-
-            
-            eventSelection.data = [self.state.sport.raw:Array(self.athlete.events.keys),
-                                  self.otherSportName.raw:self.otherSportEvents]
+            eventSelection.data = Dictionary(uniqueKeysWithValues:
+                self.athlete.events.map { sport, events in
+                    (sport.raw, Array(events.keys))
+                }
+            )
             
             self.navigationController?.pushViewController(eventSelection, animated: true)
             return eventSelection.eventSelected
             }.subscribe(onNext: { event in
+                print(event)
                 self.state.sport = event.keys.first!
                 self.state.event = event.values.first!
-                self.reloadData()
+                self.reloadData(newAthlete: false)
                 self.createPage()
             })
     }
@@ -155,43 +159,45 @@ class IndividualStatsController: UIViewController {
         let title = NSLocalizedString("Refreshing Data...", comment: "Pull to refresh")
         refreshControl.attributedTitle = NSAttributedString(string: title)
         refreshControl.rx.controlEvent(.valueChanged).subscribe ( onNext: { _ in
-            self.reloadData()
+            self.reloadData(newAthlete: true)
             self.createPage()
             refreshControl.endRefreshing()
         }).disposed(by: disposeBag)
         scrollView.refreshControl = refreshControl
     }
     // Grabs new information
-    func reloadData(resetState: Bool = true) {
-        // 3 cases:
-        // From Settings -> reset all
-        // Change Event -> state is updated
-        // Change Athlete -> change everything
+    func initState() {
         let realms = try! Realm()
         let settings = realms.objects(Settings.self).first!
-        
-        self.athlete = individualAthlete(athleteID: state.id, athleteName: state.name, type: state.sport.raw)!
-        if resetState {
-            self.state.event = self.athlete.events.first?.key ?? ""
-            self.state.sport = Sport(rawValue: settings.sport)!
-            self.state.id = settings.athleteID
-            self.state.name = settings.athleteName
-            self.state.team = Team(name: settings.teamName, code: settings.teamID)
+        self.state.sport = Sport(rawValue: settings.sport)!
+        self.state.id = settings.athleteID
+        self.state.name = settings.athleteName
+        self.state.team = Team(name: settings.teamName, code: settings.teamID)
+        reloadData(newAthlete: true)
+        createPage()
+    }
+    func reloadData(newAthlete: Bool = false) {
+        // 4 cases:
+        // Settings -> grab new data
+        // Change Event -> don't grab new data
+        // Change Athlete -> grab new data
+        // Refresh -> grab new data
+
+        if newAthlete {
+            self.athlete = individualAthlete(id: state.id, name: state.name, bothSports:true)!
+            self.state.event = self.athlete.events.first?.value.first?.key ?? ""
+            titleButton.setTitle(state.name, for: .normal)
+            titleButton.sizeToFit()
         }
-        
-        let otherSport = self.state.sport.opposite
-        let otherSportEvents = individualAthlete(athleteID: self.state.id, athleteName: self.state.name, type: otherSport.raw)!
-        self.otherSportName = otherSport
-        self.otherSportEvents = Array(otherSportEvents.events.keys)
+        eventTapButton.title = state.event
         // Set new title
-        titleButton.setTitle(settings.athleteName, for: .normal)
-        titleButton.sizeToFit()
+
 
 
     }
     // Creates a page using the selected eventName
     func createPage() {
-        let event = self.athlete.events[self.state.event]
+        let event = self.athlete.events[self.state.sport]?[self.state.event]
         if event != nil {
             self.lines = self.createLineChartData(event: event!)
             // Need self for checkboxes
