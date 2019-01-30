@@ -103,15 +103,14 @@ Change team -> get new data
             yearPicker.id = settings.teamID
             self.present(yearPicker, animated: true)
             return yearPicker.yearSelected
-        }.startWith("2018")
+        }.share().startWith("2018")
         
         // Bind Year Selected to Title
         yearSelected.bind(to: yearPickerButton.rx.title).disposed(by: disposeBag)
         // Bind Year Selected to refreshing table
-        yearSelected.debug("year").flatMap { year -> Observable<[CalendarMeet]> in
+        yearSelected.flatMap { year -> Observable<[CalendarMeet]> in
             let sport = settings.sport
             let teamID = settings.teamID
-            print(year, sport, teamID)
             return getCalendar(year: year, sport: Sport(rawValue: sport)!, teamID: teamID)
         }.bind(to: self.tableView.rx.items) { (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell
@@ -173,7 +172,6 @@ class MeetCell: UITableViewCell {
         self.meetLocation.snp.makeConstraints { make in
             make.top.bottom.equalTo(meetDate)
             make.left.equalTo(meetLocationIcon.snp.right).offset(5)
-            // make.right.equalToSuperview()
         }
     }
     required init?(coder aDecoder: NSCoder) {

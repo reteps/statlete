@@ -17,9 +17,9 @@ import RxSwift
 // Returns team information like a list of athletes from a teamID
 
 struct TeamAthlete {
-    var Name: String
-    var Gender: String
-    var ID: Int
+    var name: String
+    var gender: String
+    var id: Int
 }
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
 // https://stackoverflow.com/questions/52656378/bind-alamofire-request-to-table-view-using-rxswift/52656720?noredirect=1#comment92244571_52656720
@@ -338,12 +338,12 @@ struct RaceResult {
     }
 }
 struct Race {
-    var URL: String
-    var Name: String
-    var Rounds: [Round]
+    var url: String
+    var name: String
+    var rounds: [Round]
 }
 struct Round {
-    var Name: String
+    var name: String
     var items: [RaceResult]
 }
 func raceInfoFor(url: String, sport: Sport) -> Observable<Race> {
@@ -369,10 +369,10 @@ func raceInfoFor(url: String, sport: Sport) -> Observable<Race> {
         }
         var roundData = [Round]()
         for (name, data) in rawRoundData {
-            roundData.append(Round(Name: name, items: data))
+            roundData.append(Round(name: name, items: data))
         }
         let meetName = data[1]["meet"]["Name"].stringValue
-        let race = Race(URL: url, Name: meetName, Rounds: roundData)
+        let race = Race(url: url, name: meetName, rounds: roundData)
         return race
     }
 }
