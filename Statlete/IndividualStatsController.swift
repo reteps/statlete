@@ -109,19 +109,18 @@ class IndividualStatsController: UIViewController {
         eventTapButton.rx.tap.flatMap { _ -> PublishSubject<[Sport:String]> in
             eventSelection.data = Dictionary(uniqueKeysWithValues:
                 self.athlete.events.map { sport, events in
-                    (sport.raw, Array(events.keys))
+                    (sport, Array(events.keys))
                 }
             )
             
             self.navigationController?.pushViewController(eventSelection, animated: true)
             return eventSelection.eventSelected
-            }.subscribe(onNext: { event in
-                print(event)
+        }.subscribe(onNext: { [unowned self] event in
                 self.state.sport = event.keys.first!
                 self.state.event = event.values.first!
                 self.reloadData(newAthlete: false)
                 self.createPage()
-            })
+        }).disposed(by: disposeBag)
     }
     
     // Takes an event and returns an array of lines based on the data

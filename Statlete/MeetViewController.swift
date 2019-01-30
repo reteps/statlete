@@ -17,26 +17,19 @@ import SafariServices
 import RealmSwift
 
 class MeetViewController: UIViewController {
-    var shouldShowSearchResults = false
-    var searchBar = UISearchBar()//Controller!
+    var searchBar = UISearchBar()
     let disposeBag = DisposeBag()
-    let meetPicker = UIPickerView()
-    let meetPickerBar = UIToolbar()
-    let meetPickerContainer = UIView()
     let yearPickerButton: UIBarButtonItem = {
         let b = UIBarButtonItem()
         b.title = "2018"
         return b
     }()
+    
     let infoButton: UIBarButtonItem = {
         let b = UIBarButtonItem()
         b.title = "Info"
         return b
     }()
-    let races = PublishSubject<[JSON]>()
-    let dateFormatter = DateFormatter()
-    var manualRefresh = PublishSubject<String>()
-    var tableView = UITableView()
     var titleButton: UIButton = {
         let b = UIButton(type: .system)
         b.tintColor = .black
@@ -44,25 +37,27 @@ class MeetViewController: UIViewController {
         b.semanticContentAttribute = .forceRightToLeft
         return b
     }()
+    
+    let races = PublishSubject<[JSON]>()
+    let dateFormatter = DateFormatter()
+    var tableView = UITableView()
     let realm = try! Realm()
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        let settings = realm.objects(Settings.self).first!
-        manualRefresh.onNext("2018")
-        self.navigationItem.title = settings.teamName
-        titleButton.setTitle(settings.teamName, for: .normal)
-        self.meetPickerContainer.isExclusiveTouch = false
-        self.meetPickerContainer.isHidden = true
     }
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        let settings = realm.objects(Settings.self).first!
+        self.navigationItem.title = settings.teamName
+        titleButton.setTitle(settings.teamName, for: .normal)
         initUI()
         configureRxSwift()
 
     }
     func initTable() {
+        self.view.addSubview(tableView)
         self.tableView.delegate = nil
         self.tableView.dataSource = nil
         self.tableView.snp.makeConstraints { make in
@@ -76,135 +71,65 @@ class MeetViewController: UIViewController {
     func initNavigationItem() {
         self.navigationItem.leftBarButtonItem = yearPickerButton
         self.navigationItem.titleView = titleButton
-        self.navigationItem.rightBarButtonItem = infoButton
-        self.navigationItem.leftBarButtonItem = UIBarButtonItem()
+        // self.navigationItem.rightBarButtonItem = infoButton
 
     }
     func initUI() {
         self.view.backgroundColor = .white
-        self.view.addSubview(tableView)
-        initMeetPickerView()
-        initMeetPicker()
         initTable()
         initNavigationItem()
     }
-    // https://github.com/ReactiveX/RxSwift/blob/master/RxExample/RxExample/Examples/SimpleTableViewExample/SimpleTableViewExampleViewController.swift
     func configureRxSwift() {
-        // https://stackoverflow.com/questions/42179134/how-to-filter-array-of-observable-element-rxswift
-        // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
-        // Bind table to getCalendar
         let settings = realm.objects(Settings.self).first!
-
-        let meetSelected = self.tableView.rx.modelSelected(CalendarMeet.self).filter {
+/*
+Change year -> get new data
+Change team -> get new data
+*/
+        //
+        let individualMeet = IndividualMeetController()
+        self.tableView.rx.modelSelected(CalendarMeet.self).filter {
             return $0.hasResults
-        }
-        meetSelected.flatMap { [unowned self] meet -> Observable<[MeetEvent]> in
-            let sport = Sport(rawValue: settings.sport)!
-            return meetInfoFor(meet: meet)
-        }
-        .do(onNext: { _ in
-            self.meetPickerContainer.isHidden = false
-            self.meetPickerContainer.isExclusiveTouch = true
-        })
-        .bind(to: self.meetPicker.rx.itemTitles) { index, item in
-                
-            return item.name + " (\(item.gender))"
-        }.disposed(by: disposeBag)
-        
-        let infoTapped = self.meetPickerBar.items![2].rx.tap
-        let meetURL = meetSelected.map { meet -> String in
-            return "https://www.athletic.net/\(settings.sport)/meet/\(meet.id)/results"
-        }
-        infoTapped.withLatestFrom(meetURL).subscribe(onNext: { url in
-            let svc = SFSafariViewController(url: URL(string: url)!)
-            self.present(svc, animated: true, completion: nil)
+        }.subscribe(onNext: { meet in
+                individualMeet.meet = meet
+                self.navigationController?.pushViewController(individualMeet, animated: true)
         }).disposed(by: disposeBag)
 
         
-        self.meetPicker.rx.modelSelected(MeetEvent.self).map { $0[0] }.subscribe(onNext: { meet in
-            let indivMeet = IndividualMeetController()
-            indivMeet.meet = meet
-            self.navigationController?.pushViewController(indivMeet, animated: true)
-        }).disposed(by: disposeBag)
-        
-        infoButton.rx.tap.subscribe(onNext: { [unowned self] _ in
-            let url = "https://www.athletic.net/\(settings.sport)/School.aspx?SchoolID=\(settings.teamID)"
-            let svc = SFSafariViewController(url: URL(string: url)!)
-            self.present(svc, animated: true, completion: nil)
-        }).disposed(by: disposeBag)
-        
 
-        let yearPicker = YearPicker()
-        
         let yearSelected = yearPickerButton.rx.tap.flatMap { _  -> PublishSubject<String> in
+            let yearPicker = YearPicker()
+            yearPicker.modalPresentationStyle = .overCurrentContext
             yearPicker.sport = settings.sport
             yearPicker.id = settings.teamID
             self.present(yearPicker, animated: true)
             return yearPicker.yearSelected
-        }
+        }.startWith("2018")
+        
+        // Bind Year Selected to Title
         yearSelected.bind(to: yearPickerButton.rx.title).disposed(by: disposeBag)
-        
-        
-        Observable.merge(yearSelected, manualRefresh).flatMap { [unowned self] year -> Observable<[CalendarMeet]> in
+        // Bind Year Selected to refreshing table
+        yearSelected.debug("year").flatMap { year -> Observable<[CalendarMeet]> in
             let sport = settings.sport
             let teamID = settings.teamID
             print(year, sport, teamID)
             return getCalendar(year: year, sport: Sport(rawValue: sport)!, teamID: teamID)
-            }.bind(to:
-            self.tableView.rx.items) { (tableView, row, element) in
+        }.bind(to: self.tableView.rx.items) { (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell
                 cell.meetName.text = element.name
-                if element.hasResults {
-                    cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarCheck, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
-                } else {
-                    cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: .calendarTimes, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
-                }
+                let iconType:FontAwesome = element.hasResults ? .calendarCheck : .calendarTimes
+                cell.meetStatusWrapper.image = UIImage.fontAwesomeIcon(name: iconType, style: .solid, textColor: .black, size: CGSize(width: 30, height: 30))
+            
                 self.dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
                 let date = self.dateFormatter.date(from: element.date)
+            
                 self.dateFormatter.dateFormat = "MMM dd, Y"
                 cell.meetDate.text = self.dateFormatter.string(from: date!)
+            
                 cell.meetLocation.text = element.location
                 return cell
-            }.disposed(by: disposeBag)
-    
+        }.disposed(by: disposeBag)
     }
-    func initMeetPickerView() {
-        // https://www.hackingwithswift.com/example-code/uikit/how-to-add-a-flexible-space-to-a-uibarbuttonitem
-        self.view.addSubview(meetPickerContainer)
-        self.meetPickerContainer.addSubview(self.meetPicker)
-        self.meetPickerContainer.addSubview(self.meetPickerBar)
-        self.meetPickerContainer.backgroundColor = .white
-        self.meetPickerContainer.snp.makeConstraints { make in
-            make.left.right.bottom.width.equalTo(self.view)
-            make.top.equalTo(self.view.snp.centerY)
-            //make.top.equalTo(self.view.snp.centerY)
-        }
 
-        
-    }
-    
-    func initMeetPicker() {
-        self.meetPicker.delegate = nil
-        self.meetPicker.dataSource = nil
-        self.meetPicker.backgroundColor = .white
-        self.meetPicker.snp.makeConstraints { make in
-            make.leading.trailing.bottom.equalTo(self.meetPickerContainer)
-            make.top.equalTo(self.meetPickerContainer).offset(50)
-        }
-        self.meetPickerBar.snp.makeConstraints { make in
-            make.leading.trailing.top.equalTo(self.meetPickerContainer)
-            make.height.equalTo(50)
-        }
-        let cancelButton = UIBarButtonItem(title: "Cancel", style: .plain, target: nil, action: nil)
-        let meetInfoButton = UIBarButtonItem(title: "Meet Info", style: .plain, target: nil, action: nil)
-        let space = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
-        cancelButton.rx.tap.subscribe(onNext: { _ in
-            self.meetPickerContainer.isHidden = true
-        }).disposed(by: disposeBag)
-        self.meetPickerBar.setItems([cancelButton, space, meetInfoButton], animated: false)
-        self.meetPickerBar.sizeToFit()
-        self.meetPickerBar.isUserInteractionEnabled = true
-    }
 }
 
 class MeetCell: UITableViewCell {

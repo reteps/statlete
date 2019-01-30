@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		2EE6084921CC228300CC6BB2 /* TODO.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE6084821CC228300CC6BB2 /* TODO.swift */; };
 		2EE6084B21CC236000CC6BB2 /* UpdatedSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2EE6084A21CC236000CC6BB2 /* UpdatedSettings.swift */; };
 		2F49A3AB21D1127B0019BE36 /* WelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F49A3AA21D1127B0019BE36 /* WelcomeViewController.swift */; };
 		2F49A3AD21D116440019BE36 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F49A3AC21D116440019BE36 /* Extensions.swift */; };
@@ -33,7 +32,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2EE6084821CC228300CC6BB2 /* TODO.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TODO.swift; sourceTree = "<group>"; };
 		2EE6084A21CC236000CC6BB2 /* UpdatedSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdatedSettings.swift; sourceTree = "<group>"; };
 		2F49A3AA21D1127B0019BE36 /* WelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewController.swift; sourceTree = "<group>"; };
 		2F49A3AC21D116440019BE36 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
@@ -105,7 +103,6 @@
 			isa = PBXGroup;
 			children = (
 				D074CD0421518949004AA7BB /* AppDelegate.swift */,
-				2EE6084821CC228300CC6BB2 /* TODO.swift */,
 				D003589A2157F48A008D4B64 /* TabController.swift */,
 				D04D0A862200E659009CF3DB /* RealmDataModels.swift */,
 				D0BD08692200C64900167C47 /* EventSelection.swift */,
@@ -296,7 +293,6 @@
 				D075D74C215720DF00787AB0 /* athleticNetHandlers.swift in Sources */,
 				D0BD086A2200C64900167C47 /* EventSelection.swift in Sources */,
 				D04CAB53219DCCAE00BD7470 /* IndividualMeetController.swift in Sources */,
-				2EE6084921CC228300CC6BB2 /* TODO.swift in Sources */,
 				D09E68B521750D8F005662E3 /* BalloonMarker.swift in Sources */,
 				D0591FB7219A5D0800FDA8B7 /* MeetViewController.swift in Sources */,
 				D003589B2157F48A008D4B64 /* TabController.swift in Sources */,

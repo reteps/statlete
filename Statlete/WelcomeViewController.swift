@@ -79,7 +79,7 @@ class WelcomeViewController: UIViewController {
                 settings.athleteID = athlete.id
                 settings.lastUpdated = Date()
             }
-            let setupComplete = UserDefaults.standard.set(true, forKey:"setupComplete")
+            UserDefaults.standard.set(true, forKey:"setupComplete")
             self.tabBarController?.selectedIndex = 0
             self.tabBarController?.tabBar.isHidden = false
             self.tabBarController?.viewControllers?.remove(at: 3)

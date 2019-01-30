@@ -213,7 +213,7 @@ func getCalendar(year: String, sport: Sport, teamID: String) -> Observable<[Cale
             ]
             Alamofire.request(url, headers: headers).responseJSON { response in
                 let json = JSON(response.result.value!)
-                print(json)
+
                 let calendar = json.map { (arg) -> CalendarMeet in
 
                     let (_, raw) = arg
@@ -399,7 +399,7 @@ enum Sport: String {
         switch self {
         case .XC: return "Cross Country"
         case .TF: return "Track and Field"
-        case .None: return ""
+        case .None: return "Events"
         }
     }
 }

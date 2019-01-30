@@ -24,7 +24,9 @@ extension Round: SectionModelType {
 
 class IndividualMeetController: UIViewController {
 
-    var meet: MeetEvent? = nil
+    var meet: CalendarMeet? = nil
+    var events = [MeetEvent]()
+    var event: MeetEvent? = nil
     var disposeBag = DisposeBag()
     let tableView = UITableView()
     var filterActionSheet = UIAlertController()
@@ -83,14 +85,22 @@ class IndividualMeetController: UIViewController {
     // https://stackoverflow.com/questions/49538546/how-to-obtain-a-uialertcontroller-observable-reactivecocoa-or-rxswift
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        // self.events = meetInfoFor(meet: meet!)
 
     }
 
     func initTitleButton() {
-        titleButton.setTitle(meet!.name + " (\(meet!.gender))", for: .normal)
-        titleButton.rx.tap.subscribe(onNext: { _ in
-            print("tapped")
-        })
+        titleButton.setTitle(self.event!.name + " (\(self.event!.gender))", for: .normal)
+        let eventSelection = EventSelection()
+        let meetInfo = meetInfoFor(meet: meet!)
+        titleButton.rx.tap.withLatestFrom(meetInfo) { (_, events) in
+            let names: [String] = events.map {
+                    $0.name
+            }
+            print(names)
+            eventSelection.data = [Sport.None:names]
+            self.navigationController?.pushViewController(eventSelection, animated: true)
+        }
         self.navigationItem.titleView = titleButton
     }
     // https://github.com/RxSwiftCommunity/RxDataSources
@@ -119,7 +129,7 @@ class IndividualMeetController: UIViewController {
     }
     func configureRx() {
         let dataSource = createDataSource()
-        let raceRounds = raceInfoFor(url: self.meet!.url, sport: self.meet!.sport).map { race in
+        let raceRounds = raceInfoFor(url: self.event!.url, sport: self.meet!.sport).map { race in
             return race.Rounds
         }
         let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
@@ -128,6 +138,7 @@ class IndividualMeetController: UIViewController {
         }.startWith(0)
         // sortValue.map { options[$0] }.bind(to: self.filterButton.rx.title(for: .normal))
         let searchBar = self.searchBar.rx.text.orEmpty
+        
         Observable.combineLatest(sortValue, raceRounds, searchBar) { (index, rounds, search) in
             var newRounds = rounds
             newRounds = rounds.map { round in
@@ -182,9 +193,6 @@ class ResultCell: UITableViewCell {
     let infoButton = UIButton(type: .infoLight)
     let teamLabel = UILabel()
     var disposeBag = DisposeBag()
-    // https://medium.com/app-coder-io/27-ios-open-source-libraries-to-skyrocket-your-development-301b67d3124c
-    // https://medium.com/app-coder-io/33-ios-open-source-libraries-that-will-dominate-2017-4762cf3ce449
-    // https://stackoverflow.com/questions/25413239/custom-uitableviewcell-programmatically-using-swift
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
@@ -234,7 +242,6 @@ class ResultCell: UITableViewCell {
     required init?(coder aDecoder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    // https://github.com/ReactiveX/RxSwift/issues/437
     override func prepareForReuse() {
         super.prepareForReuse()
         self.disposeBag = DisposeBag() // because life cicle of every cell ends on prepare for reuse

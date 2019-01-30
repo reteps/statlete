@@ -20,6 +20,7 @@ class YearPicker: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         self.view.backgroundColor = UIColor.clear
+        self.view.isOpaque = false
         self.view.addSubview(invisButton)
         self.view.addSubview(picker)
         picker.backgroundColor = .white
