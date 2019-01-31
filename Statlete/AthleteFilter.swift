@@ -27,9 +27,8 @@ class AthleteFilter: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationController?.isNavigationBarHidden = true
-        self.view.backgroundColor = UIColor.clear
-        // self.view.isOpaque = false
+        navigationController?.isNavigationBarHidden = true
+        view.backgroundColor = UIColor.clear
 
         initUI()
     }
@@ -40,7 +39,7 @@ class AthleteFilter: UIViewController {
         initNavBar()
     }
     func initBack() {
-        self.view.addSubview(giantInvisibleButton)
+        view.addSubview(giantInvisibleButton)
         giantInvisibleButton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
@@ -50,7 +49,7 @@ class AthleteFilter: UIViewController {
 
     }
     func initFilterView() {
-        self.view.addSubview(filterView)
+        view.addSubview(filterView)
 
         filterView.addSubview(filterNavBar)
         filterView.addSubview(optionsTable)
@@ -64,14 +63,13 @@ class AthleteFilter: UIViewController {
     func initTable() {
         let yp = YearPicker()
         yp.modalPresentationStyle = .overCurrentContext
-        yp.sport = self.settings.sport
-        yp.id = self.settings.id
-        yp.yearSelected.subscribe(onNext: { year in
-            print("selected", year)
+        yp.sport = settings.sport
+        yp.id = settings.id
+        yp.yearSelected.subscribe(onNext: { [unowned self] year in
             self.settings.year = year
         }).disposed(by: self.disposeBag)
         let teamPicker = TeamSearchController()
-        teamPicker.selectedTeam.subscribe(onNext: { team in
+        teamPicker.selectedTeam.subscribe(onNext: { [unowned self] team in
             self.settings.id = team.code
             self.settings.name = team.name
             teamPicker.navigationController?.popViewController(animated: true)
@@ -109,7 +107,7 @@ class AthleteFilter: UIViewController {
         }
         let doneButton = UIBarButtonItem()
         doneButton.title = "Save"
-        doneButton.rx.tap.subscribe(onNext: { _ in
+        doneButton.rx.tap.subscribe(onNext: { [unowned self] _ in
             self.savedSettings.onNext(self.settings)
             self.dismiss(animated: true, completion: nil)
         }).disposed(by: disposeBag)

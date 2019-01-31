@@ -28,9 +28,9 @@ class UpdatedSettings: UIViewController {
 
     }
     func initUI() {
-        self.view.addSubview(self.tableView)
-        self.view.backgroundColor = .white
-        self.navigationItem.title = "Settings"
+        view.addSubview(tableView)
+        view.backgroundColor = .white
+        navigationItem.title = "Settings"
         initDataSource()
         initTableView()
     }

@@ -22,15 +22,15 @@ class WelcomeViewController: UIViewController {
         super.viewDidLoad()
         initUI()
         initReactions()
-        self.view.backgroundColor = .white
-        self.navigationItem.rightBarButtonItem = nextButton
+        view.backgroundColor = .white
+        navigationItem.rightBarButtonItem = nextButton
     }
     func initUI() {
         initWelcomeLabel()
         initInfoLabel() 
     }
     func initWelcomeLabel() {
-        self.view.addSubview(welcomeLabel)
+        view.addSubview(welcomeLabel)
         welcomeLabel.text = "Welcome to Statlete."
         welcomeLabel.textAlignment = .center
         welcomeLabel.snp.makeConstraints { make in
@@ -41,7 +41,7 @@ class WelcomeViewController: UIViewController {
         }
     }
     func initInfoLabel() {
-        self.view.addSubview(infoLabel)
+        view.addSubview(infoLabel)
         infoLabel.text = "Please setup your app to start."
         infoLabel.textAlignment = .center
         infoLabel.snp.makeConstraints { make in
@@ -68,6 +68,7 @@ class WelcomeViewController: UIViewController {
             athleteSearch.state.id = team.code
             athleteSearch.state.name = team.name
             athleteSearch.state.sport = Sport(rawValue: settings.sport)!
+            athleteSearch.state.year = getYear(-1)
             try! realm.write() {
                 settings.teamID = team.code
                 settings.teamName = team.name
@@ -75,7 +76,7 @@ class WelcomeViewController: UIViewController {
             self.navigationController?.pushViewController(athleteSearch, animated: true)
         }).disposed(by: disposeBag)
         
-        athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
+        athleteSearch.selectedAthlete.subscribe(onNext: { [unowned self] athlete in
             try! realm.write() {
                 settings.athleteName = athlete.name
                 settings.athleteID = athlete.id

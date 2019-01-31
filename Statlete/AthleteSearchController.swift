@@ -29,7 +29,7 @@ class AthleteSearchController: UIViewController {
 
     let tableView = UITableView()
     let searchBar = UISearchBar()
-    let selectedAthlete = PublishSubject<AthleteResult>()
+    let selectedAthlete = PublishSubject<TeamAthlete>()
     let disposeBag = DisposeBag()
     let tableHeaderView = UIView()
     let filterButton = UIBarButtonItem()
@@ -38,7 +38,7 @@ class AthleteSearchController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = .white
+        view.backgroundColor = .white
         initUI()
         configureRxSwift()
     }
@@ -49,19 +49,23 @@ class AthleteSearchController: UIViewController {
     }
 
     func initNavBar() {
-        self.navigationItem.titleView = searchBar
+        navigationItem.titleView = searchBar
         filterButton.title = "Filter"
-        self.navigationItem.rightBarButtonItem = filterButton
+        navigationItem.rightBarButtonItem = filterButton
 
     }
     func initSearchBar() {
         searchBar.placeholder = "Search"
         searchBar.delegate = nil
+        searchBar.rx.searchButtonClicked.subscribe(onNext: { [unowned self] _ in
+            self.searchBar.endEditing(true)
+        }).disposed(by: disposeBag)
+
         searchBar.sizeToFit()
     }
 
     func initTableView() {
-        self.view.addSubview(tableView)
+        view.addSubview(tableView)
         tableView.dataSource = nil
         tableView.delegate = nil
         tableView.snp.makeConstraints { make in
@@ -70,7 +74,7 @@ class AthleteSearchController: UIViewController {
         }
         tableView.estimatedRowHeight = 40
         tableView.rowHeight = UITableView.automaticDimension
-        self.tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
     
     func configureRxSwift() {
@@ -80,16 +84,14 @@ class AthleteSearchController: UIViewController {
         
         filterButton.rx.tap.subscribe(onNext: { [unowned self] tap in
             af.settings = self.state
-            print("currentState",self.state)
             self.present(afWrapper, animated: true,completion: nil)
             
         }).disposed(by: disposeBag)
-        af.savedSettings.subscribe(onNext: { s in
-            print("returnedState",s)
+        af.savedSettings.subscribe(onNext: { [unowned self] s in
             self.state = s
         }).disposed(by: disposeBag)
-        let searchFilter = self.searchBar.rx.text.orEmpty
-        let stateUpdates = af.savedSettings.debug("stateUpdate").startWith(self.state)
+        let searchFilter = searchBar.rx.text.orEmpty
+        let stateUpdates = af.savedSettings.debug("stateUpdate").startWith(state)
         
         let allAthletes = stateUpdates.flatMap { getAthletes(year: $0.year, sport: $0.sport, teamID: $0.id) }.debug("athletes")
         
@@ -97,14 +99,13 @@ class AthleteSearchController: UIViewController {
             (text.isEmpty) ? athletes : athletes.filter {
                 $0.name.range(of: text, options: .caseInsensitive) != nil
             }
-        }.bind(to: self.tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
+        }.bind(to: tableView.rx.items(cellIdentifier: "cell", cellType: UITableViewCell.self))
         { (row, element, cell) in
             cell.textLabel?.text = element.name
         }.disposed(by: disposeBag)
 
-        self.tableView.rx.modelSelected(AthleteResult.self)
-            .debug("selectedAthlete")
-            .bind(to: self.selectedAthlete)
+        tableView.rx.modelSelected(TeamAthlete.self)
+            .bind(to: selectedAthlete)
             .disposed(by: disposeBag)
     }
 }

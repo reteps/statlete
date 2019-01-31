@@ -42,8 +42,6 @@ open class BalloonMarker: MarkerImage
     
     open override func offsetForDrawing(atPoint point: CGPoint) -> CGPoint
     {
-        var offset = self.offset
-        var size = self.size
         
         if size.width == 0.0 && image != nil
         {
@@ -89,8 +87,7 @@ open class BalloonMarker: MarkerImage
     {
         guard let label = label else { return }
         
-        let offset = self.offsetForDrawing(atPoint: point)
-        let size = self.size
+        let offset = offsetForDrawing(atPoint: point)
         
         var rect = CGRect(
             origin: CGPoint(
@@ -165,12 +162,12 @@ open class BalloonMarker: MarkerImage
         }
         
         if offset.y > 0 {
-            rect.origin.y += self.insets.top + arrowSize.height
+            rect.origin.y += insets.top + arrowSize.height
         } else {
-            rect.origin.y += self.insets.top
+            rect.origin.y += insets.top
         }
         
-        rect.size.height -= self.insets.top + self.insets.bottom
+        rect.size.height -= insets.top + insets.bottom
         
         UIGraphicsPushContext(context)
         
@@ -182,8 +179,8 @@ open class BalloonMarker: MarkerImage
     }
     
     open override func refreshContent(entry: ChartDataEntry, highlight: Highlight) {
-        if self.years != nil {
-            let year = self.years![highlight.dataSetIndex]
+        if years != nil {
+            let year = years![highlight.dataSetIndex]
             valueFormatter.dateFormat = "MMM dd \(year)"
         } else {
             valueFormatter.dateFormat = "MMM dd YYYY"
@@ -201,15 +198,15 @@ open class BalloonMarker: MarkerImage
         label = newLabel
         
         _drawAttributes.removeAll()
-        _drawAttributes[.font] = self.font
+        _drawAttributes[.font] = font
         _drawAttributes[.paragraphStyle] = _paragraphStyle
-        _drawAttributes[.foregroundColor] = self.textColor
+        _drawAttributes[.foregroundColor] = textColor
         
         _labelSize = label?.size(withAttributes: _drawAttributes) ?? CGSize.zero
         
         var size = CGSize()
-        size.width = _labelSize.width + self.insets.left + self.insets.right
-        size.height = _labelSize.height + self.insets.top + self.insets.bottom
+        size.width = _labelSize.width + insets.left + insets.right
+        size.height = _labelSize.height + insets.top + insets.bottom
         size.width = max(minimumSize.width, size.width)
         size.height = max(minimumSize.height, size.height)
         self.size = size

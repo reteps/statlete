@@ -35,16 +35,20 @@ class TeamSearchController: UIViewController {
         configureObservables()
     }
     func initUI() {
-        self.view.addSubview(tableView)
-        initSearchController()
+        view.addSubview(tableView)
+        initSearchBar()
         initTableView()
     }
 
-    func initSearchController() {
+    func initSearchBar() {
         searchBar.placeholder = "Search for a team"
         searchBar.delegate = nil
         searchBar.sizeToFit()
-        self.navigationItem.titleView = searchBar
+        searchBar.rx.searchButtonClicked.subscribe(onNext: { [unowned self] _ in
+            self.searchBar.endEditing(true)
+        }).disposed(by: disposeBag)
+
+        navigationItem.titleView = searchBar
     }
 
     func initTableView() {
@@ -63,7 +67,7 @@ class TeamSearchController: UIViewController {
             .flatMapLatest { text in
                     return searchRequest(search: text, searchType: "t:t")
             }
-            .bind(to: self.tableView.rx.items) { myTableView, row, team in
+            .bind(to: tableView.rx.items) { myTableView, row, team in
                 // https://rxswift.slack.com/messages/C051G5Y6T/convo/C051G5Y6T-1538834969.000100/?thread_ts=1538834969.000100
                 let cell = myTableView.dequeueReusableCell(withIdentifier: "cell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
                 
@@ -73,7 +77,7 @@ class TeamSearchController: UIViewController {
             }.disposed(by: disposeBag)
         
         tableView.rx.modelSelected(Team.self)
-        .bind(to: self.selectedTeam).disposed(by: disposeBag)
+        .bind(to: selectedTeam).disposed(by: disposeBag)
     }
 
 

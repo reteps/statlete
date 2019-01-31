@@ -19,10 +19,10 @@ import RxSwift
 struct TeamAthlete {
     var name: String
     var gender: String
-    var id: Int
+    var id: String
     init(json: JSON) {
         self.name = json["Name"].stringValue
-        self.id = json["ID"].intValue
+        self.id = String(json["ID"].intValue)
         self.gender = json["Name"].stringValue
     }
 }

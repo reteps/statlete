@@ -17,7 +17,6 @@ import SafariServices
 import RealmSwift
 
 class MeetViewController: UIViewController {
-    var searchBar = UISearchBar()
     let disposeBag = DisposeBag()
     var team = Team()
     var sport: Sport = Sport.None
@@ -58,39 +57,40 @@ class MeetViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         let settings = realm.objects(Settings.self).first!
-        self.navigationItem.title = settings.teamName
+        navigationItem.title = settings.teamName
         titleButton.setTitle(settings.teamName, for: .normal)
         initUI()
         configureRxSwift()
 
     }
     func initTable() {
-        self.view.addSubview(tableView)
-        self.tableView.delegate = nil
-        self.tableView.dataSource = nil
-        self.tableView.snp.makeConstraints { make in
+        view.addSubview(tableView)
+        tableView.delegate = nil
+        tableView.dataSource = nil
+        tableView.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }
-        self.tableView.estimatedRowHeight = 40
-        self.tableView.rowHeight = UITableView.automaticDimension
-        self.tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
+        tableView.estimatedRowHeight = 40
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.register(MeetCell.self, forCellReuseIdentifier: "MeetCell")
 
     }
     func initNavigationItem() {
-        self.navigationItem.leftBarButtonItem = yearPickerButton
-        self.navigationItem.titleView = titleButton
-        self.navigationItem.title = "Meets"
+        navigationItem.leftBarButtonItem = yearPickerButton
+        navigationItem.titleView = titleButton
+        navigationItem.title = "Meets"
 
     }
     func initUI() {
-        self.view.backgroundColor = .white
+        view.backgroundColor = .white
 
         initTable()
         initNavigationItem()
     }
+
     func configureRxSwift() {
         let settings = realm.objects(Settings.self).first!
-        self.sport = Sport(rawValue: settings.sport)!
+        sport = Sport(rawValue: settings.sport)!
         team.code = settings.teamID
         team.name = settings.teamName
 /*
@@ -98,16 +98,16 @@ Change year -> get new data
 Change team -> get new data
 */
         
-        self.tableView.rx.modelSelected(CalendarMeet.self).filter {
+        tableView.rx.modelSelected(CalendarMeet.self).filter {
             return $0.hasResults
-        }.subscribe(onNext: { meet in
+        }.subscribe(onNext: { [unowned self] meet in
             let individualMeet = IndividualMeetController()
             individualMeet.meet = meet
             self.navigationController?.pushViewController(individualMeet, animated: true)
         }).disposed(by: disposeBag)
 
         // Year Selected
-        let yearSelected = yearPickerButton.rx.tap.flatMap { _  -> PublishSubject<String> in
+        let yearSelected = yearPickerButton.rx.tap.flatMap { [unowned self] _  -> PublishSubject<String> in
             let yearPicker = YearPicker()
             yearPicker.modalPresentationStyle = .overCurrentContext
             yearPicker.sport = self.sport
@@ -118,25 +118,25 @@ Change team -> get new data
         
         yearSelected.bind(to: yearPickerButton.rx.title).disposed(by: disposeBag)
         let teamPicker = TeamSearchController()
-        let teamSelected = titleButton.rx.tap.flatMap { _ -> PublishSubject<Team> in
+        let teamSelected = titleButton.rx.tap.flatMap { [unowned self] _ -> PublishSubject<Team> in
             self.navigationController?.pushViewController(teamPicker, animated: true)
             return teamPicker.selectedTeam
         }.debug("Team").share()
         
         teamSelected.subscribe(onNext: { team in
             self.titleButton.setTitle(team.name, for: .normal)
-        })
-        let teamChange = teamSelected.flatMap { team -> Observable<[CalendarMeet]> in
+        }).disposed(by: disposeBag)
+        let teamChange = teamSelected.flatMap { [unowned self] team -> Observable<[CalendarMeet]> in
             teamPicker.navigationController?.popViewController(animated: true)
             self.team.code = team.code
             return getCalendar(year: getYear(-1), sport: self.sport, teamID: team.code)
         }
         
-        let yearChange = yearSelected.flatMap { year -> Observable<[CalendarMeet]> in
+        let yearChange = yearSelected.flatMap { [unowned self] year -> Observable<[CalendarMeet]> in
             getCalendar(year: year, sport: self.sport, teamID: self.team.code)
         }
         Observable.merge(yearChange, teamChange)
-        .bind(to: self.tableView.rx.items) { (tableView, row, element) in
+        .bind(to: tableView.rx.items) { [unowned self] (tableView, row, element) in
                 let cell = tableView.dequeueReusableCell(withIdentifier: "MeetCell") as! MeetCell
                 cell.meetName.text = element.name
                 let iconType:FontAwesome = element.hasResults ? .calendarCheck : .calendarTimes
@@ -164,36 +164,36 @@ class MeetCell: UITableViewCell {
     var disposeBag = DisposeBag()
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        self.contentView.addSubview(meetName)
-        self.contentView.addSubview(meetStatusWrapper)
-        self.contentView.addSubview(meetDate)
-        self.contentView.addSubview(meetLocation)
-        self.contentView.addSubview(meetLocationIcon)
+        contentView.addSubview(meetName)
+        contentView.addSubview(meetStatusWrapper)
+        contentView.addSubview(meetDate)
+        contentView.addSubview(meetLocation)
+        contentView.addSubview(meetLocationIcon)
 
-        self.meetName.snp.makeConstraints { make in
+        meetName.snp.makeConstraints { make in
             make.left.equalTo(self.contentView).offset(30)
             make.height.equalTo(30)
         }
-        self.meetStatusWrapper.snp.makeConstraints { make in
+        meetStatusWrapper.snp.makeConstraints { make in
             make.width.height.equalTo(30)
         }
         
         meetDate.font = UIFont.systemFont(ofSize: 10)
 
-        self.meetDate.snp.makeConstraints { make in
+        meetDate.snp.makeConstraints { make in
             make.left.equalTo(meetName)
             make.top.equalTo(meetName.snp.bottom)
             make.height.equalTo(10)
             make.width.greaterThanOrEqualTo(0)
         }
-        self.meetLocationIcon.snp.makeConstraints { make in
+        meetLocationIcon.snp.makeConstraints { make in
             make.left.equalTo(meetDate.snp.right).offset(5)
             make.width.height.equalTo(10)
             make.top.equalTo(meetDate)
         }
-        self.meetLocationIcon.image = UIImage.fontAwesomeIcon(name: .mapMarkerAlt, style: .solid, textColor: .black, size: CGSize(width: 10, height: 10))
+        meetLocationIcon.image = UIImage.fontAwesomeIcon(name: .mapMarkerAlt, style: .solid, textColor: .black, size: CGSize(width: 10, height: 10))
         meetLocation.font = UIFont.systemFont(ofSize: 10)
-        self.meetLocation.snp.makeConstraints { make in
+        meetLocation.snp.makeConstraints { make in
             make.top.bottom.equalTo(meetDate)
             make.left.equalTo(meetLocationIcon.snp.right).offset(5)
         }

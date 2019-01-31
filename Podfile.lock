@@ -1,8 +1,5 @@
 PODS:
   - Alamofire (4.8.1)
-  - ChameleonFramework/Default (2.1.0)
-  - ChameleonFramework/Swift (2.1.0):
-    - ChameleonFramework/Default
   - Charts (3.2.1):
     - Charts/Core (= 3.2.1)
   - Charts/Core (3.2.1)
@@ -22,9 +19,6 @@ PODS:
     - Differentiator (~> 3.0)
     - RxCocoa (~> 4.0)
     - RxSwift (~> 4.0)
-  - RxRealm (0.7.6):
-    - RealmSwift (~> 3.0)
-    - RxSwift (~> 4.0)
   - RxSwift (4.4.0):
     - RxAtomic (~> 4.4)
   - SnapKit (4.0.1)
@@ -33,7 +27,6 @@ PODS:
 
 DEPENDENCIES:
   - Alamofire (~> 4.7)
-  - ChameleonFramework/Swift (from `https://github.com/ViccAlexander/Chameleon.git`)
   - Charts (~> 3.0)
   - FontAwesome.swift (~> 1.4.1)
   - Kanna (~> 4.0.0)
@@ -41,7 +34,6 @@ DEPENDENCIES:
   - RealmSwift
   - RxCocoa (~> 4.0)
   - RxDataSources (~> 3.0)
-  - RxRealm
   - RxSwift (~> 4.0)
   - SnapKit (~> 4.0.0)
   - Static
@@ -59,30 +51,23 @@ SPEC REPOS:
     - RxAtomic
     - RxCocoa
     - RxDataSources
-    - RxRealm
     - RxSwift
     - SnapKit
     - Static
     - SwiftyJSON
 
 EXTERNAL SOURCES:
-  ChameleonFramework:
-    :git: https://github.com/ViccAlexander/Chameleon.git
   M13Checkbox:
     :branch: swift_4_2
     :git: https://github.com/Marxon13/M13Checkbox.git
 
 CHECKOUT OPTIONS:
-  ChameleonFramework:
-    :commit: 6dd284bde21ea2e7f9fd89bc36f40df16e16369d
-    :git: https://github.com/ViccAlexander/Chameleon.git
   M13Checkbox:
     :commit: c26efb918e40ae4662dc6659b60f7c5493e94807
     :git: https://github.com/Marxon13/M13Checkbox.git
 
 SPEC CHECKSUMS:
   Alamofire: 16ce2c353fb72865124ddae8a57c5942388f4f11
-  ChameleonFramework: d21a3cc247abfe5e37609a283a8238b03575cf64
   Charts: f122fb70b19847fa5817d018b77d6c5a2296ab25
   Differentiator: be49ca3408f0ecfc761e4c7763d20c62be01b9ad
   FontAwesome.swift: fb8637bffb9a588c7e8c753c084565b27b20a39d
@@ -93,12 +78,11 @@ SPEC CHECKSUMS:
   RxAtomic: eacf60db868c96bfd63320e28619fe29c179656f
   RxCocoa: df63ebf7b9a70d6b4eeea407ed5dd4efc8979749
   RxDataSources: a843bad90c29817f5923ec8163f4af2de084ceb3
-  RxRealm: 5379eddd74f8d617ca7681d1f8d144af25b432b0
   RxSwift: 5976ecd04fc2fefd648827c23de5e11157faa973
   SnapKit: 0de968a9fec17499afa29683b05d0c775b6d1c29
   Static: 1542d33a345105ae57e8fffd2d5200080d99f131
   SwiftyJSON: c4bcba26dd9ec7a027fc8eade48e2c911f229e96
 
-PODFILE CHECKSUM: 3a9dc215df31b240b3eba4888576fa2d9bb4a2f9
+PODFILE CHECKSUM: 3e9b23d04fea7632ba1a3573aa8a0bb0a27486ce
 
 COCOAPODS: 1.5.3

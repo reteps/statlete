@@ -19,24 +19,24 @@ class YearPicker: UIViewController {
     let disposeBag = DisposeBag()
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.view.backgroundColor = UIColor.clear
-        self.view.isOpaque = false
-        self.view.addSubview(invisButton)
-        self.view.addSubview(picker)
+        view.backgroundColor = UIColor.clear
+        view.isOpaque = false
+        view.addSubview(invisButton)
+        view.addSubview(picker)
         picker.backgroundColor = .white
         picker.snp.makeConstraints { make in
             make.bottom.left.right.equalToSuperview()
             make.height.equalTo(300)
         }
-        getCalendarYears(sport: sport, teamID: id).bind(to: self.picker.rx.itemTitles) { _, item in
+        getCalendarYears(sport: sport, teamID: id).bind(to: picker.rx.itemTitles) { _, item in
             return item
         }.disposed(by: disposeBag)
         
-        self.picker.rx.modelSelected(String.self).subscribe(onNext: { _ in
+        picker.rx.modelSelected(String.self).subscribe(onNext: { [unowned self] _ in
             self.dismiss(animated: true, completion: nil)
         }).disposed(by: disposeBag)
-        self.picker.rx.modelSelected(String.self).map { $0[0] }
-        .bind(to: self.yearSelected).disposed(by: disposeBag)
+        picker.rx.modelSelected(String.self).map { $0[0] }
+        .bind(to: yearSelected).disposed(by: disposeBag)
         invisButton.snp.makeConstraints { make in
             make.edges.equalToSuperview()
         }

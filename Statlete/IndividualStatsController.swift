@@ -66,7 +66,7 @@ class IndividualStatsController: UIViewController {
 
     }
     func initUI() {
-        self.view.backgroundColor = .white
+        view.backgroundColor = .white
         
         initScrollViewAndContent()
         initChart()
@@ -82,7 +82,7 @@ class IndividualStatsController: UIViewController {
     }
     func initNavBar() {
         let athletePicker = AthleteSearchController()
-        titleButton.rx.tap.flatMap { _ -> PublishSubject<AthleteResult> in
+        titleButton.rx.tap.flatMap { _ -> PublishSubject<TeamAthlete> in
             athletePicker.state.id = self.state.team.code
             athletePicker.state.name = self.state.team.name
             athletePicker.state.sport = self.state.sport
@@ -98,11 +98,11 @@ class IndividualStatsController: UIViewController {
 
         }).disposed(by: disposeBag)
         titleButton.sizeToFit()
-        self.navigationItem.titleView = titleButton
+        navigationItem.titleView = titleButton
 
         eventTapButton.title = "Event"
         let eventSelection = EventSelection()
-        self.navigationItem.leftBarButtonItem = eventTapButton
+        navigationItem.leftBarButtonItem = eventTapButton
 
 
         eventTapButton.rx.tap.flatMap { _ -> PublishSubject<[Sport:String]> in
@@ -167,10 +167,10 @@ class IndividualStatsController: UIViewController {
     func initState() {
         let realms = try! Realm()
         let settings = realms.objects(Settings.self).first!
-        self.state.sport = Sport(rawValue: settings.sport)!
-        self.state.id = settings.athleteID
-        self.state.name = settings.athleteName
-        self.state.team = Team(name: settings.teamName, code: settings.teamID)
+        state.sport = Sport(rawValue: settings.sport)!
+        state.id = settings.athleteID
+        state.name = settings.athleteName
+        state.team = Team(name: settings.teamName, code: settings.teamID)
         reloadData(newAthlete: true)
         createPage()
     }
@@ -182,8 +182,8 @@ class IndividualStatsController: UIViewController {
         // Refresh -> grab new data
 
         if newAthlete {
-            self.athlete = individualAthlete(id: state.id, name: state.name, bothSports:true)!
-            self.state.event = self.athlete.events[self.state.sport]?.first?.key ?? ""
+            athlete = individualAthlete(id: state.id, name: state.name, bothSports:true)!
+            state.event = athlete.events[state.sport]?.first?.key ?? ""
             titleButton.setTitle(state.name, for: .normal)
             titleButton.sizeToFit()
         }
@@ -195,24 +195,24 @@ class IndividualStatsController: UIViewController {
     }
     // Creates a page using the selected eventName
     func createPage() {
-        let event = self.athlete.events[self.state.sport]?[self.state.event]
+        let event = athlete.events[state.sport]?[state.event]
         
         if event != nil {
-            self.lines = self.createLineChartData(event: event!)
+            lines = createLineChartData(event: event!)
             // Need self for checkboxes
             let orderedYears = event!.keys.sorted()
             
             drawChart(lines: lines, orderedYears: orderedYears)
-            for view in self.checkboxView.subviews {
+            for view in checkboxView.subviews {
                 view.removeFromSuperview()
             }
-            self.createCheckboxesAndConstrain(records: findRecords(event: event!))
+            createCheckboxesAndConstrain(records: findRecords(event: event!))
         }
 
     }
     // Returns the records for an event
     func findRecords(event: [String: [AthleteTime]]) -> [String: String] {
-        self.timeFormatter.dateFormat = "mm:ss.SS"
+        timeFormatter.dateFormat = "mm:ss.SS"
         var times = [String: String]()
         for (year, data) in event {
             if (data.count == 0) {
@@ -220,20 +220,20 @@ class IndividualStatsController: UIViewController {
                 continue
             }
             let fastest = data.max { $0.time > $1.time }
-            let formattedTime = self.timeFormatter.string(from: fastest!.time)
+            let formattedTime = timeFormatter.string(from: fastest!.time)
             times[year] = formattedTime
         }
         return times
     }
     func initCheckBoxView() {
-        self.settingsView.addSubview(self.checkboxView)
-        self.checkboxView.snp.makeConstraints { (make) in
+        settingsView.addSubview(checkboxView)
+        checkboxView.snp.makeConstraints { (make) in
             make.edges.equalToSuperview()
         }
     }
     func initSettingsView() {
-        self.contentView.addSubview(self.settingsView)
-        self.settingsView.snp.makeConstraints { (make) in
+        contentView.addSubview(settingsView)
+        settingsView.snp.makeConstraints { (make) in
             make.top.equalTo(self.chart.snp.bottom).offset(20)
             make.left.equalTo(self.contentView).offset(20)
             make.right.equalTo(self.contentView.snp.centerX).offset(-20)
@@ -241,8 +241,8 @@ class IndividualStatsController: UIViewController {
         }
     }
     func initInfoView() {
-        self.contentView.addSubview(infoView)
-        self.infoView.snp.makeConstraints { (make) in
+        contentView.addSubview(infoView)
+        infoView.snp.makeConstraints { (make) in
             make.top.equalTo(self.chart.snp.bottom).offset(20)
             make.left.equalTo(self.contentView.snp.centerX).offset(20)
             make.right.equalTo(self.contentView).offset(-20)
@@ -251,26 +251,26 @@ class IndividualStatsController: UIViewController {
         
     }
     func initChart() {
-        self.contentView.addSubview(self.chart)
-        self.chart.snp.makeConstraints { (make) in
+        contentView.addSubview(chart)
+        chart.snp.makeConstraints { (make) in
             make.top.left.equalTo(self.contentView)
             make.height.equalTo(self.scrollView)
             make.right.equalTo(self.contentView)
         }
-        self.chart.xAxis.valueFormatter = MyDateFormatter("MMM dd")
-        self.chart.xAxis.labelPosition = .bottom
-        self.chart.rightAxis.enabled = false
-        self.chart.drawBordersEnabled = true
-        self.chart.minOffset = 20
+        chart.xAxis.valueFormatter = MyDateFormatter("MMM dd")
+        chart.xAxis.labelPosition = .bottom
+        chart.rightAxis.enabled = false
+        chart.drawBordersEnabled = true
+        chart.minOffset = 20
     }
 
     func initScrollViewAndContent() {
-        self.view.addSubview(self.scrollView)
-        self.scrollView.snp.makeConstraints { (make) in
+        view.addSubview(scrollView)
+        scrollView.snp.makeConstraints { (make) in
             make.edges.equalTo(self.view.safeAreaLayoutGuide)
         }
-        self.scrollView.addSubview(self.contentView)
-        self.contentView.snp.makeConstraints { (make) in
+        scrollView.addSubview(contentView)
+        contentView.snp.makeConstraints { (make) in
             make.edges.width.equalTo(self.scrollView)
         }
     }
@@ -280,12 +280,12 @@ class IndividualStatsController: UIViewController {
         for line in lines {
             data.addDataSet(line)
         }
-        self.chart.data = data
-        self.chart.leftAxis.valueFormatter = MyDateFormatter("mm:s.S")
+        chart.data = data
+        chart.leftAxis.valueFormatter = MyDateFormatter("mm:s.S")
         let marker = BalloonMarker(color: UIColor.white, font: UIFont(name: "Helvetica", size: 12)!, textColor: UIColor.black, insets: UIEdgeInsets(top: 5, left: 5, bottom: 10.0, right: 5), years: orderedYears)
         marker.minimumSize = CGSize(width: 50.0, height: 20.0)
-        marker.chartView = self.chart
-        self.chart.marker = marker
+        marker.chartView = chart
+        chart.marker = marker
     }
 
     // This Function Sucks!!!
@@ -298,9 +298,9 @@ class IndividualStatsController: UIViewController {
             let label = UILabel()
             let recordLabel = UILabel()
 
-            self.checkboxView.addSubview(checkbox)
-            self.checkboxView.addSubview(label)
-            self.checkboxView.addSubview(recordLabel) // also clear this
+            checkboxView.addSubview(checkbox)
+            checkboxView.addSubview(label)
+            checkboxView.addSubview(recordLabel) // also clear this
             checkbox.checkedValue = index
             checkbox.rx.controlEvent(UIControlEvents.valueChanged).subscribe(onNext: { [unowned self] _ in
                 let lineIndex = checkbox.checkedValue! as! Int

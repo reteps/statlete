@@ -44,36 +44,38 @@ class IndividualMeetController: UIViewController {
     }()
     
     func initSearchBar() {
-        self.view.addSubview(searchBar)
-        self.searchBar.snp.makeConstraints { make in
+        view.addSubview(searchBar)
+        searchBar.snp.makeConstraints { make in
             make.width.equalToSuperview()
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top )
             make.height.equalTo(40)
         }
         searchBar.backgroundColor = .white
-        //searchBar.textFieldBackground?.backgroundColor = .red
+        searchBar.rx.searchButtonClicked.subscribe(onNext: { _ in
+            self.searchBar.endEditing(true)
+        }).disposed(by: disposeBag)
 
     }
     
     func initTableView() {
-        self.tableView.allowsSelection = false
-        self.tableView.snp.makeConstraints { make in
+        tableView.allowsSelection = false
+        tableView.snp.makeConstraints { make in
             make.top.equalTo(self.searchBar.snp.bottom)
             make.left.right.bottom.equalTo(self.view)
         }
-        self.tableView.delegate = nil
-        self.tableView.dataSource = nil
+        tableView.delegate = nil
+        tableView.dataSource = nil
         //https://www.atomicbird.com/blog/uistackview-table-cells
-        self.tableView.estimatedRowHeight = 44
-        self.tableView.rowHeight = UITableView.automaticDimension
-        self.tableView.register(ResultCell.self, forCellReuseIdentifier: "ResultCell")
+        tableView.estimatedRowHeight = 44
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.register(ResultCell.self, forCellReuseIdentifier: "ResultCell")
 
     }
     func initUI() {
-        self.view.addSubview(self.tableView)
-        self.view.backgroundColor = .white
-        self.navigationItem.rightBarButtonItem = sortButton
-        self.navigationItem.titleView = titleButton
+        view.addSubview(tableView)
+        view.backgroundColor = .white
+        navigationItem.rightBarButtonItem = sortButton
+        navigationItem.titleView = titleButton
         
         initSearchBar()
         initTableView()
@@ -102,7 +104,7 @@ class IndividualMeetController: UIViewController {
                     cell.infoButton.isHidden = true
                 }
 
-                cell.infoButton.rx.tap.subscribe(onNext: { _ in
+                cell.infoButton.rx.tap.subscribe(onNext: { [unowned self] _ in
                     let url = "https://athletic.net/result/\(item.resultCode!)"
                     let svc = SFSafariViewController(url: URL(string: url)!)
                     self.present(svc, animated: true, completion: nil)
@@ -116,7 +118,7 @@ class IndividualMeetController: UIViewController {
         let dataSource = createDataSource()
         let meetInfoUpdater = meetInfoFor(meet: meet!).debug("info").share()
         
-        meetInfoUpdater.debug("data").subscribe(onNext: { data in
+        meetInfoUpdater.debug("data").subscribe(onNext: { [unowned self] data in
             self.events = Dictionary(data.map { ($0.name + " (\($0.gender))", $0) }) { first, _ in first }
         }).disposed(by: disposeBag)
         
@@ -128,9 +130,9 @@ class IndividualMeetController: UIViewController {
             return meet.first!.name +  " (\(meet.first!.gender))"
         }
 
-        let tapObservable = self.titleButton.rx.tap.debug("tapped").withLatestFrom(meetInfoUpdater)
+        let tapObservable = titleButton.rx.tap.debug("tapped").withLatestFrom(meetInfoUpdater)
         .map { $0.map { $0.name + " (\($0.gender))" } }
-        .flatMap { names -> PublishSubject<[Sport:String]> in
+        .flatMap { [unowned self] names -> PublishSubject<[Sport:String]> in
             let eventSelection = EventSelection()
             eventSelection.data = [Sport.None:names]
             self.navigationController?.pushViewController(eventSelection, animated: true)
@@ -139,12 +141,12 @@ class IndividualMeetController: UIViewController {
         
         let currentEventNames = Observable.merge(startObservable, tapObservable)
         let currentEventRounds = currentEventNames
-        .filter { _ in self.events.count != 0 }
-        .map { self.events[$0]!.url }
-        .map { raceInfoFor(url: $0, sport: self.meet!.sport) }
+        .filter { [unowned self] _ in self.events.count != 0 }
+        .map { [unowned self] event in self.events[event]!.url }
+        .map { [unowned self] url in raceInfoFor(url: url, sport: self.meet!.sport) }
         .flatMap { $0.map { $0.rounds } }
         
-        currentEventNames.subscribe(onNext: { eventName in
+        currentEventNames.subscribe(onNext: { [unowned self] eventName in
             self.titleButton.setTitle(eventName, for: .normal)
             self.titleButton.sizeToFit()
         }).disposed(by: disposeBag)
@@ -152,12 +154,12 @@ class IndividualMeetController: UIViewController {
     
         
         let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
-        let sortValue = self.sortButton.rx.tap.flatMap {
+        let sortValue = sortButton.rx.tap.flatMap {
             return UIAlertController.present(in: self, title: "Sort By", message: nil, style: .actionSheet, options: options)
         }.startWith(0)
-        let searchBar = self.searchBar.rx.text.orEmpty
+        let searchText = searchBar.rx.text.orEmpty
 
-        Observable.combineLatest(sortValue, currentEventRounds, searchBar) { (index, rounds, search) in
+        Observable.combineLatest(sortValue, currentEventRounds, searchText) { (index, rounds, search) in
             var newRounds = rounds
             newRounds = rounds.map { round in
                 var newRound = round
@@ -214,11 +216,11 @@ class ResultCell: UITableViewCell {
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
-        self.contentView.addSubview(placeLabel)
-        self.contentView.addSubview(nameLabel)
-        self.contentView.addSubview(timeLabel)
-        self.contentView.addSubview(infoButton)
-        self.contentView.addSubview(teamLabel)
+        contentView.addSubview(placeLabel)
+        contentView.addSubview(nameLabel)
+        contentView.addSubview(timeLabel)
+        contentView.addSubview(infoButton)
+        contentView.addSubview(teamLabel)
         teamLabel.font = UIFont.systemFont(ofSize: 10)
         placeLabel.layer.borderColor = UIColor.black.cgColor
         placeLabel.layer.borderWidth = 2.0

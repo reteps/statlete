@@ -19,8 +19,8 @@ class EventSelection: UIViewController {
     let eventSelected = PublishSubject<[Sport:String]>()
     override func viewDidLoad() {
         super.viewDidLoad()
-        self.navigationItem.title = "Select Event"
-        self.view.addSubview(tableView)
+        navigationItem.title = "Select Event"
+        view.addSubview(tableView)
         let newData = data.map { return SectionModel(model: $0, items: $1) }
         tableView.register(UITableViewCell.self , forCellReuseIdentifier: "cell")
         tableView.snp.makeConstraints { make in
@@ -29,7 +29,7 @@ class EventSelection: UIViewController {
         let dataSource = createDataSource()
         Observable.just(newData).bind(to: tableView.rx.items(dataSource: dataSource)).disposed(by: disposeBag)
         
-        self.tableView.rx.itemSelected.map { path in
+        tableView.rx.itemSelected.map { path in
             return [dataSource[path[0]].model:dataSource[path]]
         }.bind(to: eventSelected).disposed(by: disposeBag)
         
