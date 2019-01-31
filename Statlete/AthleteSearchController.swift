@@ -13,11 +13,11 @@ import RxCocoa
 import SnapKit
 
 public struct SearchSettings {
-    var sport: String
+    var sport: Sport
     var year: String?
     var id: String
     var name: String
-    init(sport: String = "", year: String? = nil, id: String = "", name: String = "") {
+    init(sport: Sport = Sport.None, year: String? = nil, id: String = "", name: String = "") {
         self.sport = sport
         self.year = year
         self.id = id
@@ -29,15 +29,12 @@ class AthleteSearchController: UIViewController {
 
     let tableView = UITableView()
     let searchBar = UISearchBar()
-    var shouldShowSearchResults = false
-    var team: Team = Team()
-    var sport = Sport.XC.raw
     let selectedAthlete = PublishSubject<AthleteResult>()
     let disposeBag = DisposeBag()
     let tableHeaderView = UIView()
     let filterButton = UIBarButtonItem()
     let filterView = UIView()
-
+    var state = SearchSettings()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,7 +55,7 @@ class AthleteSearchController: UIViewController {
 
     }
     func initSearchBar() {
-        searchBar.placeholder = "Search for an athlete"
+        searchBar.placeholder = "Search"
         searchBar.delegate = nil
         searchBar.sizeToFit()
     }
@@ -78,32 +75,25 @@ class AthleteSearchController: UIViewController {
     
     func configureRxSwift() {
         let af = AthleteFilter()
-        af.modalPresentationStyle = .overCurrentContext
+        let afWrapper = UINavigationController(rootViewController: af)
+        afWrapper.modalPresentationStyle = .overCurrentContext
         
         filterButton.rx.tap.subscribe(onNext: { [unowned self] tap in
-            let settings = SearchSettings(sport: self.sport, year: nil, id: self.team.code, name: self.team.name)
-            af.settings = settings
-
-            self.present(af, animated: true, completion: nil)
+            af.settings = self.state
+            print("currentState",self.state)
+            self.present(afWrapper, animated: true,completion: nil)
             
         }).disposed(by: disposeBag)
+        af.savedSettings.subscribe(onNext: { s in
+            print("returnedState",s)
+            self.state = s
+        }).disposed(by: disposeBag)
+        let searchFilter = self.searchBar.rx.text.orEmpty
+        let stateUpdates = af.savedSettings.debug("stateUpdate").startWith(self.state)
         
-        let urlUpdates = af.savedSettings.map { s in
-            var url = "https://www.athletic.net/\(s.sport)/School.aspx?SchoolID=\(s.id)"
-            if s.year != nil {
-                url += "?year=\(s.year!)"
-            }
-            return url
-        }.startWith("https://www.athletic.net/\(self.sport)/School.aspx?SchoolID=\(team.code)")
+        let allAthletes = stateUpdates.flatMap { getAthletes(year: $0.year, sport: $0.sport, teamID: $0.id) }.debug("athletes")
         
-        let searchFilter = searchBar.rx.text.orEmpty
-        let allAthletes = urlUpdates.flatMap { dataRequest(url: $0) }
-        .map { $0[1]["athletes"].arrayValue }
-        .map {
-            $0.map { AthleteResult(json: $0) }
-        }
-        
-        Observable.combineLatest(allAthletes, searchFilter) { athletes, text -> [AthleteResult] in
+        Observable.combineLatest(allAthletes, searchFilter) { athletes, text -> [TeamAthlete] in
             (text.isEmpty) ? athletes : athletes.filter {
                 $0.name.range(of: text, options: .caseInsensitive) != nil
             }

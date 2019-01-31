@@ -65,7 +65,9 @@ class WelcomeViewController: UIViewController {
         }).disposed(by: disposeBag)
         
         teamSearch.selectedTeam.debug("sentToAthlete").subscribe(onNext: { [unowned self] team in
-            athleteSearch.team = team
+            athleteSearch.state.id = team.code
+            athleteSearch.state.name = team.name
+            athleteSearch.state.sport = Sport(rawValue: settings.sport)!
             try! realm.write() {
                 settings.teamID = team.code
                 settings.teamName = team.name

@@ -50,6 +50,8 @@ class IndividualMeetController: UIViewController {
             make.top.equalTo(self.view.safeAreaLayoutGuide.snp.top )
             make.height.equalTo(40)
         }
+        searchBar.backgroundColor = .white
+        //searchBar.textFieldBackground?.backgroundColor = .red
 
     }
     
@@ -112,9 +114,19 @@ class IndividualMeetController: UIViewController {
     }
     func configureRx() {
         let dataSource = createDataSource()
-        var meetInfoUpdater = meetInfoFor(meet: meet!).share()
-
-        let startObservable = meetInfoUpdater.map { $0.first!.name +  " (\($0.first!.gender))" }
+        let meetInfoUpdater = meetInfoFor(meet: meet!).debug("info").share()
+        
+        meetInfoUpdater.debug("data").subscribe(onNext: { data in
+            self.events = Dictionary(data.map { ($0.name + " (\($0.gender))", $0) }) { first, _ in first }
+        }).disposed(by: disposeBag)
+        
+        let startObservable = meetInfoUpdater
+        .map { meet -> String in
+            if (meet.count == 0) {
+                return "No Races"
+            }
+            return meet.first!.name +  " (\(meet.first!.gender))"
+        }
 
         let tapObservable = self.titleButton.rx.tap.debug("tapped").withLatestFrom(meetInfoUpdater)
         .map { $0.map { $0.name + " (\($0.gender))" } }
@@ -127,6 +139,7 @@ class IndividualMeetController: UIViewController {
         
         let currentEventNames = Observable.merge(startObservable, tapObservable)
         let currentEventRounds = currentEventNames
+        .filter { _ in self.events.count != 0 }
         .map { self.events[$0]!.url }
         .map { raceInfoFor(url: $0, sport: self.meet!.sport) }
         .flatMap { $0.map { $0.rounds } }
@@ -135,14 +148,8 @@ class IndividualMeetController: UIViewController {
             self.titleButton.setTitle(eventName, for: .normal)
             self.titleButton.sizeToFit()
         }).disposed(by: disposeBag)
-        // Change Title when there is a new event
-        meetInfoUpdater.debug("InitialInfo").subscribe(onNext: { data in
-            // https://stackoverflow.com/questions/38454952/map-array-of-objects-to-dictionary-in-swift
-            self.events = Dictionary(data.map { ($0.name + " (\($0.gender))", $0) }) { first, _ in first }
 
-        }).disposed(by: disposeBag)
-        
-
+    
         
         let options = ["Time (Fast → Slow)", "Time (Slow → Fast)", "Name (A → Z)", "Name (Z → A)", "Team (A → Z)", "Team (Z → A)"]
         let sortValue = self.sortButton.rx.tap.flatMap {

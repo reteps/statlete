@@ -20,6 +20,11 @@ struct TeamAthlete {
     var name: String
     var gender: String
     var id: Int
+    init(json: JSON) {
+        self.name = json["Name"].stringValue
+        self.id = json["ID"].intValue
+        self.gender = json["Name"].stringValue
+    }
 }
 // https://stackoverflow.com/questions/27880650/swift-extract-regex-matches
 // https://stackoverflow.com/questions/52656378/bind-alamofire-request-to-table-view-using-rxswift/52656720?noredirect=1#comment92244571_52656720
@@ -54,9 +59,9 @@ func searchRequest(search: String, searchType: String) -> Observable<[Team]> {
         return Disposables.create()
     }
 }
-func getYear() -> String {
+func getYear(_ offset: Int = 0) -> String {
     let year = Calendar.current.component(.year, from: Date())
-    return String(year)
+    return String(year + offset)
 }
 
 struct Athlete {
@@ -169,8 +174,8 @@ struct Meet {
     var times: [AthleteTime]
 }
 
-func getCalendarYears(sport: String, teamID: String) -> Observable<[String]> {
-    let url = "https://www.athletic.net/\(sport)/School.aspx?SchoolID=\(teamID)"
+func getCalendarYears(sport: Sport, teamID: String) -> Observable<[String]> {
+    let url = "https://www.athletic.net/\(sport.raw)/School.aspx?SchoolID=\(teamID)"
     return dataRequest(url: url).map { data in
         let newSeasons = data[1]["seasons"].dictionaryValue.map { (key, value) in
             return value["ID"].stringValue
@@ -181,7 +186,6 @@ func getCalendarYears(sport: String, teamID: String) -> Observable<[String]> {
 struct CalendarMeet {
     var date: String
     var hasResults: Bool
-    var startDate: String
     var name: String
     var location: String
     var id: String
@@ -189,7 +193,6 @@ struct CalendarMeet {
     init(json: JSON, sport: Sport) {
         self.date = json["StartDate"].stringValue
         self.hasResults = json["MeetHasResults"].intValue == 1
-        self.startDate = json["StartDate"].stringValue
         self.name = json["Name"].stringValue
         self.location = json["Location"].stringValue
         self.id = json["MeetID"].stringValue
@@ -202,7 +205,6 @@ func getCalendar(year: String, sport: Sport, teamID: String) -> Observable<[Cale
         urlSport = "xc"
     }
     let url = "https://www.athletic.net/api/v1/\(urlSport)Team/GetCalendar?teamID=\(teamID)&seasonID=\(year)&editPermission=false"
-
     return Observable.create { observer in
         let schoolUrl = "https://www.athletic.net/\(sport.raw)/School.aspx?SchoolID=\(teamID)"
         dataRequest(url: schoolUrl).map { $0[0]["publicToken"].stringValue }
@@ -224,6 +226,35 @@ func getCalendar(year: String, sport: Sport, teamID: String) -> Observable<[Cale
                 observer.onCompleted()
             }
         })
+        return Disposables.create()
+    }
+}
+func getAthletes(year: String? = nil, sport: Sport, teamID: String) -> Observable<[TeamAthlete]> {
+    var urlSport = "tf"
+    if sport == Sport.XC {
+        urlSport = "xc"
+    }
+    
+    let url = "https://www.athletic.net/api/v1/\(urlSport)Team/GetAthletes?teamID=\(teamID)&seasonID=\(year ?? getYear())&editPermission=false"
+    return Observable.create { observer in
+        let schoolUrl = "https://www.athletic.net/\(sport.raw)/School.aspx?SchoolID=\(teamID)"
+        dataRequest(url: schoolUrl).map { $0[0]["publicToken"].stringValue }
+            .subscribe(onNext: { token in
+                let headers: HTTPHeaders = [
+                    "authid": teamID,
+                    "authtoken": token
+                ]
+                Alamofire.request(url, headers: headers).responseJSON { response in
+                    let json = JSON(response.result.value!)
+                    let calendar = json.map { (arg) -> TeamAthlete in
+                        let (_, raw) = arg
+                        return TeamAthlete(json: raw)
+                        
+                    }
+                    observer.onNext(calendar)
+                    observer.onCompleted()
+                }
+            })
         return Disposables.create()
     }
 }
@@ -255,7 +286,7 @@ struct MeetEvent {
 
 func meetInfoFor(meet: CalendarMeet) -> Observable<[MeetEvent]> {
     let url = "https://www.athletic.net/\(meet.sport.raw)/meet/\(meet.id)/results"
-
+    print(url)
 
     if (meet.sport == Sport.XC) {
 
@@ -275,7 +306,6 @@ func meetInfoFor(meet: CalendarMeet) -> Observable<[MeetEvent]> {
         $0[1]["events"].arrayValue
     }.map { events in
         events.filter { $0["Measure"].stringValue == "M" }.map { event in
-
             return MeetEvent(json: event, meet: meet)
         }
     }
@@ -294,10 +324,9 @@ struct AthleteResult {
 // gets params and initialData from url
 func dataRequest(url: String) -> Observable<[JSON]> {
     return Observable.create { observer in
-
+        print("[request]",url)
         Alamofire.request(URL(string: url)!)
             .responseString { response in
-                print(url)
                 let htmlString = response.result.value!
                 let rawTokenData = htmlString.matchingStrings(regex: "constant\\(\"params\", (.+)\\)")[0][1]
                 let rawTeamData = htmlString.matchingStrings(regex: "constant\\(\"initialData\", (.+)\\)")[0][1]
@@ -323,11 +352,10 @@ struct RaceResult {
     var resultCode: String?
     init(json: JSON, sport: Sport) {
         self.time = json["Result"].stringValue.replacingOccurrences(of: "[awch]", with: "", options: .regularExpression, range: nil)
-        self.sortValue = json["sortValue"].doubleValue
+        self.sortValue = json["SortValue"].doubleValue
         self.athleteName = (json["AthleteName"].string != nil) ? json["AthleteName"].stringValue : json["FirstName"].stringValue + " " + json["LastName"].stringValue
         self.place = json["Place"].int
         if sport == Sport.TF {
-            self.sortValue = json["SortInt"].doubleValue
             self.place = Int(json["Place"].stringValue)
         }
         self.team = json["SchoolName"].string
@@ -335,6 +363,7 @@ struct RaceResult {
         self.isSR = json["sr"].boolValue
         self.isPR = json["pr"].boolValue
         self.resultCode = json["ShortCode"].string
+        print(self)
     }
 }
 struct Race {
@@ -361,7 +390,7 @@ func raceInfoFor(url: String, sport: Sport) -> Observable<Race> {
         results.forEach { json in
 
             let raceStruct = RaceResult(json: json, sport: sport)
-            let roundName = json["Round"].string ?? "Results"
+            let roundName = (json["Round"].string != nil) ? rounds[json["Round"].stringValue]!: "Results"
             if rawRoundData[roundName] == nil {
                 rawRoundData[roundName] = [RaceResult]()
             }

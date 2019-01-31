@@ -83,7 +83,9 @@ class IndividualStatsController: UIViewController {
     func initNavBar() {
         let athletePicker = AthleteSearchController()
         titleButton.rx.tap.flatMap { _ -> PublishSubject<AthleteResult> in
-            athletePicker.team = self.state.team
+            athletePicker.state.id = self.state.team.code
+            athletePicker.state.name = self.state.team.name
+            athletePicker.state.sport = self.state.sport
             self.navigationController?.pushViewController(athletePicker, animated: true)
             return athletePicker.selectedAthlete
         }.subscribe(onNext: { athlete in

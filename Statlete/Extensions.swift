@@ -73,3 +73,12 @@ extension UIAlertController {
     }
     
 }
+
+extension UISearchBar {
+    var textField: UITextField? {
+        return self.value(forKey: "searchField") as? UITextField
+    }
+    var textFieldBackground: UIView? {
+        return textField?.subviews.first
+    }
+}

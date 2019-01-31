@@ -27,7 +27,7 @@ class AthleteFilter: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        self.navigationController?.isNavigationBarHidden = true
         self.view.backgroundColor = UIColor.clear
         // self.view.isOpaque = false
 
@@ -62,30 +62,37 @@ class AthleteFilter: UIViewController {
     }
 
     func initTable() {
-        let teamPicker = TeamSearchController()
-        teamPicker.selectedTeam.subscribe(onNext: { team in
-            self.settings.id = team.code
-            self.settings.name = team.name
-        }).disposed(by: self.disposeBag)
         let yp = YearPicker()
         yp.modalPresentationStyle = .overCurrentContext
         yp.sport = self.settings.sport
         yp.id = self.settings.id
         yp.yearSelected.subscribe(onNext: { year in
+            print("selected", year)
             self.settings.year = year
         }).disposed(by: self.disposeBag)
+        let teamPicker = TeamSearchController()
+        teamPicker.selectedTeam.subscribe(onNext: { team in
+            self.settings.id = team.code
+            self.settings.name = team.name
+            teamPicker.navigationController?.popViewController(animated: true)
+            self.navigationController?.isNavigationBarHidden = true
+        }).disposed(by: self.disposeBag)
+        
         dataSource.sections = [
             Section(rows: [
                 // TODO fix this
                 Row(text: "Change Year", detailText: settings.year ?? "Current", selection: {
                     self.present(yp, animated: true)
+                    
                 }, accessory: .disclosureIndicator),
                 Row(text: "Change Team", detailText: settings.name, selection: {
+                    self.navigationController?.isNavigationBarHidden = false
                     self.navigationController?.pushViewController(teamPicker, animated: true)
+
                 }, accessory: .disclosureIndicator),
-                Row(text: "Cross Country", accessory: .switchToggle(value: settings.sport == Sport.XC.raw,
+                Row(text: "Cross Country", accessory: .switchToggle(value: settings.sport == Sport.XC,
                 { (bool) in
-                    self.settings.sport = bool ? Sport.XC.raw : Sport.TF.raw
+                    self.settings.sport = bool ? Sport.XC : Sport.TF
                 }))
             ])
         ]

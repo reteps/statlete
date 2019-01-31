@@ -43,30 +43,34 @@ class UpdatedSettings: UIViewController {
     func initDataSource() {
         let realm = try! Realm()
         let settings = realm.objects(Settings.self).first!
+        let teamSearch = TeamSearchController()
+        teamSearch.selectedTeam.subscribe(onNext: { team in
+            try! realm.write {
+                settings.teamID = team.code
+                settings.teamName = team.name
+            }
+            teamSearch.navigationController?.popViewController(animated: true)
+        }).disposed(by: self.disposeBag)
+        let athleteSearch = AthleteSearchController()
+        athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
+            try! realm.write {
+                settings.athleteID = athlete.id
+                settings.athleteName = athlete.name
+            }
+            athleteSearch.navigationController?.popViewController(animated: true)
+        }).disposed(by: self.disposeBag)
         dataSource.sections = [
             Section(header: "Settings", rows: [
                 Row(text: "Change Athlete", detailText: settings.athleteName, selection: {
-                    let athleteSearch = AthleteSearchController()
-                    athleteSearch.team = Team(name: settings.teamName, code: settings.teamID, location: "")
+                    athleteSearch.state.id = settings.teamID
+                    athleteSearch.state.name = settings.teamName
+                    athleteSearch.state.sport = Sport(rawValue: settings.sport)!
                     self.navigationController?.pushViewController(athleteSearch, animated:true)
-                    athleteSearch.selectedAthlete.subscribe(onNext: { athlete in
-                        try! realm.write {
-                            settings.athleteID = athlete.id
-                            settings.athleteName = athlete.name
-                        }
-                        athleteSearch.navigationController?.popViewController(animated: true)
-                    }).disposed(by: self.disposeBag)
+
                 }, accessory: .disclosureIndicator),
                 Row(text: "Change Team", detailText: settings.teamName, selection: {
-                    let teamSearch = TeamSearchController()
                     self.navigationController?.pushViewController(teamSearch, animated:true)
-                    teamSearch.selectedTeam.subscribe(onNext: { team in
-                        try! realm.write {
-                            settings.teamID = team.code
-                            settings.teamName = team.name
-                        }
-                        teamSearch.navigationController?.popViewController(animated: true)
-                    }).disposed(by: self.disposeBag)
+
                 }, accessory: .disclosureIndicator),
                 Row(text: "Cross Country", accessory: .switchToggle(value: settings.sport == Sport.XC.raw, { (bool) in
                     try! realm.write {

@@ -24,7 +24,7 @@ class MeetViewController: UIViewController {
     
     let yearPickerButton: UIBarButtonItem = {
         let b = UIBarButtonItem()
-        b.title = "2018"
+        b.title = getYear(-1)
         return b
     }()
     
@@ -48,6 +48,11 @@ class MeetViewController: UIViewController {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        // re grab year
+        let settings = realm.objects(Settings.self).first!
+        if (settings.teamID != team.code) {
+            
+        }
     }
     
     override func viewDidLoad() {
@@ -105,11 +110,11 @@ Change team -> get new data
         let yearSelected = yearPickerButton.rx.tap.flatMap { _  -> PublishSubject<String> in
             let yearPicker = YearPicker()
             yearPicker.modalPresentationStyle = .overCurrentContext
-            yearPicker.sport = self.sport.raw
+            yearPicker.sport = self.sport
             yearPicker.id = self.team.code
             self.present(yearPicker, animated: true)
             return yearPicker.yearSelected
-        }.share().startWith("2018")
+        }.share().startWith(getYear(-1))
         
         yearSelected.bind(to: yearPickerButton.rx.title).disposed(by: disposeBag)
         let teamPicker = TeamSearchController()
@@ -117,13 +122,14 @@ Change team -> get new data
             self.navigationController?.pushViewController(teamPicker, animated: true)
             return teamPicker.selectedTeam
         }.debug("Team").share()
+        
         teamSelected.subscribe(onNext: { team in
             self.titleButton.setTitle(team.name, for: .normal)
         })
         let teamChange = teamSelected.flatMap { team -> Observable<[CalendarMeet]> in
             teamPicker.navigationController?.popViewController(animated: true)
             self.team.code = team.code
-            return getCalendar(year: "2018", sport: self.sport, teamID: team.code)
+            return getCalendar(year: getYear(-1), sport: self.sport, teamID: team.code)
         }
         
         let yearChange = yearSelected.flatMap { year -> Observable<[CalendarMeet]> in

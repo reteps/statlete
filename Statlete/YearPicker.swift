@@ -14,7 +14,7 @@ class YearPicker: UIViewController {
     let picker = UIPickerView()
     let yearSelected = PublishSubject<String>()
     var id = ""
-    var sport = ""
+    var sport = Sport.None
     let invisButton = UIButton()
     let disposeBag = DisposeBag()
     override func viewDidLoad() {
