@@ -1,4 +1,4 @@
-# statlete
+# statlete (old version)
 
 iOS app for the IB Personal Project Class.
 
